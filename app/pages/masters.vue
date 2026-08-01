@@ -1,8 +1,17 @@
 <script setup lang="ts">
 import { h, onMounted, ref } from 'vue'
 import type { TableColumn } from '@nuxt/ui'
+import { useClipboard } from '@vueuse/core'
+import type { Row } from '@tanstack/vue-table'
 
 const supabase = useSupabaseClient()
+const UButton = resolveComponent('UButton')
+const UBadge = resolveComponent('UBadge')
+const UDropdownMenu = resolveComponent('UDropdownMenu')
+
+const toast = useToast()
+const { copy } = useClipboard()
+
 
 type Master = {
   id: string
@@ -84,8 +93,66 @@ const columns: TableColumn<Master>[] = [
             }, initials)
       ])
     }
+  },
+  {
+    id: 'actions',
+    meta: {
+      class: {
+        td: 'text-right'
+      }
+    },
+    cell: ({ row }) => {
+      return h(
+        UDropdownMenu,
+        {
+          content: {
+            align: 'end'
+          },
+          items: getRowItems(row),
+          'aria-label': 'Actions dropdown'
+        },
+        () =>
+          h(UButton, {
+            icon: 'i-lucide-ellipsis-vertical',
+            color: 'neutral',
+            variant: 'ghost',
+            'aria-label': 'Actions dropdown'
+          })
+      )
+    }
   }
 ]
+
+function getRowItems(row: Row<Master>) {
+  return [
+    {
+      type: 'label',
+      label: 'Actions'
+    },
+    {
+      label: 'Copiar teléfono',
+      onSelect() {
+        copy(row.original.phone || '')
+
+        toast.add({
+          title: 'Teléfono copiado al portapapeles!',
+          color: 'success',
+          icon: 'i-lucide-circle-check'
+        })
+      }
+    },
+    {
+      type: 'separator'
+    },
+    {
+      label: 'Editar master',
+    },
+    {
+      label: 'Borrar master',
+      color: 'danger',
+    }
+  ]
+}
 </script>
 <template>
   <div class="flex-1 mt-12">
