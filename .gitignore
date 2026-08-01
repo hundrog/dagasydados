@@ -18,6 +18,10 @@ logs
 .fleet
 .idea
 
+#temp
+*.tmp
+supabase/.temp
+
 # Local env files
 .env
 .env.*
