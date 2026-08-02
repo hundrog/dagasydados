@@ -1,43 +1,99 @@
 <script setup lang="ts">
-import { onMounted, ref, resolveComponent } from 'vue'
+import { h, onMounted, ref } from 'vue'
 import type { TableColumn } from '@nuxt/ui'
-
-const UTable = resolveComponent('UTable')
+import { useClipboard } from '@vueuse/core'
+import type { Row } from '@tanstack/vue-table'
+import type { GameSessionWithMaster } from '~/types/session'
 
 const supabase = useSupabaseClient()
+const UButton = resolveComponent('UButton')
+const UDropdownMenu = resolveComponent('UDropdownMenu')
 
-type GameSession = {
-  id: string
-  title: string
-  system: string | null
-  session_type: string | null
-  fecha_inicio: string
-  hora_inicio: string | null
-  hora_fin: string | null
-}
+const toast = useToast()
+const { copy } = useClipboard()
 
-const sessions = ref<GameSession[]>([])
+const sessions = ref<GameSessionWithMaster[]>([])
 const isLoading = ref(true)
 const errorMessage = ref<string | null>(null)
+const pendingDelete = ref<GameSessionWithMaster | null>(null)
+const isDeleteOpen = computed({
+  get: () => pendingDelete.value !== null,
+  set: (value: boolean) => {
+    if (!value) pendingDelete.value = null
+  }
+})
+const isDeleting = ref(false)
 
-onMounted(async () => {
+const loadSessions = async () => {
+  isLoading.value = true
+  errorMessage.value = null
+
   const { data, error } = await supabase
     .from('game_sessions')
-    .select('id,title,system,session_type,fecha_inicio,hora_inicio,hora_fin')
+    .select('id,title,system,session_type,fecha_inicio,hora_inicio,hora_fin,master:dagger_masters(id,full_name)')
 
   if (error) {
     errorMessage.value = error.message
   } else {
-    sessions.value = (data ?? []) as GameSession[]
+    sessions.value = (data ?? []) as unknown as GameSessionWithMaster[]
   }
 
   isLoading.value = false
+}
+
+onMounted(() => {
+  loadSessions()
 })
 
-const columns: TableColumn<GameSession>[] = [
+const confirmDelete = async () => {
+  if (!pendingDelete.value || isDeleting.value) return
+
+  isDeleting.value = true
+
+  const { error } = await supabase
+    .from('game_sessions')
+    .delete()
+    .eq('id', pendingDelete.value.id)
+
+  isDeleting.value = false
+
+  if (error) {
+    toast.add({
+      title: 'No se pudo borrar la sesión',
+      description: error.message,
+      color: 'error',
+      icon: 'i-lucide-octagon-x'
+    })
+    return
+  }
+
+  toast.add({
+    title: 'Sesión borrada',
+    color: 'success',
+    icon: 'i-lucide-trash-2'
+  })
+
+  pendingDelete.value = null
+  await loadSessions()
+}
+
+const goToCreate = () => {
+  navigateTo('/sessions/new')
+}
+
+const goToEdit = (id: string) => {
+  navigateTo(`/sessions/${id}/edit`)
+}
+
+const columns: TableColumn<GameSessionWithMaster>[] = [
   {
     accessorKey: 'title',
     header: 'Title'
+  },
+  {
+    id: 'master',
+    header: 'Master',
+    cell: ({ row }) => row.original.master?.full_name || '-'
   },
   {
     accessorKey: 'system',
@@ -83,17 +139,129 @@ const columns: TableColumn<GameSession>[] = [
       if (!end) return formatTime(start)
       return `${formatTime(start)} - ${formatTime(end)}`
     }
+  },
+  {
+    id: 'actions',
+    meta: {
+      class: {
+        td: 'text-right'
+      }
+    },
+    cell: ({ row }) => {
+      return h(
+        UDropdownMenu,
+        {
+          content: {
+            align: 'end'
+          },
+          items: getRowItems(row),
+          'aria-label': 'Actions dropdown'
+        },
+        () =>
+          h(UButton, {
+            icon: 'i-lucide-ellipsis-vertical',
+            color: 'neutral',
+            variant: 'ghost',
+            'aria-label': 'Actions dropdown'
+          })
+      )
+    }
   }
 ]
-</script>
 
+function getRowItems(row: Row<GameSessionWithMaster>) {
+  return [
+    {
+      type: 'label',
+      label: 'Actions'
+    },
+    {
+      label: 'Copiar ID',
+      onSelect() {
+        copy(row.original.id)
+
+        toast.add({
+          title: 'ID copiado al portapapeles!',
+          color: 'success',
+          icon: 'i-lucide-circle-check'
+        })
+      }
+    },
+    {
+      label: 'Copiar título',
+      onSelect() {
+        copy(row.original.title)
+
+        toast.add({
+          title: 'Título copiado al portapapeles!',
+          color: 'success',
+          icon: 'i-lucide-circle-check'
+        })
+      }
+    },
+    {
+      type: 'separator'
+    },
+    {
+      label: 'Editar sesión',
+      onSelect() {
+        goToEdit(row.original.id)
+      }
+    },
+    {
+      label: 'Borrar sesión',
+      color: 'danger',
+      onSelect() {
+        pendingDelete.value = row.original
+      }
+    }
+  ]
+}
+</script>
 <template>
   <div class="flex-1 mt-12">
     <div class="justify-end flex my-8">
-      <UButton label="Nueva Sesión" icon="i-heroicons-plus" />
+      <UButton
+        label="Nueva Sesión"
+        icon="i-heroicons-plus"
+        class="cursor-pointer"
+        @click="goToCreate"
+      />
     </div>
     <div v-if="isLoading" class="p-4 text-sm text-slate-500">Cargando sesiones...</div>
     <div v-else-if="errorMessage" class="p-4 text-sm text-red-600">{{ errorMessage }}</div>
     <UTable v-else :data="sessions" :columns="columns" class="flex-1" />
+
+    <UModal v-model:open="isDeleteOpen" title="Borrar sesión">
+      <template #body>
+        <div class="space-y-4">
+          <p class="text-sm text-slate-600">
+            ¿Borrar la sesión
+            <span class="font-semibold text-slate-900">
+              {{ pendingDelete?.title || 'esta sesión' }}
+            </span>?
+            Esta acción no se puede deshacer.
+          </p>
+
+          <div class="flex justify-end gap-2">
+            <UButton
+              label="Cancelar"
+              color="neutral"
+              variant="ghost"
+              class="cursor-pointer"
+              :disabled="isDeleting"
+              @click="pendingDelete = null"
+            />
+            <UButton
+              label="Borrar"
+              color="error"
+              class="cursor-pointer"
+              :loading="isDeleting"
+              @click="confirmDelete"
+            />
+          </div>
+        </div>
+      </template>
+    </UModal>
   </div>
 </template>
