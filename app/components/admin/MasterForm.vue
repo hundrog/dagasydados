@@ -1,15 +1,24 @@
 <script setup lang="ts">
 import * as z from 'zod'
+import type { Master } from '~/types/master'
 
 const supabase = useSupabaseClient()
+
+const props = defineProps<{
+  master?: Master | null
+}>()
+
 const emit = defineEmits<{
-  created: []
+  saved: [master: Master]
 }>()
 
 const isOpen = ref(false)
 const isSubmitting = ref(false)
 const errorMessage = ref<string | null>(null)
 const successMessage = ref<string | null>(null)
+const currentMaster = ref<Master | null>(null)
+
+const isEdit = computed(() => !!currentMaster.value)
 
 const schema = z.object({
   full_name: z.string().min(1, 'El nombre es obligatorio'),
@@ -36,6 +45,26 @@ const resetForm = () => {
   successMessage.value = null
 }
 
+const hydrateState = (master: Master) => {
+  state.full_name = master.full_name ?? ''
+  state.user_name = master.user_name ?? ''
+  state.phone = master.phone ?? ''
+  state.avatar_url = master.avatar_url ?? ''
+  errorMessage.value = null
+  successMessage.value = null
+}
+
+function open(master?: Master | null) {
+  if (master) {
+    currentMaster.value = master
+    hydrateState(master)
+  } else {
+    currentMaster.value = null
+    resetForm()
+  }
+  isOpen.value = true
+}
+
 async function submitMaster() {
   if (isSubmitting.value) return
 
@@ -50,7 +79,45 @@ async function submitMaster() {
     avatar_url: state.avatar_url?.trim() ? state.avatar_url.trim() : null
   }
 
-  const { error } = await supabase.from('dagger_masters').insert(payload)
+  if (isEdit.value && currentMaster.value) {
+    const masterId = currentMaster.value.id
+    const { error: updateError } = await supabase
+      .from('dagger_masters')
+      .update(payload)
+      .eq('id', masterId)
+
+    if (updateError) {
+      isSubmitting.value = false
+      errorMessage.value = updateError.message
+      return
+    }
+
+    const { data: refreshed, error: selectError } = await supabase
+      .from('dagger_masters')
+      .select('id,full_name,user_name,phone,avatar_url')
+      .eq('id', masterId)
+      .maybeSingle()
+
+    isSubmitting.value = false
+
+    if (selectError) {
+      errorMessage.value = selectError.message
+      return
+    }
+
+    successMessage.value = 'Master actualizado correctamente'
+    const savedMaster = (refreshed as Master | null) ?? { ...currentMaster.value, ...payload }
+    currentMaster.value = savedMaster
+    emit('saved', savedMaster)
+    isOpen.value = false
+    return
+  }
+
+  const { data, error } = await supabase
+    .from('dagger_masters')
+    .insert(payload)
+    .select('id,full_name,user_name,phone,avatar_url')
+    .single()
 
   isSubmitting.value = false
 
@@ -60,15 +127,22 @@ async function submitMaster() {
   }
 
   successMessage.value = 'Master creado correctamente'
-  resetForm()
-  emit('created')
+  emit('saved', data as Master)
   isOpen.value = false
 }
+
+defineExpose({ open })
 </script>
 
 <template>
-  <UModal v-model:open="isOpen" title="Nuevo master">
-    <UButton label="Nuevo Master" icon="i-heroicons-plus" class="cursor-pointer" @click="isOpen = true" />
+  <UModal v-model:open="isOpen" :title="isEdit ? 'Editar master' : 'Nuevo master'">
+    <UButton
+      v-if="!props.master"
+      label="Nuevo Master"
+      icon="i-heroicons-plus"
+      class="cursor-pointer"
+      @click="open(null)"
+    />
 
     <template #body>
       <UForm :schema="schema" :state="state" class="w-full space-y-4" @submit="submitMaster">
@@ -92,7 +166,7 @@ async function submitMaster() {
         <p v-if="successMessage" class="text-sm text-green-600">{{ successMessage }}</p>
 
         <UButton type="submit" block :loading="isSubmitting" class="cursor-pointer">
-          Guardar Master
+          {{ isEdit ? 'Actualizar Master' : 'Guardar Master' }}
         </UButton>
       </UForm>
     </template>

@@ -3,27 +3,28 @@ import { h, onMounted, ref } from 'vue'
 import type { TableColumn } from '@nuxt/ui'
 import { useClipboard } from '@vueuse/core'
 import type { Row } from '@tanstack/vue-table'
+import type { Master } from '~/types/master'
+import MasterForm from '~/components/admin/MasterForm.vue'
 
 const supabase = useSupabaseClient()
 const UButton = resolveComponent('UButton')
-const UBadge = resolveComponent('UBadge')
 const UDropdownMenu = resolveComponent('UDropdownMenu')
 
 const toast = useToast()
 const { copy } = useClipboard()
 
-
-type Master = {
-  id: string
-  full_name: string | null
-  user_name: string | null
-  phone: string | null
-  avatar_url: string | null
-}
-
 const masters = ref<Master[]>([])
 const isLoading = ref(true)
 const errorMessage = ref<string | null>(null)
+const masterFormRef = ref<InstanceType<typeof MasterForm> | null>(null)
+const pendingDelete = ref<Master | null>(null)
+const isDeleteOpen = computed({
+  get: () => pendingDelete.value !== null,
+  set: (value: boolean) => {
+    if (!value) pendingDelete.value = null
+  }
+})
+const isDeleting = ref(false)
 
 const getInitials = (value: string | null) => {
   if (!value) return 'M'
@@ -56,6 +57,38 @@ const loadMasters = async () => {
 onMounted(() => {
   loadMasters()
 })
+
+const confirmDelete = async () => {
+  if (!pendingDelete.value || isDeleting.value) return
+
+  isDeleting.value = true
+
+  const { error } = await supabase
+    .from('dagger_masters')
+    .delete()
+    .eq('id', pendingDelete.value.id)
+
+  isDeleting.value = false
+
+  if (error) {
+    toast.add({
+      title: 'No se pudo borrar el master',
+      description: error.message,
+      color: 'error',
+      icon: 'i-lucide-octagon-x'
+    })
+    return
+  }
+
+  toast.add({
+    title: 'Master borrado',
+    color: 'success',
+    icon: 'i-lucide-trash-2'
+  })
+
+  pendingDelete.value = null
+  await loadMasters()
+}
 
 const columns: TableColumn<Master>[] = [
   {
@@ -146,10 +179,16 @@ function getRowItems(row: Row<Master>) {
     },
     {
       label: 'Editar master',
+      onSelect() {
+        masterFormRef.value?.open(row.original)
+      }
     },
     {
       label: 'Borrar master',
       color: 'danger',
+      onSelect() {
+        pendingDelete.value = row.original
+      }
     }
   ]
 }
@@ -157,11 +196,43 @@ function getRowItems(row: Row<Master>) {
 <template>
   <div class="flex-1 mt-12">
     <div class="flex justify-end my-8">
-      <AdminMasterForm @created="loadMasters" />
+      <AdminMasterForm ref="masterFormRef" @saved="loadMasters" />
     </div>
 
     <div v-if="isLoading" class="p-4 text-sm text-slate-500">Cargando masters...</div>
     <div v-else-if="errorMessage" class="p-4 text-sm text-red-600">{{ errorMessage }}</div>
     <UTable v-else :data="masters" :columns="columns" class="flex-1" />
+
+    <UModal v-model:open="isDeleteOpen" title="Borrar master">
+      <template #body>
+        <div class="space-y-4">
+          <p class="text-sm text-slate-600">
+            ¿Borrar a
+            <span class="font-semibold text-slate-900">
+              {{ pendingDelete?.full_name || pendingDelete?.user_name || 'este master' }}
+            </span>?
+            Esta acción no se puede deshacer.
+          </p>
+
+          <div class="flex justify-end gap-2">
+            <UButton
+              label="Cancelar"
+              color="neutral"
+              variant="ghost"
+              class="cursor-pointer"
+              :disabled="isDeleting"
+              @click="pendingDelete = null"
+            />
+            <UButton
+              label="Borrar"
+              color="error"
+              class="cursor-pointer"
+              :loading="isDeleting"
+              @click="confirmDelete"
+            />
+          </div>
+        </div>
+      </template>
+    </UModal>
   </div>
 </template>
