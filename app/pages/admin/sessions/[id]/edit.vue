@@ -40,11 +40,11 @@ onMounted(async () => {
 })
 
 const onSaved = () => {
-  navigateTo('/sessions')
+  navigateTo('/admin/sessions')
 }
 
 const goBack = () => {
-  navigateTo('/sessions')
+  navigateTo('/admin/sessions')
 }
 </script>
 

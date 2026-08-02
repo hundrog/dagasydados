@@ -78,11 +78,11 @@ const confirmDelete = async () => {
 }
 
 const goToCreate = () => {
-  navigateTo('/sessions/new')
+  navigateTo('/admin/sessions/new')
 }
 
 const goToEdit = (id: string) => {
-  navigateTo(`/sessions/${id}/edit`)
+  navigateTo(`/admin/sessions/${id}/edit`)
 }
 
 const columns: TableColumn<GameSessionWithMaster>[] = [

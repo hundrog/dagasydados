@@ -6,7 +6,7 @@ const route = useRoute()
 const items = computed<NavigationMenuItem[]>(() => [
   {
     label: 'Todas las Mesas',
-    to: '/sessions',
+    to: '/admin/sessions',
     active: route.path.startsWith('/docs/getting-started')
   },
   {

@@ -2,11 +2,11 @@
 import SessionForm from '~/components/admin/SessionForm.vue'
 
 const goBack = () => {
-  navigateTo('/sessions')
+  navigateTo('/admin/sessions')
 }
 
 const onSaved = () => {
-  navigateTo('/sessions')
+  navigateTo('/admin/sessions')
 }
 </script>
 
