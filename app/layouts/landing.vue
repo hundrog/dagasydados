@@ -1,6 +1,6 @@
 <template>
   <div>
-    <LandingSiteNav />
+    <SiteNav />
     <UMain class="max-w-7xl m-auto">
       <slot />
     </UMain>
