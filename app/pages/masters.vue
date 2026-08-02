@@ -4,7 +4,7 @@ import type { TableColumn } from '@nuxt/ui'
 import { useClipboard } from '@vueuse/core'
 import type { Row } from '@tanstack/vue-table'
 import type { Master } from '~/types/master'
-import MasterForm from '~/components/admin/MasterForm.vue'
+import type MasterForm from '~/components/admin/MasterForm.vue'
 
 const supabase = useSupabaseClient()
 const UButton = resolveComponent('UButton')
@@ -33,7 +33,7 @@ const getInitials = (value: string | null) => {
     .split(/\s+/)
     .filter(Boolean)
     .slice(0, 2)
-    .map((part) => part[0]?.toUpperCase() ?? '')
+    .map(part => part[0]?.toUpperCase() ?? '')
     .join('') || 'M'
 }
 
@@ -138,17 +138,17 @@ const columns: TableColumn<Master>[] = [
       return h(
         UDropdownMenu,
         {
-          content: {
+          'content': {
             align: 'end'
           },
-          items: getRowItems(row),
+          'items': getRowItems(row),
           'aria-label': 'Actions dropdown'
         },
         () =>
           h(UButton, {
-            icon: 'i-lucide-ellipsis-vertical',
-            color: 'neutral',
-            variant: 'ghost',
+            'icon': 'i-lucide-ellipsis-vertical',
+            'color': 'neutral',
+            'variant': 'ghost',
             'aria-label': 'Actions dropdown'
           })
       )
@@ -193,17 +193,39 @@ function getRowItems(row: Row<Master>) {
   ]
 }
 </script>
+
 <template>
   <div class="flex-1 mt-12">
     <div class="flex justify-end my-8">
-      <AdminMasterForm ref="masterFormRef" @saved="loadMasters" />
+      <AdminMasterForm
+        ref="masterFormRef"
+        @saved="loadMasters"
+      />
     </div>
 
-    <div v-if="isLoading" class="p-4 text-sm text-slate-500">Cargando masters...</div>
-    <div v-else-if="errorMessage" class="p-4 text-sm text-red-600">{{ errorMessage }}</div>
-    <UTable v-else :data="masters" :columns="columns" class="flex-1" />
+    <div
+      v-if="isLoading"
+      class="p-4 text-sm text-slate-500"
+    >
+      Cargando masters...
+    </div>
+    <div
+      v-else-if="errorMessage"
+      class="p-4 text-sm text-red-600"
+    >
+      {{ errorMessage }}
+    </div>
+    <UTable
+      v-else
+      :data="masters"
+      :columns="columns"
+      class="flex-1"
+    />
 
-    <UModal v-model:open="isDeleteOpen" title="Borrar master">
+    <UModal
+      v-model:open="isDeleteOpen"
+      title="Borrar master"
+    >
       <template #body>
         <div class="space-y-4">
           <p class="text-sm text-slate-600">

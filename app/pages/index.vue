@@ -1,15 +1,7 @@
 <script setup lang="ts">
 definePageMeta({
-  layout: "landing",
-});
-
-const modalOpen = ref(false)
-const modalTitle = ref('')
-
-function openReserve(title: string) {
-  modalTitle.value = title
-  modalOpen.value = true
-}
+  layout: 'landing'
+})
 </script>
 
 <template>
@@ -21,7 +13,5 @@ function openReserve(title: string) {
 
       <!-- <LandingCommunityPanel /> -->
     </main>
-
-    <!-- <LandingReserveModal v-model:open="modalOpen" :session-title="modalTitle" /> -->
   </UPage>
 </template>

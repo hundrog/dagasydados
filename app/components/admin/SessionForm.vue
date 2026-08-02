@@ -160,7 +160,7 @@ const initialState = (): Schema => ({
 const state = reactive<Schema>(initialState())
 
 const masterItems = computed(() =>
-  masters.value.map((master) => ({
+  masters.value.map(master => ({
     label: master.full_name || 'Sin nombre',
     value: master.id
   }))
@@ -194,7 +194,7 @@ const buildRruleString = (): string => {
 
   if (freq === RRule.WEEKLY && days.value.length > 0) {
     options.byweekday = days.value
-      .map((code) => dayCodeToWeekday[code])
+      .map(code => dayCodeToWeekday[code])
       .filter((weekday): weekday is number => typeof weekday === 'number')
   }
 
@@ -345,61 +345,151 @@ async function submitSession() {
     @submit="submitSession"
   >
     <section class="space-y-4">
-      <h2 class="text-lg font-semibold text-slate-900">Información básica</h2>
+      <h2 class="text-lg font-semibold text-slate-900">
+        Información básica
+      </h2>
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <UFormField label="Título" name="title" required>
-          <UInput v-model="state.title" class="w-full" />
+        <UFormField
+          label="Título"
+          name="title"
+          required
+        >
+          <UInput
+            v-model="state.title"
+            class="w-full"
+          />
         </UFormField>
-        <UFormField label="Campaña" name="campaign">
-          <UInput v-model="state.campaign" class="w-full" />
+        <UFormField
+          label="Campaña"
+          name="campaign"
+        >
+          <UInput
+            v-model="state.campaign"
+            class="w-full"
+          />
         </UFormField>
-        <UFormField label="URL de imagen" name="image_url" class="md:col-span-2">
-          <UInput v-model="state.image_url" class="w-full" />
+        <UFormField
+          label="URL de imagen"
+          name="image_url"
+          class="md:col-span-2"
+        >
+          <UInput
+            v-model="state.image_url"
+            class="w-full"
+          />
         </UFormField>
-        <UFormField label="Descripción" name="description" class="md:col-span-2">
-          <UTextarea v-model="state.description" class="w-full" :rows="4" />
+        <UFormField
+          label="Descripción"
+          name="description"
+          class="md:col-span-2"
+        >
+          <UTextarea
+            v-model="state.description"
+            class="w-full"
+            :rows="4"
+          />
         </UFormField>
       </div>
     </section>
 
     <section class="space-y-4">
-      <h2 class="text-lg font-semibold text-slate-900">Clasificación</h2>
+      <h2 class="text-lg font-semibold text-slate-900">
+        Clasificación
+      </h2>
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <UFormField label="Sistema" name="system">
-          <UInput v-model="state.system" class="w-full" />
+        <UFormField
+          label="Sistema"
+          name="system"
+        >
+          <UInput
+            v-model="state.system"
+            class="w-full"
+          />
         </UFormField>
-        <UFormField label="Tipo de sesión" name="session_type">
-          <UInput v-model="state.session_type" class="w-full" />
+        <UFormField
+          label="Tipo de sesión"
+          name="session_type"
+        >
+          <UInput
+            v-model="state.session_type"
+            class="w-full"
+          />
         </UFormField>
-        <UFormField label="Audiencia" name="audience">
-          <UInput v-model="state.audience" class="w-full" />
+        <UFormField
+          label="Audiencia"
+          name="audience"
+        >
+          <UInput
+            v-model="state.audience"
+            class="w-full"
+          />
         </UFormField>
-        <UFormField label="Modalidad" name="mode">
-          <UInput v-model="state.mode" class="w-full" />
+        <UFormField
+          label="Modalidad"
+          name="mode"
+        >
+          <UInput
+            v-model="state.mode"
+            class="w-full"
+          />
         </UFormField>
       </div>
     </section>
 
     <section class="space-y-4">
-      <h2 class="text-lg font-semibold text-slate-900">Programación</h2>
+      <h2 class="text-lg font-semibold text-slate-900">
+        Programación
+      </h2>
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <UFormField label="Fecha de inicio" name="fecha_inicio" required>
-          <UInput v-model="state.fecha_inicio" type="date" class="w-full" />
+        <UFormField
+          label="Fecha de inicio"
+          name="fecha_inicio"
+          required
+        >
+          <UInput
+            v-model="state.fecha_inicio"
+            type="date"
+            class="w-full"
+          />
         </UFormField>
-        <UFormField label="Zona horaria" name="zona_horaria">
-          <UInput v-model="state.zona_horaria" class="w-full" placeholder="UTC, America/Mexico_City..." />
+        <UFormField
+          label="Zona horaria"
+          name="zona_horaria"
+        >
+          <UInput
+            v-model="state.zona_horaria"
+            class="w-full"
+            placeholder="UTC, America/Mexico_City..."
+          />
         </UFormField>
-        <UFormField label="Hora de inicio" name="hora_inicio">
-          <UInput v-model="state.hora_inicio" type="time" class="w-full" />
+        <UFormField
+          label="Hora de inicio"
+          name="hora_inicio"
+        >
+          <UInput
+            v-model="state.hora_inicio"
+            type="time"
+            class="w-full"
+          />
         </UFormField>
-        <UFormField label="Hora de fin" name="hora_fin">
-          <UInput v-model="state.hora_fin" type="time" class="w-full" />
+        <UFormField
+          label="Hora de fin"
+          name="hora_fin"
+        >
+          <UInput
+            v-model="state.hora_fin"
+            type="time"
+            class="w-full"
+          />
         </UFormField>
       </div>
 
       <div class="space-y-4 pt-2">
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <UFormField label="Periodicidad" name="periodicidad">
+          <UFormField
+            label="Periodicidad"
+            name="periodicidad"
+          >
             <URadioGroup
               v-model="periodicity"
               :items="periodicityOptions"
@@ -408,7 +498,10 @@ async function submitSession() {
             />
           </UFormField>
 
-          <UFormField label="Día de la semana" name="start_weekday">
+          <UFormField
+            label="Día de la semana"
+            name="start_weekday"
+          >
             <UInput
               :model-value="startWeekdayLabel ?? ''"
               readonly
@@ -443,7 +536,11 @@ async function submitSession() {
           </div>
         </UFormField>
 
-        <UFormField label="RRULE" name="rrule" hint="Se genera automáticamente. Puedes editarlo para casos avanzados.">
+        <UFormField
+          label="RRULE"
+          name="rrule"
+          hint="Se genera automáticamente. Puedes editarlo para casos avanzados."
+        >
           <UInput
             v-model="state.rrule"
             class="w-full font-mono text-sm"
@@ -455,26 +552,63 @@ async function submitSession() {
     </section>
 
     <section class="space-y-4">
-      <h2 class="text-lg font-semibold text-slate-900">Logística</h2>
+      <h2 class="text-lg font-semibold text-slate-900">
+        Logística
+      </h2>
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <UFormField label="Ubicación" name="location" class="md:col-span-2">
-          <UInput v-model="state.location" class="w-full" />
+        <UFormField
+          label="Ubicación"
+          name="location"
+          class="md:col-span-2"
+        >
+          <UInput
+            v-model="state.location"
+            class="w-full"
+          />
         </UFormField>
-        <UFormField label="Costo" name="costo">
-          <UInput v-model="state.costo" type="number" class="w-full" />
+        <UFormField
+          label="Costo"
+          name="costo"
+        >
+          <UInput
+            v-model="state.costo"
+            type="number"
+            class="w-full"
+          />
         </UFormField>
-        <UFormField label="Jugadores actuales" name="current_players">
-          <UInput v-model="state.current_players" type="number" class="w-full" />
+        <UFormField
+          label="Jugadores actuales"
+          name="current_players"
+        >
+          <UInput
+            v-model="state.current_players"
+            type="number"
+            class="w-full"
+          />
         </UFormField>
-        <UFormField label="Máximo de jugadores" name="max_players" class="md:col-span-2">
-          <UInput v-model="state.max_players" type="number" class="w-full" />
+        <UFormField
+          label="Máximo de jugadores"
+          name="max_players"
+          class="md:col-span-2"
+        >
+          <UInput
+            v-model="state.max_players"
+            type="number"
+            class="w-full"
+          />
         </UFormField>
       </div>
     </section>
 
     <section class="space-y-4">
-      <h2 class="text-lg font-semibold text-slate-900">Master</h2>
-      <UFormField label="Master" name="master_id" required>
+      <h2 class="text-lg font-semibold text-slate-900">
+        Master
+      </h2>
+      <UFormField
+        label="Master"
+        name="master_id"
+        required
+      >
         <USelectMenu
           v-model="state.master_id"
           :items="masterItems"
@@ -486,7 +620,12 @@ async function submitSession() {
       </UFormField>
     </section>
 
-    <p v-if="errorMessage" class="text-sm text-red-600">{{ errorMessage }}</p>
+    <p
+      v-if="errorMessage"
+      class="text-sm text-red-600"
+    >
+      {{ errorMessage }}
+    </p>
 
     <div class="flex justify-end gap-2 pt-4 border-t border-slate-200">
       <UButton

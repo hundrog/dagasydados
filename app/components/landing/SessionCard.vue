@@ -1,10 +1,9 @@
-n<script setup lang="ts">
-import { textSpanContainsPosition } from 'typescript';
+<script setup lang="ts">
 import type { GameSession } from '~/data/sessions'
 
 const props = defineProps<{ session: GameSession }>()
 
-const placeholderUrl = "https://placehold.co/600x340/1e174a/9fa7ff?text=Sin+imagen"
+const placeholderUrl = 'https://placehold.co/600x340/1e174a/9fa7ff?text=Sin+imagen'
 
 const modeColor = computed(() => {
   switch (props.session.mode) {
@@ -26,7 +25,7 @@ const modeIcon = computed(() => {
     case 'offline':
       return 'i-lucide-map-pin'
     case 'hybrid':
-      return 'i-lucide-wifi' 
+      return 'i-lucide-wifi'
     default:
       return 'i-lucide-help-circle'
   }
@@ -46,7 +45,6 @@ const modeLabel = computed(() => {
 })
 </script>
 
-
 <template>
   <NuxtLink
     class="card group flex flex-col overflow-hidden card-hoverable"
@@ -56,7 +54,7 @@ const modeLabel = computed(() => {
         :src="session.image_url.length > 0 ? session.image_url : placeholderUrl"
         :alt="session.title"
         class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-      />
+      >
       <div
         class="absolute inset-0 bg-linear-to-t from-surface-high via-surface-high/20 to-transparent"
       />
@@ -66,7 +64,10 @@ const modeLabel = computed(() => {
           class="label-metadata flex items-center gap-1.5 px-2.5 py-1 rounded-md backdrop-blur-sm"
           :class="modeColor"
         >
-          <UIcon :name="modeIcon" class="size-3" />
+          <UIcon
+            :name="modeIcon"
+            class="size-3"
+          />
           {{ modeLabel }}
         </span>
       </div>
@@ -74,40 +75,46 @@ const modeLabel = computed(() => {
 
     <div class="flex flex-col flex-1 p-5 gap-3">
       <div class="flex justify-start items-center flex-wrap gap-3">
-      <UBadge>
-        {{ session.system }}
-      </UBadge>
-      <UBadge color="secondary" variant="outline">
-        {{ session.session_type }}
-      </UBadge>
-      <UBadge color="neutral" variant="outline">
-        {{ session.audience ? session.audience : 'Todos los públicos' }}
-      </UBadge>
-    </div>
+        <UBadge>
+          {{ session.system }}
+        </UBadge>
+        <UBadge
+          color="secondary"
+          variant="outline"
+        >
+          {{ session.session_type }}
+        </UBadge>
+        <UBadge
+          color="neutral"
+          variant="outline"
+        >
+          {{ session.audience ? session.audience : 'Todos los públicos' }}
+        </UBadge>
+      </div>
 
-    <div class="flex flex-col w-full">
-      <span class="label-metadata text-secondary items-center gap-1.5 flex">
-        <UIcon
-          name="i-lucide-users"
-          class="size-3 text-on-surface-dim shrink-0"
-        />
-        {{ session.current_players }} / {{ session.max_players }}
-      </span>
-      <span class="label-metadata items-center">
-        <UIcon
-          name="i-lucide-map-pin"
-          class="size-3 text-on-surface-dim shrink-0"
-        />
-        {{ session.location }}
-      </span>
-      <span class="label-metadata text-muted items-center">
-        <UIcon
-          name="i-lucide-clock"
-          class="size-3 text-on-surface-dim shrink-0"
-        />
-        {{ session.date }} - {{ session.time }}
-      </span>
-</div>
+      <div class="flex flex-col w-full">
+        <span class="label-metadata text-secondary items-center gap-1.5 flex">
+          <UIcon
+            name="i-lucide-users"
+            class="size-3 text-on-surface-dim shrink-0"
+          />
+          {{ session.current_players }} / {{ session.max_players }}
+        </span>
+        <span class="label-metadata items-center">
+          <UIcon
+            name="i-lucide-map-pin"
+            class="size-3 text-on-surface-dim shrink-0"
+          />
+          {{ session.location }}
+        </span>
+        <span class="label-metadata text-muted items-center">
+          <UIcon
+            name="i-lucide-clock"
+            class="size-3 text-on-surface-dim shrink-0"
+          />
+          {{ session.date }} - {{ session.time }}
+        </span>
+      </div>
       <h2
         class="font-display text-headline-sm text-on-surface leading-snug line-clamp-2 group-hover:text-primary transition-colors duration-200"
       >
@@ -130,16 +137,19 @@ const modeLabel = computed(() => {
             v-if="session.daggerMaster?.avatar_url"
             :src="session.daggerMaster.avatar_url"
             :alt="
-              session.daggerMaster.full_name ||
-              session.daggerMaster.user_name
+              session.daggerMaster.full_name
+                || session.daggerMaster.user_name
             "
             class="size-6 rounded-full object-cover shrink-0"
-          />
+          >
           <div
             v-else
             class="size-6 rounded-full bg-surface-variant flex items-center justify-center shrink-0"
           >
-            <UIcon name="i-lucide-user" class="size-3 text-on-surface-dim" />
+            <UIcon
+              name="i-lucide-user"
+              class="size-3 text-on-surface-dim"
+            />
           </div>
 
           <span class="font-body text-label-sm text-on-surface-dim truncate">

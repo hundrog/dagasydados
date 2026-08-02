@@ -70,8 +70,18 @@ const goBack = () => {
         />
       </div>
 
-      <div v-if="isLoading" class="p-4 text-sm text-slate-500">Cargando sesión...</div>
-      <div v-else-if="errorMessage" class="p-4 text-sm text-red-600">{{ errorMessage }}</div>
+      <div
+        v-if="isLoading"
+        class="p-4 text-sm text-slate-500"
+      >
+        Cargando sesión...
+      </div>
+      <div
+        v-else-if="errorMessage"
+        class="p-4 text-sm text-red-600"
+      >
+        {{ errorMessage }}
+      </div>
       <SessionForm
         v-else
         :session="session"

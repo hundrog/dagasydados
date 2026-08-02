@@ -135,7 +135,10 @@ defineExpose({ open })
 </script>
 
 <template>
-  <UModal v-model:open="isOpen" :title="isEdit ? 'Editar master' : 'Nuevo master'">
+  <UModal
+    v-model:open="isOpen"
+    :title="isEdit ? 'Editar master' : 'Nuevo master'"
+  >
     <UButton
       v-if="!props.master"
       label="Nuevo Master"
@@ -145,27 +148,72 @@ defineExpose({ open })
     />
 
     <template #body>
-      <UForm :schema="schema" :state="state" class="w-full space-y-4" @submit="submitMaster">
-        <UFormField label="Nombre completo" name="full_name" required>
-          <UInput v-model="state.full_name" class="w-full" />
+      <UForm
+        :schema="schema"
+        :state="state"
+        class="w-full space-y-4"
+        @submit="submitMaster"
+      >
+        <UFormField
+          label="Nombre completo"
+          name="full_name"
+          required
+        >
+          <UInput
+            v-model="state.full_name"
+            class="w-full"
+          />
         </UFormField>
 
-        <UFormField label="Apodo" name="user_name">
-          <UInput v-model="state.user_name" class="w-full" />
+        <UFormField
+          label="Apodo"
+          name="user_name"
+        >
+          <UInput
+            v-model="state.user_name"
+            class="w-full"
+          />
         </UFormField>
 
-        <UFormField label="Teléfono" name="phone">
-          <UInput v-model="state.phone" class="w-full" />
+        <UFormField
+          label="Teléfono"
+          name="phone"
+        >
+          <UInput
+            v-model="state.phone"
+            class="w-full"
+          />
         </UFormField>
 
-        <UFormField label="URL del avatar" name="avatar_url">
-          <UInput v-model="state.avatar_url" class="w-full" />
+        <UFormField
+          label="URL del avatar"
+          name="avatar_url"
+        >
+          <UInput
+            v-model="state.avatar_url"
+            class="w-full"
+          />
         </UFormField>
 
-        <p v-if="errorMessage" class="text-sm text-red-600">{{ errorMessage }}</p>
-        <p v-if="successMessage" class="text-sm text-green-600">{{ successMessage }}</p>
+        <p
+          v-if="errorMessage"
+          class="text-sm text-red-600"
+        >
+          {{ errorMessage }}
+        </p>
+        <p
+          v-if="successMessage"
+          class="text-sm text-green-600"
+        >
+          {{ successMessage }}
+        </p>
 
-        <UButton type="submit" block :loading="isSubmitting" class="cursor-pointer">
+        <UButton
+          type="submit"
+          block
+          :loading="isSubmitting"
+          class="cursor-pointer"
+        >
           {{ isEdit ? 'Actualizar Master' : 'Guardar Master' }}
         </UButton>
       </UForm>

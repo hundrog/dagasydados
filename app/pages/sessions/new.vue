@@ -15,8 +15,12 @@ const onSaved = () => {
     <div class="max-w-4xl mx-auto px-4 py-8">
       <div class="flex items-center justify-between mb-8">
         <div>
-          <h1 class="text-2xl font-bold text-slate-900">Nueva sesión</h1>
-          <p class="text-sm text-slate-500 mt-1">Crea una nueva sesión de juego.</p>
+          <h1 class="text-2xl font-bold text-slate-900">
+            Nueva sesión
+          </h1>
+          <p class="text-sm text-slate-500 mt-1">
+            Crea una nueva sesión de juego.
+          </p>
         </div>
         <UButton
           label="Volver"
@@ -28,7 +32,10 @@ const onSaved = () => {
         />
       </div>
 
-      <SessionForm @saved="onSaved" @cancel="goBack" />
+      <SessionForm
+        @saved="onSaved"
+        @cancel="goBack"
+      />
     </div>
   </div>
 </template>

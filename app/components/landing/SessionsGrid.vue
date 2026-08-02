@@ -11,4 +11,3 @@ import { sessions } from '~/data/sessions'
     />
   </div>
 </template>
-

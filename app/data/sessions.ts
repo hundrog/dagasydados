@@ -52,7 +52,7 @@ export const sessions: GameSession[] = [
       full_name: 'Master Pino',
       avatar_url: '',
       phone: '+5215512345678'
-    },
+    }
   },
   {
     id: 'mina-perdida-phandelver',
@@ -76,7 +76,7 @@ export const sessions: GameSession[] = [
       full_name: 'Master Alan',
       avatar_url: '',
       phone: '+5215512345678'
-    },
+    }
   },
   {
     id: 'cronicas-multiverso',
@@ -98,6 +98,6 @@ export const sessions: GameSession[] = [
       full_name: 'Varios Masters de la Comunidad',
       avatar_url: '',
       phone: '+5215512345678'
-    },
+    }
   }
 ]

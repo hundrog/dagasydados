@@ -151,17 +151,17 @@ const columns: TableColumn<GameSessionWithMaster>[] = [
       return h(
         UDropdownMenu,
         {
-          content: {
+          'content': {
             align: 'end'
           },
-          items: getRowItems(row),
+          'items': getRowItems(row),
           'aria-label': 'Actions dropdown'
         },
         () =>
           h(UButton, {
-            icon: 'i-lucide-ellipsis-vertical',
-            color: 'neutral',
-            variant: 'ghost',
+            'icon': 'i-lucide-ellipsis-vertical',
+            'color': 'neutral',
+            'variant': 'ghost',
             'aria-label': 'Actions dropdown'
           })
       )
@@ -218,6 +218,7 @@ function getRowItems(row: Row<GameSessionWithMaster>) {
   ]
 }
 </script>
+
 <template>
   <div class="flex-1 mt-12">
     <div class="justify-end flex my-8">
@@ -228,11 +229,29 @@ function getRowItems(row: Row<GameSessionWithMaster>) {
         @click="goToCreate"
       />
     </div>
-    <div v-if="isLoading" class="p-4 text-sm text-slate-500">Cargando sesiones...</div>
-    <div v-else-if="errorMessage" class="p-4 text-sm text-red-600">{{ errorMessage }}</div>
-    <UTable v-else :data="sessions" :columns="columns" class="flex-1" />
+    <div
+      v-if="isLoading"
+      class="p-4 text-sm text-slate-500"
+    >
+      Cargando sesiones...
+    </div>
+    <div
+      v-else-if="errorMessage"
+      class="p-4 text-sm text-red-600"
+    >
+      {{ errorMessage }}
+    </div>
+    <UTable
+      v-else
+      :data="sessions"
+      :columns="columns"
+      class="flex-1"
+    />
 
-    <UModal v-model:open="isDeleteOpen" title="Borrar sesión">
+    <UModal
+      v-model:open="isDeleteOpen"
+      title="Borrar sesión"
+    >
       <template #body>
         <div class="space-y-4">
           <p class="text-sm text-slate-600">

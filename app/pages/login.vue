@@ -22,7 +22,7 @@ const fields: AuthFormField[] = [{
   type: 'checkbox'
 }]
 
-const providers = [{
+const _providers = [{
   label: 'Google',
   icon: 'i-simple-icons-google',
   onClick: () => {
@@ -62,5 +62,3 @@ function onSubmit(payload: FormSubmitEvent<Schema>) {
     </UPageCard>
   </div>
 </template>
-
-
