@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import * as z from 'zod'
+import { RRule } from 'rrule'
 import type { GameSession, GameSessionInsert, GameSessionUpdate, SessionMasterRef } from '~/types/session'
 
 const supabase = useSupabaseClient()
@@ -14,10 +15,103 @@ const emit = defineEmits<{
   cancel: []
 }>()
 
+type Periodicity = 'NONE' | 'WEEKLY' | 'BIWEEKLY' | 'MONTHLY'
+
+const periodicityOptions: Array<{ label: string, value: Periodicity }> = [
+  { label: 'Sin recurrencia', value: 'NONE' },
+  { label: 'Semanal', value: 'WEEKLY' },
+  { label: 'Quincenal', value: 'BIWEEKLY' },
+  { label: 'Mensual', value: 'MONTHLY' }
+]
+
+const dayOptions: Array<{ code: string, label: string, short: string }> = [
+  { code: 'MO', label: 'Lunes', short: 'L' },
+  { code: 'TU', label: 'Martes', short: 'M' },
+  { code: 'WE', label: 'Miércoles', short: 'X' },
+  { code: 'TH', label: 'Jueves', short: 'J' },
+  { code: 'FR', label: 'Viernes', short: 'V' },
+  { code: 'SA', label: 'Sábado', short: 'S' },
+  { code: 'SU', label: 'Domingo', short: 'D' }
+]
+
+const dayCodeToWeekday: Record<string, number> = {
+  MO: RRule.MO.weekday,
+  TU: RRule.TU.weekday,
+  WE: RRule.WE.weekday,
+  TH: RRule.TH.weekday,
+  FR: RRule.FR.weekday,
+  SA: RRule.SA.weekday,
+  SU: RRule.SU.weekday
+}
+
+const weekdayToCode: Record<number, string> = {
+  [RRule.MO.weekday]: 'MO',
+  [RRule.TU.weekday]: 'TU',
+  [RRule.WE.weekday]: 'WE',
+  [RRule.TH.weekday]: 'TH',
+  [RRule.FR.weekday]: 'FR',
+  [RRule.SA.weekday]: 'SA',
+  [RRule.SU.weekday]: 'SU'
+}
+
+const dayCodeToLabel: Record<string, string> = {
+  MO: 'Lunes',
+  TU: 'Martes',
+  WE: 'Miércoles',
+  TH: 'Jueves',
+  FR: 'Viernes',
+  SA: 'Sábado',
+  SU: 'Domingo'
+}
+
+const startWeekdayCode = computed(() => {
+  if (!state.fecha_inicio) return null
+  const date = new Date(state.fecha_inicio)
+  if (Number.isNaN(date.getTime())) return null
+  return weekdayToCode[date.getDay()] ?? null
+})
+
+const startWeekdayLabel = computed(() => {
+  if (!startWeekdayCode.value) return null
+  return dayCodeToLabel[startWeekdayCode.value]
+})
+
+const userTouchedDays = ref(false)
+
+const parseRrule = (raw: string | null | undefined) => {
+  if (!raw) return { periodicity: 'NONE' as Periodicity, days: [] as string[] }
+  try {
+    const rule = RRule.fromString(`RRULE:${raw}`)
+    const options = rule.origOptions
+    let periodicity: Periodicity = 'NONE'
+    if (options.freq === RRule.WEEKLY) {
+      periodicity = options.interval === 2 ? 'BIWEEKLY' : 'WEEKLY'
+    } else if (options.freq === RRule.MONTHLY) {
+      periodicity = 'MONTHLY'
+    }
+    const byday = (options.byweekday ?? []) as Array<number | { weekday: number }>
+    const days = byday
+      .map((entry) => {
+        const weekday = typeof entry === 'number' ? entry : entry.weekday
+        return Object.entries(dayCodeToWeekday).find(([, value]) => value === weekday)?.[0]
+      })
+      .filter((code): code is string => Boolean(code))
+    return { periodicity, days }
+  } catch {
+    return { periodicity: 'NONE' as Periodicity, days: [] as string[] }
+  }
+}
+
+const initialParsed = parseRrule(props.session?.rrule)
+
 const isSubmitting = ref(false)
 const errorMessage = ref<string | null>(null)
 const masters = ref<SessionMasterRef[]>([])
 const isLoadingMasters = ref(true)
+
+const periodicity = ref<Periodicity>(initialParsed.periodicity)
+const days = ref<string[]>(initialParsed.days)
+const isRruleTouched = ref<boolean>(Boolean(props.session?.rrule))
 
 const schema = z.object({
   title: z.string().min(1, 'El título es obligatorio'),
@@ -76,6 +170,71 @@ const toNumberOrNull = (value: number | '' | undefined | null) => {
   if (value === '' || value === null || value === undefined) return null
   return Number(value)
 }
+
+const frequencyForPeriodicity = (value: Periodicity): number | null => {
+  if (value === 'WEEKLY') return RRule.WEEKLY
+  if (value === 'BIWEEKLY') return RRule.WEEKLY
+  if (value === 'MONTHLY') return RRule.MONTHLY
+  return null
+}
+
+const buildRruleString = (): string => {
+  if (periodicity.value === 'NONE') return ''
+
+  const freq = frequencyForPeriodicity(periodicity.value)
+  if (!freq) return ''
+
+  const interval = periodicity.value === 'BIWEEKLY' ? 2 : 1
+
+  const options: Record<string, unknown> = {
+    freq,
+    interval,
+    dtstart: state.fecha_inicio ? new Date(state.fecha_inicio) : new Date()
+  }
+
+  if (freq === RRule.WEEKLY && days.value.length > 0) {
+    options.byweekday = days.value
+      .map((code) => dayCodeToWeekday[code])
+      .filter((weekday): weekday is number => typeof weekday === 'number')
+  }
+
+  return new RRule(options).toString().replace(/^RRULE:/, '')
+}
+
+const syncRruleFromInputs = () => {
+  if (isRruleTouched.value) return
+  state.rrule = buildRruleString()
+}
+
+const onRruleInput = () => {
+  isRruleTouched.value = true
+}
+
+const onPeriodicityChange = () => {
+  isRruleTouched.value = false
+  syncRruleFromInputs()
+}
+
+const toggleDay = (code: string) => {
+  const index = days.value.indexOf(code)
+  if (index === -1) {
+    days.value.push(code)
+  } else {
+    days.value.splice(index, 1)
+  }
+  userTouchedDays.value = true
+  isRruleTouched.value = false
+  syncRruleFromInputs()
+}
+
+watch(() => state.fecha_inicio, () => {
+  if (!userTouchedDays.value && startWeekdayCode.value) {
+    days.value = [startWeekdayCode.value]
+  }
+  if (!isRruleTouched.value) {
+    state.rrule = buildRruleString()
+  }
+})
 
 const buildPayload = (): GameSessionInsert => ({
   title: state.title.trim(),
@@ -236,8 +395,61 @@ async function submitSession() {
         <UFormField label="Hora de fin" name="hora_fin">
           <UInput v-model="state.hora_fin" type="time" class="w-full" />
         </UFormField>
-        <UFormField label="Recurrencia (RRULE)" name="rrule" class="md:col-span-2">
-          <UInput v-model="state.rrule" class="w-full" placeholder="FREQ=WEEKLY;BYDAY=MO" />
+      </div>
+
+      <div class="space-y-4 pt-2">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <UFormField label="Periodicidad" name="periodicidad">
+            <URadioGroup
+              v-model="periodicity"
+              :items="periodicityOptions"
+              orientation="horizontal"
+              @update:model-value="onPeriodicityChange"
+            />
+          </UFormField>
+
+          <UFormField label="Día de la semana" name="start_weekday">
+            <UInput
+              :model-value="startWeekdayLabel ?? ''"
+              readonly
+              disabled
+              class="w-full"
+              placeholder="Selecciona una fecha de inicio"
+            />
+          </UFormField>
+        </div>
+
+        <UFormField
+          v-if="periodicity !== 'NONE' && periodicity !== 'MONTHLY'"
+          label="Días de la semana"
+          name="dias"
+          hint="Selecciona uno o varios días. Define BYDAY en RRULE."
+        >
+          <div class="flex flex-wrap gap-2">
+            <button
+              v-for="day in dayOptions"
+              :key="day.code"
+              type="button"
+              class="cursor-pointer flex items-center justify-center w-10 h-10 rounded-full border text-sm font-semibold transition"
+              :class="days.includes(day.code)
+                ? 'bg-slate-900 text-white border-slate-900'
+                : 'bg-white text-slate-700 border-slate-300 hover:border-slate-500'"
+              :aria-label="day.label"
+              :title="day.label"
+              @click="toggleDay(day.code)"
+            >
+              {{ day.short }}
+            </button>
+          </div>
+        </UFormField>
+
+        <UFormField label="RRULE" name="rrule" hint="Se genera automáticamente. Puedes editarlo para casos avanzados.">
+          <UInput
+            v-model="state.rrule"
+            class="w-full font-mono text-sm"
+            placeholder="FREQ=WEEKLY;BYDAY=MO"
+            @update:model-value="onRruleInput"
+          />
         </UFormField>
       </div>
     </section>

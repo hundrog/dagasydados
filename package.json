@@ -19,6 +19,7 @@
     "@tanstack/vue-table": "^8.21.3",
     "@vueuse/core": "^14.4.0",
     "nuxt": "^4.5.1",
+    "rrule": "^2.8.1",
     "tailwindcss": "^4.3.3",
     "zod": "^4.4.3"
   },
