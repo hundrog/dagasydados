@@ -3,6 +3,7 @@ import * as z from 'zod'
 import type { FormSubmitEvent, AuthFormField } from '@nuxt/ui'
 
 const toast = useToast()
+const supabase = useSupabaseClient()
 
 const fields: AuthFormField[] = [{
   name: 'email',
@@ -22,17 +23,11 @@ const fields: AuthFormField[] = [{
   type: 'checkbox'
 }]
 
-const _providers = [{
-  label: 'Google',
-  icon: 'i-simple-icons-google',
+const providers = [{
+  label: 'Discord',
+  icon: 'i-simple-icons-discord',
   onClick: () => {
-    toast.add({ title: 'Google', description: 'Login with Google' })
-  }
-}, {
-  label: 'GitHub',
-  icon: 'i-simple-icons-github',
-  onClick: () => {
-    toast.add({ title: 'GitHub', description: 'Login with GitHub' })
+    signInWithDiscord()
   }
 }]
 
@@ -46,6 +41,26 @@ type Schema = z.output<typeof schema>
 function onSubmit(payload: FormSubmitEvent<Schema>) {
   console.log('Submitted', payload)
 }
+
+async function signInWithDiscord() {
+  const { error } = await supabase.auth.signInWithOAuth({
+    provider: 'discord',
+  })
+
+  if (error) {
+    toast.add({
+      title: 'Error',
+      description: error.message,
+      color: 'error'
+    })
+  } else {
+    toast.add({
+      title: 'Success',
+      description: 'Redirecting to Discord for authentication...',
+      color: 'success'
+    })
+  }
+}
 </script>
 
 <template>
@@ -57,6 +72,7 @@ function onSubmit(payload: FormSubmitEvent<Schema>) {
         description="Enter your credentials to access your account."
         icon="i-lucide-user"
         :fields="fields"
+        :providers="providers"
         @submit="onSubmit"
       />
     </UPageCard>

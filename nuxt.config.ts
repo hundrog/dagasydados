@@ -16,7 +16,9 @@ export default defineNuxtConfig({
   },
 
   routeRules: {
-    '/': { prerender: true }
+    '/': { prerender: true },
+    // Set layout for specific route
+    '/admin/**': { appLayout: 'admin' },
   },
 
   compatibilityDate: '2026-06-30',
@@ -29,13 +31,14 @@ export default defineNuxtConfig({
       }
     }
   },
+
   supabase: {
     redirectOptions: {
       login: '/login',
       callback: '/confirm',
       include: ['/admin(/*)?'],
       exclude: [],
-      saveRedirectToCookie: false
+      saveRedirectToCookie: true
     }
   }
 })

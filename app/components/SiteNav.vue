@@ -5,14 +5,12 @@ const route = useRoute()
 
 const items = computed<NavigationMenuItem[]>(() => [
   {
-    label: 'Todas las Mesas',
+    label: 'Administrar',
     to: '/admin/sessions',
-    active: route.path.startsWith('/docs/getting-started')
   },
   {
     label: 'Comunidad',
     to: '#comunidad',
-    active: route.path.startsWith('/docs/components')
   },
   {
     label: 'Whatsapp',
@@ -28,7 +26,6 @@ const items = computed<NavigationMenuItem[]>(() => [
       <div class="logo-text logo-image inline-flex items-center gap-2 font-display text-xl text-on-surface">
         <img
           src="/logo-dayda.png"
-          alt="dagas y dados"
           class="h-8 w-auto"
         >
         <p>Dagas y Dados</p>
