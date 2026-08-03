@@ -25,7 +25,7 @@ const fields: AuthFormField[] = [{
 }]
 
 const options = {
-  redirectTo: `${runtimeConfig.public.clientUrl}/confirm`
+  redirectTo: `/confirm`
 }
 
 const providers = [{
