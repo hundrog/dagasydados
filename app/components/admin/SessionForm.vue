@@ -74,7 +74,17 @@ const parseRrule = (raw: string | null | undefined) => {
     return { periodicity: 'NONE' as Periodicity, days: [] as string[], count: null as number | null }
   }
   try {
-    const rule = RRule.fromString(`RRULE:${raw}`)
+    let body = raw
+    if (raw.startsWith('DTSTART:')) {
+      const idx = raw.indexOf('RRULE:')
+      if (idx === -1) {
+        return { periodicity: 'NONE' as Periodicity, days: [] as string[], count: null as number | null }
+      }
+      body = raw.slice(idx + 'RRULE:'.length)
+    } else if (raw.startsWith('RRULE:')) {
+      body = raw.slice('RRULE:'.length)
+    }
+    const rule = RRule.fromString(`RRULE:${body}`)
     const options = rule.origOptions
     let periodicity: Periodicity = 'NONE'
     if (options.freq === RRule.WEEKLY) {

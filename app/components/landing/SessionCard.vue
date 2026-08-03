@@ -1,14 +1,33 @@
 <script setup lang="ts">
+import { RRule, rrulestr } from 'rrule'
 import type { GameSessionWithMaster } from '~/types/session'
 
 const props = defineProps<{ session: GameSessionWithMaster }>()
 
 const placeholderUrl = 'https://placehold.co/600x340/1e174a/9fa7ff?text=Sin+imagen'
 
-const formatDate = (value: string | null) => {
+const parseRule = (raw: string, fallbackDtstart: Date): RRule | null => {
+  try {
+    if (raw.startsWith('DTSTART:')) {
+      const normalized = raw.includes('\nRRULE:') ? raw : raw.replace('RRULE:', '\nRRULE:')
+      const rule = rrulestr(normalized)
+      return rule instanceof RRule ? rule : null
+    }
+    if (raw.startsWith('RRULE:')) {
+      const rule = rrulestr(raw, { dtstart: fallbackDtstart })
+      return rule instanceof RRule ? rule : null
+    }
+    const rule = rrulestr(`RRULE:${raw}`, { dtstart: fallbackDtstart })
+    return rule instanceof RRule ? rule : null
+  } catch {
+    return null
+  }
+}
+
+const formatDate = (value: string | Date | null) => {
   if (!value) return ''
-  const date = new Date(value)
-  if (Number.isNaN(date.getTime())) return value
+  const date = value instanceof Date ? value : new Date(value)
+  if (Number.isNaN(date.getTime())) return value instanceof Date ? '' : value
   return date.toLocaleDateString('es-ES', {
     day: '2-digit',
     month: 'short',
@@ -25,15 +44,58 @@ const formatTime = (value: string | null) => {
   return value.slice(0, 5)
 }
 
+const weekdayLabel = computed(() => {
+  if (!props.session.fecha_inicio) return ''
+  const date = new Date(props.session.fecha_inicio)
+  if (Number.isNaN(date.getTime())) return ''
+  return date.toLocaleDateString('es-ES', { weekday: 'long' }).toLowerCase()
+})
+
+const recurrence = computed(() => {
+  const raw = props.session.rrule
+  if (!raw || !props.session.fecha_inicio) return null
+  const dtstart = new Date(props.session.fecha_inicio)
+  if (Number.isNaN(dtstart.getTime())) return null
+  const rule = parseRule(raw, dtstart)
+  if (!rule) return null
+  try {
+    const bounded = typeof rule.origOptions.count === 'number' || rule.origOptions.until != null
+    if (!bounded) return null
+    const occurrences = rule.all()
+    const first = occurrences[0]
+    const last = occurrences[occurrences.length - 1]
+    if (occurrences.length < 2 || !first || !last) return null
+    return {
+      start: first,
+      end: last,
+      count: occurrences.length
+    }
+  } catch {
+    return null
+  }
+})
+
+const recurrenceLabel = computed(() => {
+  if (!recurrence.value) return ''
+  return `${formatDate(recurrence.value.start)} a ${formatDate(recurrence.value.end)} · ${recurrence.value.count} sesiones`
+})
+
 const scheduleLabel = computed(() => {
-  const date = formatDate(props.session.fecha_inicio)
   const start = formatTime(props.session.hora_inicio)
   const end = formatTime(props.session.hora_fin)
-  if (!date && !start && !end) return ''
-  if (date && start && end) return `${date} · ${start} - ${end}`
-  if (date && start) return `${date} · ${start}`
+  const timeRange = `${start}${end ? ` - ${end}` : ''}`
+  const date = formatDate(props.session.fecha_inicio)
+  const weekday = weekdayLabel.value
+
+  if (recurrence.value) {
+    if (weekday && timeRange) return `${weekday} ${timeRange}`
+    if (weekday) return weekday
+    if (timeRange) return timeRange
+    return date
+  }
+  if (date && timeRange) return `${date} · ${timeRange}`
   if (date) return date
-  return `${start}${end ? ` - ${end}` : ''}`
+  return timeRange
 })
 
 const modeColor = computed(() => {
@@ -137,6 +199,16 @@ const modeLabel = computed(() => {
             class="size-3 text-on-surface-dim shrink-0"
           />
           {{ session.location }}
+        </span>
+        <span
+          v-if="recurrenceLabel"
+          class="label-metadata text-muted items-center"
+        >
+          <UIcon
+            name="i-lucide-repeat"
+            class="size-3 text-on-surface-dim shrink-0"
+          />
+          {{ recurrenceLabel }}
         </span>
         <span class="label-metadata text-muted items-center">
           <UIcon
