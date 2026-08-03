@@ -1,10 +1,11 @@
 <script setup lang="ts">
 import * as z from 'zod'
 import { RRule } from 'rrule'
-import type { GameSession, GameSessionInsert, GameSessionUpdate, SessionMasterRef } from '~/types/session'
+import type { GameSession, GameSessionInsert, SessionMasterRef } from '~/types/session'
 
 const supabase = useSupabaseClient()
 const toast = useToast()
+const { uploadSessionImage, deleteSessionImageByUrl } = useSessionImage()
 
 const props = defineProps<{
   session?: GameSession | null
@@ -122,7 +123,7 @@ const schema = z.object({
   title: z.string().min(1, 'El título es obligatorio'),
   description: z.string().optional(),
   campaign: z.string().optional(),
-  image_url: z.url('Debe ser una URL válida').optional().or(z.literal('')),
+  image_url: z.string().optional(),
   system: z.string().optional(),
   session_type: z.string().optional(),
   audience: z.string().optional(),
@@ -163,6 +164,33 @@ const initialState = (): Schema => ({
 })
 
 const state = reactive<Schema>(initialState())
+
+const imageFile = ref<File | null>(null)
+
+const imagePreview = computed(() => {
+  if (imageFile.value) return URL.createObjectURL(imageFile.value)
+  return state.image_url || null
+})
+
+const onImageChange = () => {
+  if (!imageFile.value) {
+    state.image_url = props.session?.image_url ?? ''
+    return
+  }
+  if (imageFile.value.size > 5 * 1024 * 1024) {
+    toast.add({
+      title: 'La imagen supera el tamaño máximo de 5 MB',
+      color: 'error',
+      icon: 'i-lucide-octagon-x'
+    })
+    imageFile.value = null
+  }
+}
+
+const clearImage = () => {
+  imageFile.value = null
+  state.image_url = props.session?.image_url ?? ''
+}
 
 const masterItems = computed(() =>
   masters.value.map(master => ({
@@ -293,16 +321,34 @@ async function submitSession() {
 
   if (props.session?.id) {
     const sessionId = props.session.id
-    const updatePayload: GameSessionUpdate = payload
+    const previousImageUrl = props.session.image_url
+
+    let uploadedUrl: string | null = null
+    if (imageFile.value) {
+      try {
+        uploadedUrl = await uploadSessionImage(imageFile.value)
+        payload.image_url = uploadedUrl
+      } catch (uploadError) {
+        isSubmitting.value = false
+        errorMessage.value = uploadError instanceof Error ? uploadError.message : 'No se pudo subir la imagen'
+        return
+      }
+    }
+
     const { error: updateError } = await supabase
       .from('game_sessions')
-      .update(updatePayload)
+      .update(payload)
       .eq('id', sessionId)
 
     if (updateError) {
+      if (uploadedUrl) await deleteSessionImageByUrl(uploadedUrl)
       isSubmitting.value = false
       errorMessage.value = updateError.message
       return
+    }
+
+    if (uploadedUrl && previousImageUrl !== uploadedUrl) {
+      await deleteSessionImageByUrl(previousImageUrl)
     }
 
     const { data: refreshed, error: selectError } = await supabase
@@ -328,6 +374,18 @@ async function submitSession() {
     return
   }
 
+  let uploadedUrl: string | null = null
+  if (imageFile.value) {
+    try {
+      uploadedUrl = await uploadSessionImage(imageFile.value)
+      payload.image_url = uploadedUrl
+    } catch (uploadError) {
+      isSubmitting.value = false
+      errorMessage.value = uploadError instanceof Error ? uploadError.message : 'No se pudo subir la imagen'
+      return
+    }
+  }
+
   const { data, error } = await supabase
     .from('game_sessions')
     .insert(payload)
@@ -337,6 +395,7 @@ async function submitSession() {
   isSubmitting.value = false
 
   if (error) {
+    if (uploadedUrl) await deleteSessionImageByUrl(uploadedUrl)
     errorMessage.value = error.message
     return
   }
@@ -383,14 +442,40 @@ async function submitSession() {
           />
         </UFormField>
         <UFormField
-          label="URL de imagen"
+          label="Imagen de la sesión"
           name="image_url"
           class="md:col-span-2"
         >
-          <UInput
-            v-model="state.image_url"
-            class="w-full"
-          />
+          <div class="space-y-4">
+            <div
+              v-if="imagePreview"
+              class="relative w-full max-w-sm"
+            >
+              <img
+                :src="imagePreview"
+                alt="Vista previa de la sesión"
+                class="w-full h-48 object-cover rounded-lg border border-slate-200"
+              >
+              <UButton
+                icon="i-lucide-x"
+                color="neutral"
+                variant="ghost"
+                size="sm"
+                class="absolute top-2 right-2 cursor-pointer"
+                aria-label="Quitar imagen"
+                :disabled="isSubmitting"
+                @click="clearImage"
+              />
+            </div>
+            <UFileUpload
+              v-model="imageFile"
+              accept="image/*"
+              :disabled="isSubmitting"
+              label="Subir imagen"
+              description="JPG, PNG o WebP · Máximo 5 MB"
+              @change="onImageChange"
+            />
+          </div>
         </UFormField>
         <UFormField
           label="Descripción"

@@ -14,6 +14,29 @@ export type Database = {
   }
   public: {
     Tables: {
+      admins: {
+        Row: {
+          created_at: string | null
+          id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'admins_id_fkey'
+            columns: ['id']
+            isOneToOne: true
+            referencedRelation: 'dagger_masters'
+            referencedColumns: ['id']
+          }
+        ]
+      }
       dagger_masters: {
         Row: {
           avatar_url: string | null

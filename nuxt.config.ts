@@ -42,7 +42,7 @@ export default defineNuxtConfig({
     strict: false,
     headers: {
       contentSecurityPolicy: {
-        'img-src': ["'self'", 'data:', 'https://dklnezquirguwvndctkb.supabase.co', 'https://placehold.co/', 'https://images.unsplash.com/'],
+        'img-src': ["'self'", 'data:', 'blob:', 'https://dklnezquirguwvndctkb.supabase.co', 'https://placehold.co/', 'https://images.unsplash.com/'],
         'connect-src': ["'self'", 'https://dklnezquirguwvndctkb.supabase.co', 'wss://dklnezquirguwvndctkb.supabase.co'],
         'media-src': ["'self'", 'https://dklnezquirguwvndctkb.supabase.co']
       }

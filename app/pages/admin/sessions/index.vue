@@ -11,6 +11,7 @@ const UDropdownMenu = resolveComponent('UDropdownMenu')
 
 const toast = useToast()
 const { copy } = useClipboard()
+const { deleteSessionImageByUrl } = useSessionImage()
 
 const sessions = ref<GameSessionWithMaster[]>([])
 const isLoading = ref(true)
@@ -30,7 +31,7 @@ const loadSessions = async () => {
 
   const { data, error } = await supabase
     .from('game_sessions')
-    .select('id,title,system,session_type,fecha_inicio,hora_inicio,hora_fin,master:dagger_masters(id,full_name,user_name,avatar_url,phone)')
+    .select('id,title,system,session_type,fecha_inicio,hora_inicio,hora_fin,image_url,master:dagger_masters(id,full_name,user_name,avatar_url,phone)')
 
   if (error) {
     errorMessage.value = error.message
@@ -49,6 +50,8 @@ const confirmDelete = async () => {
   if (!pendingDelete.value || isDeleting.value) return
 
   isDeleting.value = true
+
+  await deleteSessionImageByUrl(pendingDelete.value.image_url)
 
   const { error } = await supabase
     .from('game_sessions')
