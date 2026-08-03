@@ -38,16 +38,6 @@ export default defineNuxtConfig({
     }
   },
 
-  supabase: {
-    redirectOptions: {
-      login: '/login',
-      callback: '/confirm',
-      include: ['/admin(/*)?'],
-      exclude: [],
-      saveRedirectToCookie: true
-    }
-  },
-
   security: {
     strict: false,
     headers: {
@@ -56,6 +46,16 @@ export default defineNuxtConfig({
         'connect-src': ["'self'", 'https://dklnezquirguwvndctkb.supabase.co', 'wss://dklnezquirguwvndctkb.supabase.co'],
         'media-src': ["'self'", 'https://dklnezquirguwvndctkb.supabase.co']
       }
+    }
+  },
+
+  supabase: {
+    redirectOptions: {
+      login: '/login',
+      callback: '/confirm',
+      include: ['/admin(/*)?'],
+      exclude: [],
+      saveRedirectToCookie: true
     }
   }
 })
