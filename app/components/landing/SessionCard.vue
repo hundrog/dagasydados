@@ -4,6 +4,10 @@ import type { GameSessionWithMaster } from '~/types/session'
 
 const props = defineProps<{ session: GameSessionWithMaster }>()
 
+const emit = defineEmits<{
+  reserved: []
+}>()
+
 const placeholderUrl = 'https://placehold.co/600x340/1e174a/9fa7ff?text=Sin+imagen'
 
 const parseRule = (raw: string, fallbackDtstart: Date): RRule | null => {
@@ -272,7 +276,7 @@ const modeLabel = computed(() => {
           :current-players="session.current_players"
           :phone="session.master?.phone || ''"
           :master-name="session.master?.user_name || ''"
-          :session-type="session.session_type"
+          :session-type="session.session_type ?? undefined"
           :session-title="session.title"
           @reserved="emit('reserved')"
         />
