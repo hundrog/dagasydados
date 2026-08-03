@@ -1,6 +1,11 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
-  modules: ['@nuxt/eslint', '@nuxt/ui', '@nuxtjs/supabase'],
+  modules: [
+    '@nuxt/eslint',
+    '@nuxt/ui',
+    '@nuxtjs/supabase',
+    'nuxt-security'
+  ],
 
   devtools: {
     enabled: true
@@ -40,6 +45,17 @@ export default defineNuxtConfig({
       include: ['/admin(/*)?'],
       exclude: [],
       saveRedirectToCookie: true
+    }
+  },
+
+  security: {
+    strict: false,
+    headers: {
+      contentSecurityPolicy: {
+        'img-src': ["'self'", 'data:', 'https://dklnezquirguwvndctkb.supabase.co', 'https://placehold.co/', 'https://images.unsplash.com/'],
+        'connect-src': ["'self'", 'https://dklnezquirguwvndctkb.supabase.co', 'wss://dklnezquirguwvndctkb.supabase.co'],
+        'media-src': ["'self'", 'https://dklnezquirguwvndctkb.supabase.co']
+      }
     }
   }
 })
