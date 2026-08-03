@@ -4,7 +4,6 @@ import type { FormSubmitEvent, AuthFormField } from '@nuxt/ui'
 
 const toast = useToast()
 const supabase = useSupabaseClient()
-const runtimeConfig = useRuntimeConfig()
 
 const fields: AuthFormField[] = [{
   name: 'email',
