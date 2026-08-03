@@ -12,6 +12,10 @@ const UDropdownMenu = resolveComponent('UDropdownMenu')
 
 const toast = useToast()
 const { copy } = useClipboard()
+const { isAdmin } = useIsAdmin()
+const user = useSupabaseUser()
+
+const canModify = (master: Master) => isAdmin.value || master.id === user.value?.id
 
 const masters = ref<Master[]>([])
 const isLoading = ref(true)
@@ -179,6 +183,7 @@ function getRowItems(row: Row<Master>) {
     },
     {
       label: 'Editar master',
+      disabled: !canModify(row.original),
       onSelect() {
         masterFormRef.value?.open(row.original)
       }
@@ -186,6 +191,7 @@ function getRowItems(row: Row<Master>) {
     {
       label: 'Borrar master',
       color: 'danger',
+      disabled: !canModify(row.original),
       onSelect() {
         pendingDelete.value = row.original
       }

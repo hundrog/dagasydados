@@ -11,7 +11,11 @@ const UDropdownMenu = resolveComponent('UDropdownMenu')
 
 const toast = useToast()
 const { copy } = useClipboard()
+const { isAdmin } = useIsAdmin()
+const user = useSupabaseUser()
 const { deleteSessionImageByUrl } = useSessionImage()
+
+const canModify = (session: GameSessionWithMaster) => isAdmin.value || session.master_id === user.value?.id
 
 const sessions = ref<GameSessionWithMaster[]>([])
 const isLoading = ref(true)
@@ -207,6 +211,7 @@ function getRowItems(row: Row<GameSessionWithMaster>) {
     },
     {
       label: 'Editar sesión',
+      disabled: !canModify(row.original),
       onSelect() {
         goToEdit(row.original.id)
       }
@@ -214,6 +219,7 @@ function getRowItems(row: Row<GameSessionWithMaster>) {
     {
       label: 'Borrar sesión',
       color: 'danger',
+      disabled: !canModify(row.original),
       onSelect() {
         pendingDelete.value = row.original
       }
