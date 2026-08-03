@@ -6,31 +6,40 @@ export function useIsAdmin() {
 
   const isAdmin = ref(false)
   const isLoading = ref(false)
+  let pendingPromise: Promise<void> | null = null
 
-  const refresh = async (): Promise<void> => {
-    if (!user.value) {
+  const refresh = (): Promise<void> => {
+    if (pendingPromise) return pendingPromise
+
+    const userId = user.value?.sub
+    if (!userId) {
       isAdmin.value = false
-      return
+      return Promise.resolve()
     }
 
     isLoading.value = true
-    try {
-      const { data, error } = await supabase
-        .from('admins')
-        .select('id')
-        .eq('id', user.value.sub)
-        .maybeSingle()
+    pendingPromise = (async () => {
+      try {
+        const { data, error } = await supabase
+          .from('admins')
+          .select('id')
+          .eq('id', userId)
+          .maybeSingle()
 
-      isAdmin.value = !error && data !== null
-    } finally {
-      isLoading.value = false
-    }
+        isAdmin.value = !error && data !== null
+      } finally {
+        isLoading.value = false
+        pendingPromise = null
+      }
+    })()
+
+    return pendingPromise
   }
 
   watch(
     () => user.value,
-    async () => {
-      await refresh()
+    () => {
+      void refresh()
     },
     { immediate: true }
   )

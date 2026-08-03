@@ -6,6 +6,8 @@ import type { GameSession, GameSessionInsert, SessionMasterRef } from '~/types/s
 const supabase = useSupabaseClient()
 const toast = useToast()
 const { uploadSessionImage, deleteSessionImageByUrl } = useSessionImage()
+const { isAdmin, refresh: refreshAdminStatus } = useIsAdmin()
+const user = useSupabaseUser()
 
 const props = defineProps<{
   session?: GameSession | null
@@ -300,10 +302,17 @@ const buildPayload = (): GameSessionInsert => ({
 })
 
 onMounted(async () => {
-  const { data, error } = await supabase
+  await refreshAdminStatus()
+
+  let query = supabase
     .from('dagger_masters')
     .select('id,full_name,user_name,avatar_url,phone')
-    .order('full_name', { ascending: true })
+
+  if (!isAdmin.value) {
+    query = query.eq('id', user.value?.sub ?? '__no_master__')
+  }
+
+  const { data, error } = await query.order('full_name', { ascending: true })
 
   if (!error && data) {
     masters.value = data as SessionMasterRef[]
