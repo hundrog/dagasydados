@@ -24,6 +24,12 @@ const periodicityOptions: Array<{ label: string, value: Periodicity }> = [
   { label: 'Mensual', value: 'MONTHLY' }
 ]
 
+const modeOptions: Array<{ label: string, value: string }> = [
+  { label: 'Online', value: 'online' },
+  { label: 'Presencial', value: 'offline' },
+  { label: 'Híbrido', value: 'hybrid' }
+]
+
 const dayOptions: Array<{ code: string, label: string, short: string }> = [
   { code: 'MO', label: 'Lunes', short: 'L' },
   { code: 'TU', label: 'Martes', short: 'M' },
@@ -54,16 +60,6 @@ const weekdayToCode: Record<number, string> = {
   [RRule.SU.weekday]: 'SU'
 }
 
-const dayCodeToLabel: Record<string, string> = {
-  MO: 'Lunes',
-  TU: 'Martes',
-  WE: 'Miércoles',
-  TH: 'Jueves',
-  FR: 'Viernes',
-  SA: 'Sábado',
-  SU: 'Domingo'
-}
-
 const startWeekdayCode = computed(() => {
   if (!state.fecha_inicio) return null
   const date = new Date(state.fecha_inicio)
@@ -71,15 +67,12 @@ const startWeekdayCode = computed(() => {
   return weekdayToCode[date.getDay()] ?? null
 })
 
-const startWeekdayLabel = computed(() => {
-  if (!startWeekdayCode.value) return null
-  return dayCodeToLabel[startWeekdayCode.value]
-})
-
 const userTouchedDays = ref(false)
 
 const parseRrule = (raw: string | null | undefined) => {
-  if (!raw) return { periodicity: 'NONE' as Periodicity, days: [] as string[] }
+  if (!raw) {
+    return { periodicity: 'NONE' as Periodicity, days: [] as string[], count: null as number | null }
+  }
   try {
     const rule = RRule.fromString(`RRULE:${raw}`)
     const options = rule.origOptions
@@ -96,9 +89,10 @@ const parseRrule = (raw: string | null | undefined) => {
         return Object.entries(dayCodeToWeekday).find(([, value]) => value === weekday)?.[0]
       })
       .filter((code): code is string => Boolean(code))
-    return { periodicity, days }
+    const count = typeof options.count === 'number' && options.count > 0 ? options.count : null
+    return { periodicity, days, count }
   } catch {
-    return { periodicity: 'NONE' as Periodicity, days: [] as string[] }
+    return { periodicity: 'NONE' as Periodicity, days: [] as string[], count: null as number | null }
   }
 }
 
@@ -111,6 +105,7 @@ const isLoadingMasters = ref(true)
 
 const periodicity = ref<Periodicity>(initialParsed.periodicity)
 const days = ref<string[]>(initialParsed.days)
+const count = ref<number | '' | undefined>(initialParsed.count ?? '')
 const isRruleTouched = ref<boolean>(Boolean(props.session?.rrule))
 
 const schema = z.object({
@@ -198,6 +193,10 @@ const buildRruleString = (): string => {
       .filter((weekday): weekday is number => typeof weekday === 'number')
   }
 
+  if (count.value && Number(count.value) > 0) {
+    options.count = Number(count.value)
+  }
+
   return new RRule(options).toString().replace(/^RRULE:/, '')
 }
 
@@ -211,6 +210,11 @@ const onRruleInput = () => {
 }
 
 const onPeriodicityChange = () => {
+  isRruleTouched.value = false
+  syncRruleFromInputs()
+}
+
+const onCountChange = () => {
   isRruleTouched.value = false
   syncRruleFromInputs()
 }
@@ -428,9 +432,12 @@ async function submitSession() {
           label="Modalidad"
           name="mode"
         >
-          <UInput
+          <USelectMenu
             v-model="state.mode"
+            :items="modeOptions"
+            value-key="value"
             class="w-full"
+            placeholder="Selecciona una modalidad"
           />
         </UFormField>
       </div>
@@ -499,15 +506,17 @@ async function submitSession() {
           </UFormField>
 
           <UFormField
-            label="Día de la semana"
-            name="start_weekday"
+            label="Número de sesiones"
+            name="count"
           >
             <UInput
-              :model-value="startWeekdayLabel ?? ''"
-              readonly
-              disabled
+              v-model="count"
+              type="number"
+              min="1"
               class="w-full"
-              placeholder="Selecciona una fecha de inicio"
+              placeholder="Sin límite"
+              :disabled="periodicity === 'NONE'"
+              @update:model-value="onCountChange"
             />
           </UFormField>
         </div>
