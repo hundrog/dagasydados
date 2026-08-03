@@ -4,6 +4,7 @@ import type { FormSubmitEvent, AuthFormField } from '@nuxt/ui'
 
 const toast = useToast()
 const supabase = useSupabaseClient()
+const runtimeConfig = useRuntimeConfig()
 
 const fields: AuthFormField[] = [{
   name: 'email',
@@ -22,6 +23,10 @@ const fields: AuthFormField[] = [{
   label: 'Remember me',
   type: 'checkbox'
 }]
+
+const options = {
+  redirectTo: `${runtimeConfig.public.clientUrl}/confirm`,
+}
 
 const providers = [{
   label: 'Discord',
@@ -45,6 +50,7 @@ function onSubmit(payload: FormSubmitEvent<Schema>) {
 async function signInWithDiscord() {
   const { error } = await supabase.auth.signInWithOAuth({
     provider: 'discord',
+    options: options
   })
 
   if (error) {
@@ -66,15 +72,8 @@ async function signInWithDiscord() {
 <template>
   <div class="flex flex-col items-center justify-center gap-4 p-4">
     <UPageCard class="w-full max-w-md">
-      <UAuthForm
-        :schema="schema"
-        title="Login"
-        description="Enter your credentials to access your account."
-        icon="i-lucide-user"
-        :fields="fields"
-        :providers="providers"
-        @submit="onSubmit"
-      />
+      <UAuthForm :schema="schema" title="Login" description="Enter your credentials to access your account."
+        icon="i-lucide-user" :fields="fields" :providers="providers" @submit="onSubmit" />
     </UPageCard>
   </div>
 </template>
