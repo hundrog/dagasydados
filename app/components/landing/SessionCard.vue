@@ -1,9 +1,40 @@
 <script setup lang="ts">
-import type { GameSession } from '~/data/sessions'
+import type { GameSessionWithMaster } from '~/types/session'
 
-const props = defineProps<{ session: GameSession }>()
+const props = defineProps<{ session: GameSessionWithMaster }>()
 
 const placeholderUrl = 'https://placehold.co/600x340/1e174a/9fa7ff?text=Sin+imagen'
+
+const formatDate = (value: string | null) => {
+  if (!value) return ''
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return value
+  return date.toLocaleDateString('es-ES', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric'
+  })
+}
+
+const formatTime = (value: string | null) => {
+  if (!value) return ''
+  const parsed = new Date(value)
+  if (!Number.isNaN(parsed.getTime())) {
+    return parsed.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })
+  }
+  return value.slice(0, 5)
+}
+
+const scheduleLabel = computed(() => {
+  const date = formatDate(props.session.fecha_inicio)
+  const start = formatTime(props.session.hora_inicio)
+  const end = formatTime(props.session.hora_fin)
+  if (!date && !start && !end) return ''
+  if (date && start && end) return `${date} · ${start} - ${end}`
+  if (date && start) return `${date} · ${start}`
+  if (date) return date
+  return `${start}${end ? ` - ${end}` : ''}`
+})
 
 const modeColor = computed(() => {
   switch (props.session.mode) {
@@ -51,7 +82,7 @@ const modeLabel = computed(() => {
   >
     <div class="relative h-48 overflow-hidden shrink-0">
       <img
-        :src="session.image_url.length > 0 ? session.image_url : placeholderUrl"
+        :src="session.image_url && session.image_url.length > 0 ? session.image_url : placeholderUrl"
         :alt="session.title"
         class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
       >
@@ -112,7 +143,7 @@ const modeLabel = computed(() => {
             name="i-lucide-clock"
             class="size-3 text-on-surface-dim shrink-0"
           />
-          {{ session.date }} - {{ session.time }}
+          {{ scheduleLabel }}
         </span>
       </div>
       <h2
@@ -134,11 +165,11 @@ const modeLabel = computed(() => {
       >
         <div class="flex items-center gap-2 min-w-0">
           <img
-            v-if="session.daggerMaster?.avatar_url"
-            :src="session.daggerMaster.avatar_url"
+            v-if="session.master?.avatar_url"
+            :src="session.master.avatar_url"
             :alt="
-              session.daggerMaster.full_name
-                || session.daggerMaster.user_name
+              session.master.full_name
+                || session.master.user_name
             "
             class="size-6 rounded-full object-cover shrink-0"
           >
@@ -154,9 +185,9 @@ const modeLabel = computed(() => {
 
           <span class="font-body text-label-sm text-on-surface-dim truncate">
             {{
-              session.daggerMaster?.user_name
-                ? `@${session.daggerMaster.user_name}`
-                : (session.daggerMaster?.full_name)
+              session.master?.user_name
+                ? `@${session.master.user_name}`
+                : (session.master?.full_name)
             }}
           </span>
         </div>
@@ -164,10 +195,14 @@ const modeLabel = computed(() => {
 
       <div class="max-w">
         <LandingReserveForm
-          :phone="session.daggerMaster?.phone || ''"
-          :master_name="session.daggerMaster?.user_name || ''"
-          :session_type="session.session_type"
-          :session_title="session.title"
+          :session-id="session.id"
+          :max-players="session.max_players"
+          :current-players="session.current_players"
+          :phone="session.master?.phone || ''"
+          :master-name="session.master?.user_name || ''"
+          :session-type="session.session_type"
+          :session-title="session.title"
+          @reserved="emit('reserved')"
         />
       </div>
     </div>

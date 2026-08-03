@@ -260,7 +260,7 @@ const buildPayload = (): GameSessionInsert => ({
 onMounted(async () => {
   const { data, error } = await supabase
     .from('dagger_masters')
-    .select('id,full_name')
+    .select('id,full_name,user_name,avatar_url,phone')
     .order('full_name', { ascending: true })
 
   if (!error && data) {

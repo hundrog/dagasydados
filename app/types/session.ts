@@ -7,6 +7,9 @@ export type GameSessionUpdate = Database['public']['Tables']['game_sessions']['U
 export type SessionMasterRef = {
   id: string
   full_name: string | null
+  user_name: string | null
+  avatar_url: string | null
+  phone: string | null
 }
 
 export type GameSessionWithMaster = GameSession & {
