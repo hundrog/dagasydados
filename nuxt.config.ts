@@ -12,14 +12,14 @@ export default defineNuxtConfig({
     public: {
       supabaseUrl: process.env.SUPABASE_URL,
       supabaseKey: process.env.SUPABASE_KEY,
-      clientUrl: process.env.CLIENT_URL,
+      clientUrl: process.env.CLIENT_URL
     }
   },
 
   routeRules: {
     '/': { prerender: true },
     // Set layout for specific route
-    '/admin/**': { appLayout: 'admin' },
+    '/admin/**': { appLayout: 'admin' }
   },
 
   compatibilityDate: '2026-06-30',

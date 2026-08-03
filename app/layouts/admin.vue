@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { NavigationMenuItem } from '@nuxt/ui'
+
 const supabase = useSupabaseClient()
 const toast = useToast()
 
@@ -9,13 +10,13 @@ const items: NavigationMenuItem[] = [
   {
     label: 'Game Sessions',
     icon: 'i-lucide-calendar',
-    to: '/admin/sessions',
+    to: '/admin/sessions'
   },
   {
     label: 'Dagger Masters',
     icon: 'i-lucide-user',
-    to: '/admin/masters',
-  },
+    to: '/admin/masters'
+  }
 ]
 
 async function signOut() {
@@ -31,7 +32,6 @@ async function signOut() {
   } else {
     navigateTo('/')
   }
-
 }
 </script>
 
@@ -53,15 +53,15 @@ async function signOut() {
           :ui="{ link: 'p-1.5 overflow-hidden' }"
         />
         <template #footer>
-            <div class="flex-1" />
-            <UButton
-                label="Cerrar sesión"
-                icon="i-lucide-log-out"
-                color="neutral"
-                variant="ghost"
-                class="w-full justify-start cursor-pointer"
-                @click="signOut"
-            />
+          <div class="flex-1" />
+          <UButton
+            label="Cerrar sesión"
+            icon="i-lucide-log-out"
+            color="neutral"
+            variant="ghost"
+            class="w-full justify-start cursor-pointer"
+            @click="signOut"
+          />
         </template>
       </USidebar>
 

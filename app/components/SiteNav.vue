@@ -1,16 +1,14 @@
 <script setup lang="ts">
 import type { NavigationMenuItem } from '@nuxt/ui'
 
-const route = useRoute()
-
 const items = computed<NavigationMenuItem[]>(() => [
   {
     label: 'Administrar',
-    to: '/admin/sessions',
+    to: '/admin/sessions'
   },
   {
     label: 'Comunidad',
-    to: '#comunidad',
+    to: '#comunidad'
   },
   {
     label: 'Whatsapp',
