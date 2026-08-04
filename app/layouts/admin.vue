@@ -44,7 +44,7 @@ async function signOut() {
         :ui="{
           gap: 'h-[calc(100%-var(--ui-header-height))]',
           container:
-            'absolute top-(--ui-header-height) bottom-0 h-[calc(100%-var(--ui-header-height))]'
+            'top-(--ui-header-height) bottom-0 h-[calc(100%-var(--ui-header-height))]'
         }"
       >
         <UNavigationMenu
