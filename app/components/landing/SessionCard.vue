@@ -30,7 +30,7 @@ const {
         class="absolute inset-0 bg-linear-to-t from-surface-high via-surface-high/20 to-transparent"
       />
 
-      <div class="absolute top-3 right-3 flex flex-col items-end gap-1.5">
+        <div class="absolute bottom-3 right-3 flex flex-col items-end gap-1.5">
         <span
           class="label-metadata flex items-center gap-1.5 px-2.5 py-1 rounded-md backdrop-blur-sm"
           :class="modeColor"
