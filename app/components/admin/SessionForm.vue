@@ -689,7 +689,6 @@ async function submitSession() {
         <UFormField
           label="Máximo de jugadores"
           name="max_players"
-          class="md:col-span-2"
         >
           <UInput
             v-model="state.max_players"
@@ -699,6 +698,18 @@ async function submitSession() {
         </UFormField>
       </div>
     </section>
+
+    <AdminSessionPlayers
+      v-if="props.session?.id"
+      :session-id="props.session.id"
+    />
+
+    <p
+      v-else
+      class="text-sm text-slate-500"
+    >
+      Guarda la sesión primero para poder administrar los jugadores inscritos.
+    </p>
 
     <section class="space-y-4">
       <h2 class="text-lg font-semibold text-slate-900">
