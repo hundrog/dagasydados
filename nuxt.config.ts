@@ -11,6 +11,33 @@ export default defineNuxtConfig({
     enabled: true
   },
 
+  app: {
+    head: {
+      title: 'Dagas y Dados',
+      meta: [
+        { name: 'description', content: 'Dagas y Dados' }
+      ],
+      link: [
+        // Favicon básico
+        { rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' },
+
+        // Tamaños estándar
+        { rel: 'icon', type: 'image/png', sizes: '16x16', href: '/favicon-16x16.png' },
+        { rel: 'icon', type: 'image/png', sizes: '32x32', href: '/favicon-32x32.png' },
+
+        // Dispositivos Apple
+        { rel: 'apple-touch-icon', sizes: '180x180', href: '/apple-touch-icon.png' },
+
+        // Dispositivos Android
+        { rel: 'icon', type: 'image/png', sizes: '192x192', href: '/android-chrome-192x192.png' },
+        { rel: 'icon', type: 'image/png', sizes: '512x512', href: '/android-chrome-512x512.png' },
+
+        // Manifiesto de aplicación web
+        { rel: 'manifest', href: '/site.webmanifest' }
+      ]
+    }
+  },
+
   css: ['~/assets/css/main.css'],
 
   runtimeConfig: {
