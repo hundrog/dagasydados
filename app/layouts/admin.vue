@@ -3,21 +3,48 @@ import type { NavigationMenuItem } from '@nuxt/ui'
 
 const supabase = useSupabaseClient()
 const toast = useToast()
+const route = useRoute()
 
 const open = ref(true)
 
-const items: NavigationMenuItem[] = [
+const isSessionEdit = computed(() => /^\/admin\/sessions\/.+\/edit$/.test(route.path))
+
+const formSections = [
+  { label: 'Información básica', id: 'informacion-basica' },
+  { label: 'Clasificación', id: 'clasificacion' },
+  { label: 'Programación', id: 'programacion' },
+  { label: 'Logística', id: 'logistica' },
+  { label: 'Jugadores', id: 'jugadores' },
+  { label: 'Master', id: 'master' }
+]
+
+function scrollToSection(id: string) {
+  if (!import.meta.client) return
+
+  document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+}
+
+const items = computed<NavigationMenuItem[]>(() => [
   {
     label: 'Game Sessions',
     icon: 'i-lucide-calendar',
-    to: '/admin/sessions'
+    to: '/admin/sessions',
+    active: route.path.startsWith('/admin/sessions'),
+    defaultOpen: isSessionEdit.value,
+    children: isSessionEdit.value
+      ? formSections.map(section => ({
+          label: section.label,
+          onSelect: () => scrollToSection(section.id)
+        }))
+      : undefined
   },
   {
     label: 'Dagger Masters',
     icon: 'i-lucide-user',
-    to: '/admin/masters'
+    to: '/admin/masters',
+    active: route.path.startsWith('/admin/masters')
   }
-]
+])
 
 async function signOut() {
   const { error } = await supabase.auth.signOut()

@@ -423,7 +423,10 @@ async function submitSession() {
     class="w-full space-y-8"
     @submit="submitSession"
   >
-    <section class="space-y-4">
+    <section
+      id="informacion-basica"
+      class="space-y-4 scroll-mt-24"
+    >
       <h2 class="text-lg font-semibold text-primary-900">
         Información básica
       </h2>
@@ -497,7 +500,10 @@ async function submitSession() {
       </div>
     </section>
 
-    <section class="space-y-4">
+    <section
+      id="clasificacion"
+      class="space-y-4 scroll-mt-24"
+    >
       <h2 class="text-lg font-semibold text-primary-900">
         Clasificación
       </h2>
@@ -544,7 +550,10 @@ async function submitSession() {
       </div>
     </section>
 
-    <section class="space-y-4">
+    <section
+      id="programacion"
+      class="space-y-4 scroll-mt-24"
+    >
       <h2 class="text-lg font-semibold text-primary-900">
         Programación
       </h2>
@@ -661,7 +670,10 @@ async function submitSession() {
       </div>
     </section>
 
-    <section class="space-y-4">
+    <section
+      id="logistica"
+      class="space-y-4 scroll-mt-24"
+    >
       <h2 class="text-lg font-semibold text-primary-900">
         Logística
       </h2>
@@ -701,6 +713,7 @@ async function submitSession() {
 
     <AdminSessionPlayers
       v-if="props.session?.id"
+      id="jugadores"
       :session-id="props.session.id"
     />
 
@@ -711,7 +724,10 @@ async function submitSession() {
       Guarda la sesión primero para poder administrar los jugadores inscritos.
     </p>
 
-    <section class="space-y-4">
+    <section
+      id="master"
+      class="space-y-4 scroll-mt-24"
+    >
       <h2 class="text-lg font-semibold text-primary-900">
         Master
       </h2>

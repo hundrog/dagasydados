@@ -12,6 +12,7 @@ const UDropdownMenu = resolveComponent('UDropdownMenu')
 
 const props = defineProps<{
   sessionId: string
+  id?: string
 }>()
 
 const players = ref<SessionPlayer[]>([])
@@ -227,7 +228,10 @@ function getPlayerRowItems(row: Row<SessionPlayer>) {
 </script>
 
 <template>
-  <section class="space-y-4">
+  <section
+    :id="props.id"
+    class="space-y-4 scroll-mt-24"
+  >
     <div class="flex items-center justify-between">
       <h2 class="text-lg font-semibold text-primary-900">
         Jugadores inscritos
