@@ -229,7 +229,7 @@ function getPlayerRowItems(row: Row<SessionPlayer>) {
 <template>
   <section class="space-y-4">
     <div class="flex items-center justify-between">
-      <h2 class="text-lg font-semibold text-slate-900">
+      <h2 class="text-lg font-semibold text-primary-900">
         Jugadores inscritos
       </h2>
       <UButton
@@ -320,7 +320,7 @@ function getPlayerRowItems(row: Row<SessionPlayer>) {
       <div class="space-y-4">
         <p class="text-sm text-slate-600">
           ¿Borrar a
-          <span class="font-semibold text-slate-900">
+          <span class="font-semibold text-primary-900">
             {{ pendingDeletePlayer?.nombre || 'este jugador' }}
           </span>?
           Esta acción no se puede deshacer.

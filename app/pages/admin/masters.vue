@@ -236,7 +236,7 @@ function getRowItems(row: Row<Master>) {
         <div class="space-y-4">
           <p class="text-sm text-slate-600">
             ¿Borrar a
-            <span class="font-semibold text-slate-900">
+            <span class="font-semibold text-primary-900">
               {{ pendingDelete?.full_name || pendingDelete?.user_name || 'este master' }}
             </span>?
             Esta acción no se puede deshacer.

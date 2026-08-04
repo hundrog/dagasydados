@@ -424,7 +424,7 @@ async function submitSession() {
     @submit="submitSession"
   >
     <section class="space-y-4">
-      <h2 class="text-lg font-semibold text-slate-900">
+      <h2 class="text-lg font-semibold text-primary-900">
         Información básica
       </h2>
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -498,7 +498,7 @@ async function submitSession() {
     </section>
 
     <section class="space-y-4">
-      <h2 class="text-lg font-semibold text-slate-900">
+      <h2 class="text-lg font-semibold text-primary-900">
         Clasificación
       </h2>
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -545,7 +545,7 @@ async function submitSession() {
     </section>
 
     <section class="space-y-4">
-      <h2 class="text-lg font-semibold text-slate-900">
+      <h2 class="text-lg font-semibold text-primary-900">
         Programación
       </h2>
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -662,7 +662,7 @@ async function submitSession() {
     </section>
 
     <section class="space-y-4">
-      <h2 class="text-lg font-semibold text-slate-900">
+      <h2 class="text-lg font-semibold text-primary-900">
         Logística
       </h2>
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -712,7 +712,7 @@ async function submitSession() {
     </p>
 
     <section class="space-y-4">
-      <h2 class="text-lg font-semibold text-slate-900">
+      <h2 class="text-lg font-semibold text-primary-900">
         Master
       </h2>
       <UFormField

@@ -265,7 +265,7 @@ function getRowItems(row: Row<GameSessionWithMaster>) {
         <div class="space-y-4">
           <p class="text-sm text-slate-600">
             ¿Borrar la sesión
-            <span class="font-semibold text-slate-900">
+            <span class="font-semibold text-primary-900">
               {{ pendingDelete?.title || 'esta sesión' }}
             </span>?
             Esta acción no se puede deshacer.
