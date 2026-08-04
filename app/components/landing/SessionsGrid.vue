@@ -13,7 +13,7 @@ const loadSessions = async () => {
 
   const { data, error } = await supabase
     .from('game_sessions')
-    .select('id,title,system,session_type,audience,mode,image_url,current_players,max_players,location,description,costo,fecha_inicio,hora_inicio,hora_fin,rrule,master:dagger_masters(id,full_name,user_name,avatar_url,phone)')
+    .select('id,title,system,session_type,audience,mode,image_url,max_players,location,description,costo,fecha_inicio,hora_inicio,hora_fin,rrule,session_players(count),master:dagger_masters(id,full_name,user_name,avatar_url,phone)')
 
   if (error) {
     errorMessage.value = error.message

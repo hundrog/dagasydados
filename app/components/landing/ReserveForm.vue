@@ -6,18 +6,24 @@ const props = defineProps<{
   phone?: string
   sessionType?: string
   sessionTitle?: string
+  sessionId?: string
 }>()
 
+const supabase = useSupabaseClient()
+const toast = useToast()
 const isOpen = ref(false)
+const isLoading = ref(false)
 
 const schema = z.object({
-  name: z.string().min(1, 'Name is required')
+  name: z.string().min(1, 'El nombre es requerido'),
+  telefono: z.string().min(1, 'El telefono es requerido')
 })
 
 type Schema = z.output<typeof schema>
 
 const state = reactive<Partial<Schema>>({
-  name: ''
+  name: '',
+  telefono: ''
 })
 
 const message = computed(() => {
@@ -30,17 +36,53 @@ const wame = computed(() => {
   return `https://wa.me/${props.phone}?text=${message.value}`
 })
 
-function openWhatsApp() {
-  if (!props.phone) {
+async function handleReserve() {
+  if (!props.phone || !props.sessionId || !state.name?.trim() || !state.telefono?.trim()) {
     return
   }
 
-  if (import.meta.client) {
+  isLoading.value = true
+
+  const { error } = await supabase
+    .from('session_players')
+    .insert({
+      game_session_id: props.sessionId,
+      nombre: state.name.trim(),
+      telefono: state.telefono.trim()
+    })
+
+  isLoading.value = false
+
+  if (error) {
+    if (error.code === '23505') {
+      toast.add({
+        title: 'Ya estas registrado',
+        description: 'Este telefono ya esta registrado para esta sesion.',
+        color: 'error',
+        icon: 'i-lucide-octagon-x'
+      })
+    } else {
+      toast.add({
+        title: 'Error al reservar',
+        description: error.message,
+        color: 'error',
+        icon: 'i-lucide-octagon-x'
+      })
+    }
+    return
+  } else if (import.meta.client) {
     window.open(wame.value, '_blank', 'noopener,noreferrer')
   }
 
   isOpen.value = false
   state.name = ''
+  state.telefono = ''
+
+  toast.add({
+    title: 'Reserva registrada',
+    color: 'success',
+    icon: 'i-lucide-check'
+  })
 }
 </script>
 
@@ -72,13 +114,25 @@ function openWhatsApp() {
             class="w-full"
           />
         </UFormField>
+        <UFormField
+          label="Telefono"
+          name="telefono"
+          required
+        >
+          <UInput
+            v-model="state.telefono"
+            placeholder="+52 123 456 7890"
+            class="w-full"
+          />
+        </UFormField>
         <USeparator class="my-8" />
         <UButton
           type="button"
           block
-          :disabled="!state.name?.length"
+          :loading="isLoading"
+          :disabled="!state.name?.length || !state.telefono?.length"
           class="cursor-pointer"
-          @click="openWhatsApp"
+          @click="handleReserve"
         >
           Reservar
         </UButton>

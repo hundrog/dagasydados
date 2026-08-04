@@ -138,7 +138,6 @@ const schema = z.object({
   location: z.string().optional(),
   costo: z.union([z.number(), z.literal('')]).optional(),
   max_players: z.union([z.number(), z.literal('')]).optional(),
-  current_players: z.union([z.number(), z.literal('')]).optional(),
   master_id: z.string().min(1, 'El master es obligatorio')
 })
 
@@ -161,7 +160,6 @@ const initialState = (): Schema => ({
   location: props.session?.location ?? '',
   costo: props.session?.costo ?? '',
   max_players: props.session?.max_players ?? '',
-  current_players: props.session?.current_players ?? '',
   master_id: props.session?.master_id ?? ''
 })
 
@@ -297,7 +295,6 @@ const buildPayload = (): GameSessionInsert => ({
   location: state.location?.trim() || null,
   costo: toNumberOrNull(state.costo),
   max_players: toNumberOrNull(state.max_players),
-  current_players: toNumberOrNull(state.current_players),
   master_id: state.master_id
 })
 
@@ -685,16 +682,6 @@ async function submitSession() {
         >
           <UInput
             v-model="state.costo"
-            type="number"
-            class="w-full"
-          />
-        </UFormField>
-        <UFormField
-          label="Jugadores actuales"
-          name="current_players"
-        >
-          <UInput
-            v-model="state.current_players"
             type="number"
             class="w-full"
           />

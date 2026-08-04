@@ -117,7 +117,6 @@ export type Database = {
           campaign: string | null
           costo: number | null
           created_at: string | null
-          current_players: number | null
           description: string | null
           fecha_inicio: string
           hora_fin: string | null
@@ -140,7 +139,6 @@ export type Database = {
           campaign?: string | null
           costo?: number | null
           created_at?: string | null
-          current_players?: number | null
           description?: string | null
           fecha_inicio: string
           hora_fin?: string | null
@@ -163,7 +161,6 @@ export type Database = {
           campaign?: string | null
           costo?: number | null
           created_at?: string | null
-          current_players?: number | null
           description?: string | null
           fecha_inicio?: string
           hora_fin?: string | null
@@ -187,6 +184,41 @@ export type Database = {
             columns: ['master_id']
             isOneToOne: false
             referencedRelation: 'dagger_masters'
+            referencedColumns: ['id']
+          }
+        ]
+      }
+      session_players: {
+        Row: {
+          created_at: string | null
+          game_session_id: string
+          id: string
+          nombre: string
+          telefono: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          game_session_id: string
+          id?: string
+          nombre: string
+          telefono: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          game_session_id?: string
+          id?: string
+          nombre?: string
+          telefono?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'session_players_game_session_id_fkey'
+            columns: ['game_session_id']
+            isOneToOne: false
+            referencedRelation: 'game_sessions'
             referencedColumns: ['id']
           }
         ]

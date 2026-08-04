@@ -10,6 +10,8 @@ const emit = defineEmits<{
 
 const placeholderUrl = 'https://placehold.co/600x340/1e174a/9fa7ff?text=Sin+imagen'
 
+const currentPlayers = computed(() => props.session.session_players?.[0]?.count ?? 0)
+
 const parseRule = (raw: string, fallbackDtstart: Date): RRule | null => {
   try {
     if (raw.startsWith('DTSTART:')) {
@@ -195,7 +197,7 @@ const modeLabel = computed(() => {
             name="i-lucide-users"
             class="size-3 text-on-surface-dim shrink-0"
           />
-          {{ session.current_players }} / {{ session.max_players }}
+          {{ currentPlayers }} / {{ session.max_players }}
         </span>
         <span class="label-metadata items-center">
           <UIcon
@@ -273,7 +275,7 @@ const modeLabel = computed(() => {
         <LandingReserveForm
           :session-id="session.id"
           :max-players="session.max_players"
-          :current-players="session.current_players"
+          :current-players="currentPlayers"
           :phone="session.master?.phone || ''"
           :master-name="session.master?.user_name || ''"
           :session-type="session.session_type ?? undefined"
