@@ -95,7 +95,7 @@ async function handleReserve() {
       block
       label="Aparta tu lugar"
       class="mt-3 cursor-pointer"
-      @click="isOpen = true"
+      @click.stop="isOpen = true"
     />
 
     <template #body>
