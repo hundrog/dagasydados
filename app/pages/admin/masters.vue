@@ -15,7 +15,7 @@ const { copy } = useClipboard()
 const { isAdmin } = useIsAdmin()
 const user = useSupabaseUser()
 
-const canModify = (master: Master) => isAdmin.value || master.id === user.value?.id
+const canModify = (master: Master) => isAdmin.value || master.id === user.value?.sub
 
 const masters = ref<Master[]>([])
 const isLoading = ref(true)

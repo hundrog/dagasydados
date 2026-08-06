@@ -3,6 +3,8 @@ import * as z from 'zod'
 import type { Master } from '~/types/master'
 
 const supabase = useSupabaseClient()
+const toast = useToast()
+const { uploadMasterAvatar, deleteMasterAvatarByUrl } = useMasterAvatar()
 
 const props = defineProps<{
   master?: Master | null
@@ -17,6 +19,8 @@ const isSubmitting = ref(false)
 const errorMessage = ref<string | null>(null)
 const successMessage = ref<string | null>(null)
 const currentMaster = ref<Master | null>(null)
+const avatarFile = ref<File | null>(null)
+const avatarRemoved = ref(false)
 
 const isEdit = computed(() => !!currentMaster.value)
 
@@ -41,6 +45,8 @@ const resetForm = () => {
   state.user_name = ''
   state.phone = ''
   state.avatar_url = ''
+  avatarFile.value = null
+  avatarRemoved.value = false
   errorMessage.value = null
   successMessage.value = null
 }
@@ -50,8 +56,37 @@ const hydrateState = (master: Master) => {
   state.user_name = master.user_name ?? ''
   state.phone = master.phone ?? ''
   state.avatar_url = master.avatar_url ?? ''
+  avatarFile.value = null
+  avatarRemoved.value = false
   errorMessage.value = null
   successMessage.value = null
+}
+
+const avatarPreview = computed(() => {
+  if (avatarFile.value) return URL.createObjectURL(avatarFile.value)
+  if (state.avatar_url) return state.avatar_url
+  return null
+})
+
+const onAvatarChange = () => {
+  if (avatarFile.value && avatarFile.value.size > 5 * 1024 * 1024) {
+    toast.add({
+      title: 'La imagen supera el tamaño máximo de 5 MB',
+      color: 'error',
+      icon: 'i-lucide-octagon-x'
+    })
+    avatarFile.value = null
+    return
+  }
+  if (avatarFile.value) {
+    avatarRemoved.value = false
+  }
+}
+
+const clearAvatar = () => {
+  avatarFile.value = null
+  state.avatar_url = ''
+  avatarRemoved.value = true
 }
 
 function open(master?: Master | null) {
@@ -72,11 +107,35 @@ async function submitMaster() {
   errorMessage.value = null
   successMessage.value = null
 
+  const previousAvatarUrl = currentMaster.value?.avatar_url ?? null
+
+  let uploadedUrl: string | null = null
+  if (avatarFile.value) {
+    try {
+      uploadedUrl = await uploadMasterAvatar(avatarFile.value)
+    } catch (uploadError) {
+      isSubmitting.value = false
+      errorMessage.value = uploadError instanceof Error ? uploadError.message : 'No se pudo subir el avatar'
+      return
+    }
+  }
+
   const payload = {
     full_name: state.full_name?.trim() || null,
     user_name: state.user_name?.trim() || null,
     phone: state.phone?.trim() || null,
-    avatar_url: state.avatar_url?.trim() ? state.avatar_url.trim() : null
+    avatar_url: avatarFile.value ? uploadedUrl : (avatarRemoved.value ? null : (state.avatar_url?.trim() || null))
+  }
+
+  const cleanupUpload = async () => {
+    if (uploadedUrl) await deleteMasterAvatarByUrl(uploadedUrl)
+  }
+
+  const cleanupPreviousAvatar = async () => {
+    const replaced = uploadedUrl ? previousAvatarUrl !== uploadedUrl : avatarRemoved.value
+    if (replaced && previousAvatarUrl) {
+      await deleteMasterAvatarByUrl(previousAvatarUrl)
+    }
   }
 
   if (isEdit.value && currentMaster.value) {
@@ -87,10 +146,13 @@ async function submitMaster() {
       .eq('id', masterId)
 
     if (updateError) {
+      await cleanupUpload()
       isSubmitting.value = false
       errorMessage.value = updateError.message
       return
     }
+
+    await cleanupPreviousAvatar()
 
     const { data: refreshed, error: selectError } = await supabase
       .from('dagger_masters')
@@ -122,6 +184,7 @@ async function submitMaster() {
   isSubmitting.value = false
 
   if (error) {
+    await cleanupUpload()
     errorMessage.value = error.message
     return
   }
@@ -186,13 +249,39 @@ defineExpose({ open })
         </UFormField>
 
         <UFormField
-          label="URL del avatar"
+          label="Avatar"
           name="avatar_url"
         >
-          <UInput
-            v-model="state.avatar_url"
-            class="w-full"
-          />
+          <div class="space-y-4">
+            <div
+              v-if="avatarPreview"
+              class="relative w-fit"
+            >
+              <img
+                :src="avatarPreview"
+                alt="Vista previa del avatar"
+                class="size-24 rounded-full object-cover border border-slate-200"
+              >
+              <UButton
+                icon="i-lucide-x"
+                color="neutral"
+                variant="ghost"
+                size="sm"
+                class="absolute -top-2 -right-2 cursor-pointer rounded-full"
+                aria-label="Quitar avatar"
+                :disabled="isSubmitting"
+                @click="clearAvatar"
+              />
+            </div>
+            <UFileUpload
+              v-model="avatarFile"
+              accept="image/*"
+              :disabled="isSubmitting"
+              label="Subir avatar"
+              description="JPG, PNG o WebP · Máximo 5 MB"
+              @change="onAvatarChange"
+            />
+          </div>
         </UFormField>
 
         <p
