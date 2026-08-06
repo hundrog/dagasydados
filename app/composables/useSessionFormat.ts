@@ -2,6 +2,24 @@ import { computed, toValue, type MaybeRefOrGetter } from 'vue'
 import { RRule, rrulestr } from 'rrule'
 import type { GameSessionWithMaster } from '~/types/session'
 
+export const parseSessionRule = (raw: string, fallbackDtstart: Date): RRule | null => {
+  try {
+    if (raw.startsWith('DTSTART:')) {
+      const normalized = raw.includes('\nRRULE:') ? raw : raw.replace('RRULE:', '\nRRULE:')
+      const rule = rrulestr(normalized)
+      return rule instanceof RRule ? rule : null
+    }
+    if (raw.startsWith('RRULE:')) {
+      const rule = rrulestr(raw, { dtstart: fallbackDtstart })
+      return rule instanceof RRule ? rule : null
+    }
+    const rule = rrulestr(`RRULE:${raw}`, { dtstart: fallbackDtstart })
+    return rule instanceof RRule ? rule : null
+  } catch {
+    return null
+  }
+}
+
 export const useSessionFormat = (sessionRef: MaybeRefOrGetter<GameSessionWithMaster | null>) => {
   const session = computed(() => toValue(sessionRef))
 
@@ -25,23 +43,8 @@ export const useSessionFormat = (sessionRef: MaybeRefOrGetter<GameSessionWithMas
     return value.slice(0, 5)
   }
 
-  const parseRule = (raw: string, fallbackDtstart: Date): RRule | null => {
-    try {
-      if (raw.startsWith('DTSTART:')) {
-        const normalized = raw.includes('\nRRULE:') ? raw : raw.replace('RRULE:', '\nRRULE:')
-        const rule = rrulestr(normalized)
-        return rule instanceof RRule ? rule : null
-      }
-      if (raw.startsWith('RRULE:')) {
-        const rule = rrulestr(raw, { dtstart: fallbackDtstart })
-        return rule instanceof RRule ? rule : null
-      }
-      const rule = rrulestr(`RRULE:${raw}`, { dtstart: fallbackDtstart })
-      return rule instanceof RRule ? rule : null
-    } catch {
-      return null
-    }
-  }
+  const parseRule = (raw: string, fallbackDtstart: Date): RRule | null =>
+    parseSessionRule(raw, fallbackDtstart)
 
   const weekdayLabel = computed(() => {
     if (!session.value?.fecha_inicio) return ''
