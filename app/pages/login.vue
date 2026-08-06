@@ -23,10 +23,6 @@ const fields: AuthFormField[] = [{
   type: 'checkbox'
 }]
 
-const options = {
-  redirectTo: `/confirm`
-}
-
 const providers = [{
   label: 'Discord',
   icon: 'i-simple-icons-discord',
@@ -49,7 +45,9 @@ function onSubmit(payload: FormSubmitEvent<Schema>) {
 async function signInWithDiscord() {
   const { error } = await supabase.auth.signInWithOAuth({
     provider: 'discord',
-    options: options
+    options: {
+      redirectTo: `${window.location.origin}/confirm`
+    }
   })
 
   if (error) {
