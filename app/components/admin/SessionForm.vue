@@ -35,8 +35,8 @@ const modeOptions: Array<{ label: string, value: string }> = [
 
 const dayOptions: Array<{ code: string, label: string, short: string }> = [
   { code: 'MO', label: 'Lunes', short: 'L' },
-  { code: 'TU', label: 'Martes', short: 'M' },
-  { code: 'WE', label: 'Miércoles', short: 'X' },
+  { code: 'TU', label: 'Martes', short: 'Ma' },
+  { code: 'WE', label: 'Miércoles', short: 'Mi' },
   { code: 'TH', label: 'Jueves', short: 'J' },
   { code: 'FR', label: 'Viernes', short: 'V' },
   { code: 'SA', label: 'Sábado', short: 'S' },
@@ -63,11 +63,14 @@ const weekdayToCode: Record<number, string> = {
   [RRule.SU.weekday]: 'SU'
 }
 
+const weekdayCodeFromDate = (date: Date): string | null =>
+  weekdayToCode[(date.getDay() + 6) % 7] ?? null
+
 const startWeekdayCode = computed(() => {
   if (!state.fecha_inicio) return null
   const date = parseLocalDate(state.fecha_inicio)
   if (!date) return null
-  return weekdayToCode[date.getDay()] ?? null
+  return weekdayCodeFromDate(date)
 })
 
 const userTouchedDays = ref(false)
@@ -271,8 +274,11 @@ const toggleDay = (code: string) => {
   syncRruleFromInputs()
 }
 
-watch(() => state.fecha_inicio, () => {
-  if (!userTouchedDays.value && startWeekdayCode.value) {
+watch(() => state.fecha_inicio, (newDate, oldDate) => {
+  const oldDay = parseLocalDate(oldDate)
+  const oldCode = oldDay ? weekdayCodeFromDate(oldDay) : null
+  const isFollowingDate = days.value.length === 1 && days.value[0] === oldCode
+  if ((!userTouchedDays.value || isFollowingDate) && startWeekdayCode.value) {
     days.value = [startWeekdayCode.value]
   }
   if (!isRruleTouched.value) {
