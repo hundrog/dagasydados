@@ -33,6 +33,18 @@ const systemOptions = computed(() => {
   return current && !defaults.includes(current) ? [...defaults, current] : defaults
 })
 
+const sessionTypeOptions = computed(() => {
+  const defaults = ['one shot', 'two shot', 'campaña']
+  const current = state.session_type?.trim()
+  return current && !defaults.includes(current) ? [...defaults, current] : defaults
+})
+
+const audienceOptions = computed(() => {
+  const defaults = ['Todo Público', 'Novatos', 'Experimentados']
+  const current = state.audience?.trim()
+  return current && !defaults.includes(current) ? [...defaults, current] : defaults
+})
+
 const modeOptions: Array<{ label: string, value: string }> = [
   { label: 'Online', value: 'online' },
   { label: 'Presencial', value: 'offline' },
@@ -159,7 +171,7 @@ const initialState = (): Schema => ({
   image_url: props.session?.image_url ?? '',
   system: props.session?.system ?? '',
   session_type: props.session?.session_type ?? '',
-  audience: props.session?.audience ?? '',
+  audience: props.session?.audience ?? 'Todo Público',
   mode: props.session?.mode ?? '',
   fecha_inicio: props.session?.fecha_inicio ?? '',
   hora_inicio: props.session?.hora_inicio ?? '',
@@ -538,18 +550,22 @@ async function submitSession() {
           label="Tipo de sesión"
           name="session_type"
         >
-          <UInput
+          <USelectMenu
             v-model="state.session_type"
+            :items="sessionTypeOptions"
             class="w-full"
+            placeholder="Selecciona un tipo"
           />
         </UFormField>
         <UFormField
           label="Audiencia"
           name="audience"
         >
-          <UInput
+          <USelectMenu
             v-model="state.audience"
+            :items="audienceOptions"
             class="w-full"
+            placeholder="Selecciona una audiencia"
           />
         </UFormField>
         <UFormField
