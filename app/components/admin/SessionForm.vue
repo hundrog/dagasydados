@@ -235,7 +235,9 @@ const buildRruleString = (): string => {
     options.count = Number(count.value)
   }
 
-  return new RRule(options).toString().replace(/^RRULE:/, '')
+  const serialized = new RRule(options).toString()
+  const rulePart = serialized.split('\n').find(line => line.startsWith('RRULE:'))
+  return rulePart ?? ''
 }
 
 const syncRruleFromInputs = () => {
