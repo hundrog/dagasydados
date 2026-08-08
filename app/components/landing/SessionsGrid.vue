@@ -59,8 +59,8 @@ const monthEnd = computed(() => {
 })
 
 const occurrencesInMonth = (session: GameSessionWithMaster): Date[] => {
-  const start = session.fecha_inicio ? new Date(session.fecha_inicio) : null
-  if (!start || Number.isNaN(start.getTime())) return []
+  const start = parseLocalDate(session.fecha_inicio)
+  if (!start) return []
 
   const isInMonth = start >= monthStart.value && start <= monthEnd.value
   if (!session.rrule) {
@@ -93,7 +93,7 @@ const matchesFilters = (session: GameSessionWithMaster) => {
 const filteredSessions = computed(() =>
   sessions.value
     .filter(matchesFilters)
-    .sort((a, b) => new Date(a.fecha_inicio).getTime() - new Date(b.fecha_inicio).getTime())
+    .sort((a, b) => (parseLocalDate(a.fecha_inicio)?.getTime() ?? 0) - (parseLocalDate(b.fecha_inicio)?.getTime() ?? 0))
 )
 
 const hasActiveFilters = computed(() =>

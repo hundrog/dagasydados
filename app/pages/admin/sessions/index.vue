@@ -116,7 +116,9 @@ const columns: TableColumn<GameSessionWithMaster>[] = [
     cell: ({ row }) => {
       const value = row.getValue('fecha_inicio') as string | null
       if (!value) return '-'
-      return new Date(value).toLocaleDateString('es-ES', {
+      const date = parseLocalDate(value)
+      if (!date) return '-'
+      return date.toLocaleDateString('es-ES', {
         day: '2-digit',
         month: 'short',
         year: 'numeric'

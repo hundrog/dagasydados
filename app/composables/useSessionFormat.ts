@@ -6,7 +6,7 @@ export const parseSessionRule = (raw: string, fallbackDtstart: Date): RRule | nu
   try {
     if (raw.startsWith('DTSTART:')) {
       const normalized = raw.includes('\nRRULE:') ? raw : raw.replace('RRULE:', '\nRRULE:')
-      const rule = rrulestr(normalized)
+      const rule = rrulestr(normalized, { dtstart: fallbackDtstart })
       return rule instanceof RRule ? rule : null
     }
     if (raw.startsWith('RRULE:')) {
@@ -25,8 +25,8 @@ export const useSessionFormat = (sessionRef: MaybeRefOrGetter<GameSessionWithMas
 
   const formatDate = (value: string | Date | null) => {
     if (!value) return ''
-    const date = value instanceof Date ? value : new Date(value)
-    if (Number.isNaN(date.getTime())) return value instanceof Date ? '' : value
+    const date = parseLocalDate(value)
+    if (!date) return value instanceof Date ? '' : value
     return date.toLocaleDateString('es-ES', {
       day: '2-digit',
       month: 'short',
@@ -48,16 +48,16 @@ export const useSessionFormat = (sessionRef: MaybeRefOrGetter<GameSessionWithMas
 
   const weekdayLabel = computed(() => {
     if (!session.value?.fecha_inicio) return ''
-    const date = new Date(session.value.fecha_inicio)
-    if (Number.isNaN(date.getTime())) return ''
+    const date = parseLocalDate(session.value.fecha_inicio)
+    if (!date) return ''
     return date.toLocaleDateString('es-ES', { weekday: 'long' }).toLowerCase()
   })
 
   const recurrence = computed(() => {
     const raw = session.value?.rrule
     if (!raw || !session.value?.fecha_inicio) return null
-    const dtstart = new Date(session.value.fecha_inicio)
-    if (Number.isNaN(dtstart.getTime())) return null
+    const dtstart = parseLocalDate(session.value.fecha_inicio)
+    if (!dtstart) return null
     const rule = parseRule(raw, dtstart)
     if (!rule) return null
     try {

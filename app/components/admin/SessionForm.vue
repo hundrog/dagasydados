@@ -65,8 +65,8 @@ const weekdayToCode: Record<number, string> = {
 
 const startWeekdayCode = computed(() => {
   if (!state.fecha_inicio) return null
-  const date = new Date(state.fecha_inicio)
-  if (Number.isNaN(date.getTime())) return null
+  const date = parseLocalDate(state.fecha_inicio)
+  if (!date) return null
   return weekdayToCode[date.getDay()] ?? null
 })
 
@@ -222,7 +222,7 @@ const buildRruleString = (): string => {
   const options: Record<string, unknown> = {
     freq,
     interval,
-    dtstart: state.fecha_inicio ? new Date(state.fecha_inicio) : new Date()
+    dtstart: state.fecha_inicio ? (parseLocalDate(state.fecha_inicio) ?? new Date()) : new Date()
   }
 
   if (freq === RRule.WEEKLY && days.value.length > 0) {
