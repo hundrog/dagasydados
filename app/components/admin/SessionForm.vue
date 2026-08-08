@@ -27,6 +27,12 @@ const periodicityOptions: Array<{ label: string, value: Periodicity }> = [
   { label: 'Mensual', value: 'MONTHLY' }
 ]
 
+const systemOptions = computed(() => {
+  const defaults = ['Daggerheart', 'Mork Borg', 'Vaesen']
+  const current = state.system?.trim()
+  return current && !defaults.includes(current) ? [...defaults, current] : defaults
+})
+
 const modeOptions: Array<{ label: string, value: string }> = [
   { label: 'Online', value: 'online' },
   { label: 'Presencial', value: 'offline' },
@@ -520,9 +526,12 @@ async function submitSession() {
           label="Sistema"
           name="system"
         >
-          <UInput
+          <USelectMenu
             v-model="state.system"
+            :items="systemOptions"
+            create-item
             class="w-full"
+            placeholder="Selecciona o escribe un sistema"
           />
         </UFormField>
         <UFormField
