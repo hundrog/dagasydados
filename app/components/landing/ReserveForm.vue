@@ -33,7 +33,8 @@ const message = computed(() => {
 })
 
 const wame = computed(() => {
-  return `https://wa.me/${props.phone}?text=${message.value}`
+  const number = props.phone?.replace(/\D/g, '') ?? ''
+  return `https://wa.me/${number}?text=${message.value}`
 })
 
 async function handleReserve() {

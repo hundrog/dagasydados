@@ -30,6 +30,7 @@ const successMessage = ref<string | null>(null)
 const currentMaster = ref<Master | null>(null)
 const avatarFile = ref<File | null>(null)
 const avatarRemoved = ref(false)
+let skipCountryWatch = false
 
 const isEdit = computed(() => !!currentMaster.value)
 
@@ -60,15 +61,36 @@ const resetForm = () => {
   successMessage.value = null
 }
 
+const stripCountryCode = (digits: string, dialCode: string) => {
+  const d = dialCode.replace(/\D/g, '')
+  return d && digits.length > d.length && digits.startsWith(d) ? digits.slice(d.length) : digits
+}
+
+const withMobilePrefix = (country: PhoneCode | undefined, digits: string) => {
+  return country?.code === 'MX' ? `1${digits}` : digits
+}
+
 const hydrateState = (master: Master) => {
   state.full_name = master.full_name ?? ''
   state.user_name = master.user_name ?? ''
-  state.phone = master.phone ?? ''
   state.avatar_url = master.avatar_url ?? ''
   avatarFile.value = null
   avatarRemoved.value = false
   errorMessage.value = null
   successMessage.value = null
+
+  const digits = master.phone?.replace(/\D/g, '') ?? ''
+  const match = (phoneCodes.value ?? []).find((c) => {
+    const d = c.dialCode.replace(/\D/g, '')
+    return d && digits.length > d.length && digits.startsWith(d)
+  })
+  const detected = match ?? { code: 'MX', dialCode: '+52' }
+  skipCountryWatch = true
+  countryCode.value = detected.code
+  state.phone = stripCountryCode(digits, detected.dialCode)
+  if (detected.code === 'MX' && state.phone.startsWith('1')) {
+    state.phone = state.phone.slice(1)
+  }
 }
 
 const avatarPreview = computed(() => {
@@ -132,7 +154,7 @@ async function submitMaster() {
   const payload = {
     full_name: state.full_name?.trim() || null,
     user_name: state.user_name?.trim() || null,
-    phone: state.phone?.trim() || null,
+    phone: (state.phone?.replace(/\D/g, '') && `${dialCode.value.replace(/\D/g, '')}${withMobilePrefix(country.value, state.phone.replace(/\D/g, ''))}`) || null,
     avatar_url: avatarFile.value ? uploadedUrl : (avatarRemoved.value ? null : (state.avatar_url?.trim() || null))
   }
 
@@ -205,8 +227,7 @@ async function submitMaster() {
 
 defineExpose({ open })
 
-const phone = ref('')
-const countryCode = ref('US')
+const countryCode = ref('MX')
 
 const { data: phoneCodes, status, execute } = await useLazyFetch<PhoneCode[]>('/api/phone-codes')
 
@@ -221,7 +242,11 @@ function onOpen() {
 }
 
 watch(countryCode, () => {
-  phone.value = ''
+  if (skipCountryWatch) {
+    skipCountryWatch = false
+    return
+  }
+  state.phone = ''
 })
 </script>
 
@@ -270,15 +295,6 @@ watch(countryCode, () => {
           label="Teléfono"
           name="phone"
         >
-          <UInput
-            v-model="state.phone"
-            class="w-full"
-          />
-        </UFormField>
-        <UFormField
-          label="Teléfono"
-          name="phone-number"
-        >
           <UFieldGroup class="w-full">
             <USelectMenu
               v-model="countryCode"
@@ -316,7 +332,7 @@ watch(countryCode, () => {
             </USelectMenu>
 
             <UInput
-              v-model="phone"
+              v-model="state.phone"
               v-maska="mask"
               class="w-full"
               :placeholder="mask.replaceAll('#', '_')"
