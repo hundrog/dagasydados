@@ -3,7 +3,7 @@ import type { GameSessionWithMaster } from '~/types/session'
 
 const props = defineProps<{ session: GameSessionWithMaster }>()
 
-const placeholderUrl = 'https://placehold.co/600x340/1e174a/9fa7ff?text=Sin+imagen'
+const placeholderUrl = 'https://placehold.co/600x450/1e174a/9fa7ff?text=Sin+imagen'
 
 const {
   scheduleLabel,
@@ -20,7 +20,7 @@ const {
     :to="`/sessions/${session.id}`"
     class="card group flex flex-col overflow-hidden card-hoverable"
   >
-    <div class="relative h-48 overflow-hidden shrink-0">
+    <div class="relative aspect-[4/3] overflow-hidden shrink-0">
       <img
         :src="session.image_url && session.image_url.length > 0 ? session.image_url : placeholderUrl"
         :alt="session.title"

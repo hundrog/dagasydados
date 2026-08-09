@@ -22,7 +22,7 @@ const {
   modeLabel
 } = useSessionFormat(session)
 
-const placeholderUrl = 'https://placehold.co/600x340/1e174a/9fa7ff?text=Sin+imagen'
+const placeholderUrl = 'https://placehold.co/600x450/1e174a/9fa7ff?text=Sin+imagen'
 
 const loadSession = async () => {
   const { data, error } = await supabase
@@ -55,22 +55,23 @@ const goBack = () => {
   <div class="flex-1 mt-12">
     <div class="max-w-4xl mx-auto px-4 py-8">
       <div class="flex justify-between items-center">
-      <UButton
-        label="Volver a la cartelera"
-        icon="i-lucide-arrow-left"
-        color="neutral"
-        variant="ghost"
-        class="cursor-pointer mb-6"
-        @click="goBack"
-      />
-      <UButton
-        v-if="session && canModify(session)"
-        label="Editar"
-        icon="i-lucide-pencil"
-        color="neutral"
-        variant="ghost"
-        class="cursor-pointer mb-6"
-      />
+        <UButton
+          label="Volver a la cartelera"
+          icon="i-lucide-arrow-left"
+          color="neutral"
+          variant="ghost"
+          class="cursor-pointer mb-6"
+          @click="goBack"
+        />
+        <UButton
+          v-if="session && canModify(session)"
+          label="Editar"
+          icon="i-lucide-pencil"
+          color="neutral"
+          variant="ghost"
+          class="cursor-pointer mb-6"
+          :to="`/admin/sessions/${session.id}/edit`"
+        />
       </div>
 
       <div
@@ -90,7 +91,7 @@ const goBack = () => {
         v-else-if="session"
         class="space-y-8"
       >
-        <div class="relative h-64 sm:h-80 overflow-hidden rounded-xl">
+        <div class="relative aspect-[4/3] overflow-hidden rounded-xl">
           <img
             :src="session.image_url && session.image_url.length > 0 ? session.image_url : placeholderUrl"
             :alt="session.title"
