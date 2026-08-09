@@ -30,7 +30,14 @@ const items = computed<NavigationMenuItem[]>(() => [
         :items="items"
         class="hidden sm:block"
       />
-      <UButton icon="i-simple-icons-whatsapp" size="md" color="success" variant="solid" target="_blank" to='https://chat.whatsapp.com/IbiecwzhrVf7XRqWscTHgO' />
+      <UButton
+        icon="i-simple-icons-whatsapp"
+        size="md"
+        color="success"
+        variant="solid"
+        target="_blank"
+        to="https://chat.whatsapp.com/IbiecwzhrVf7XRqWscTHgO"
+      />
       <UColorModeButton />
     </template>
 
@@ -40,7 +47,14 @@ const items = computed<NavigationMenuItem[]>(() => [
         orientation="vertical"
         class="-mx-2.5"
       />
-      <UButton icon="i-simple-icons-whatsapp" size="md" color="success" variant="solid" target="_blank" to='https://chat.whatsapp.com/IbiecwzhrVf7XRqWscTHgO' />
+      <UButton
+        icon="i-simple-icons-whatsapp"
+        size="md"
+        color="success"
+        variant="solid"
+        target="_blank"
+        to="https://chat.whatsapp.com/IbiecwzhrVf7XRqWscTHgO"
+      />
       <UColorModeButton />
     </template>
   </UHeader>
