@@ -3,10 +3,14 @@ import type { GameSessionWithMaster } from '~/types/session'
 
 const route = useRoute()
 const supabase = useSupabaseClient()
+const { isAdmin } = useIsAdmin()
+const user = useSupabaseUser()
 
 const session = ref<GameSessionWithMaster | null>(null)
 const isLoading = ref(true)
 const errorMessage = ref<string | null>(null)
+
+const canModify = (session: GameSessionWithMaster) => isAdmin.value || session.master_id === user.value?.sub
 
 const {
   formatDate,
@@ -50,6 +54,7 @@ const goBack = () => {
 <template>
   <div class="flex-1 mt-12">
     <div class="max-w-4xl mx-auto px-4 py-8">
+      <div class="flex justify-between items-center">
       <UButton
         label="Volver a la cartelera"
         icon="i-lucide-arrow-left"
@@ -58,6 +63,15 @@ const goBack = () => {
         class="cursor-pointer mb-6"
         @click="goBack"
       />
+      <UButton
+        v-if="session && canModify(session)"
+        label="Editar"
+        icon="i-lucide-pencil"
+        color="neutral"
+        variant="ghost"
+        class="cursor-pointer mb-6"
+      />
+      </div>
 
       <div
         v-if="isLoading"
