@@ -5,7 +5,7 @@ import type { FormSubmitEvent, AuthFormField } from '@nuxt/ui'
 const toast = useToast()
 const supabase = useSupabaseClient()
 
-const fields: AuthFormField[] = [{
+const _fields: AuthFormField[] = [{
   name: 'email',
   type: 'email',
   label: 'Email',
@@ -72,9 +72,8 @@ async function signInWithDiscord() {
       <UAuthForm
         :schema="schema"
         title="Login"
-        description="Enter your credentials to access your account."
+        description="Inicia sesion con Discord para iniciar."
         icon="i-lucide-user"
-        :fields="fields"
         :providers="providers"
         @submit="onSubmit"
       />
