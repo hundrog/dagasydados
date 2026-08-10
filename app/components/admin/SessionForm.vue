@@ -27,29 +27,27 @@ const periodicityOptions: Array<{ label: string, value: Periodicity }> = [
   { label: 'Mensual', value: 'MONTHLY' }
 ]
 
+const { lookups, refresh: refreshLookups } = useLookups()
+
 const systemOptions = computed(() => {
-  const defaults = ['Daggerheart', 'Mork Borg', 'Vaesen']
+  const defaults = lookups.value?.systems ?? []
   const current = state.system?.trim()
   return current && !defaults.includes(current) ? [...defaults, current] : defaults
 })
 
 const sessionTypeOptions = computed(() => {
-  const defaults = ['One Shot', 'Two Shot', 'Campaña', 'West Marches', 'Mesa Abierta']
+  const defaults = lookups.value?.session_types ?? []
   const current = state.session_type?.trim()
   return current && !defaults.includes(current) ? [...defaults, current] : defaults
 })
 
 const audienceOptions = computed(() => {
-  const defaults = ['Todo Público', 'Novatos', 'Experimentados']
+  const defaults = lookups.value?.audiences ?? []
   const current = state.audience?.trim()
   return current && !defaults.includes(current) ? [...defaults, current] : defaults
 })
 
-const modeOptions: Array<{ label: string, value: string }> = [
-  { label: 'Online', value: 'online' },
-  { label: 'Presencial', value: 'offline' },
-  { label: 'Híbrido', value: 'hybrid' }
-]
+const modeOptions = computed(() => lookups.value?.modes ?? [])
 
 const dayOptions: Array<{ code: string, label: string, short: string }> = [
   { code: 'MO', label: 'Lunes', short: 'L' },
@@ -344,6 +342,7 @@ const buildPayload = (): GameSessionInsert => ({
 
 onMounted(async () => {
   await refreshAdminStatus()
+  void refreshLookups()
 
   let query = supabase
     .from('dagger_masters')

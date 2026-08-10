@@ -42,17 +42,17 @@ const weekdayOptions: Array<{ label: string, value: number | 'all' }> = [
   { label: 'Domingo', value: 0 }
 ]
 
-const modeOptions: Array<{ label: string, value: string }> = [
-  { label: 'Todas las modalidades', value: 'all' },
-  { label: 'Online', value: 'online' },
-  { label: 'Presencial', value: 'offline' },
-  { label: 'Híbrido', value: 'hybrid' }
-]
+const { lookups, refresh: refreshLookups } = useLookups()
 
-const sessionTypeOptions: Array<{ label: string, value: string }> = [
+const modeOptions = computed(() => [
+  { label: 'Todas las modalidades', value: 'all' },
+  ...(lookups.value?.modes ?? [])
+])
+
+const sessionTypeOptions = computed(() => [
   { label: 'Todos los tipos', value: 'all' },
-  ...['One Shot', 'Two Shot', 'Campaña', 'West Marches', 'Mesa Abierta'].map(type => ({ label: type, value: type }))
-]
+  ...(lookups.value?.session_types ?? []).map(type => ({ label: type, value: type }))
+])
 
 const monthStart = computed(() => {
   const [year, month] = selectedMonth.value.split('-').map(Number)
@@ -131,6 +131,7 @@ const loadSessions = async () => {
 }
 
 onMounted(() => {
+  void refreshLookups()
   loadSessions()
 })
 </script>
