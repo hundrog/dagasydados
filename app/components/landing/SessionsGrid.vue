@@ -15,6 +15,7 @@ const currentMonthValue = () => {
 const selectedMonth = ref(currentMonthValue())
 const selectedWeekday = ref<number | 'all'>('all')
 const selectedMode = ref<string>('all')
+const selectedSessionType = ref<string>('all')
 
 const monthOptions = computed(() => {
   const now = new Date()
@@ -46,6 +47,11 @@ const modeOptions: Array<{ label: string, value: string }> = [
   { label: 'Online', value: 'online' },
   { label: 'Presencial', value: 'offline' },
   { label: 'Híbrido', value: 'hybrid' }
+]
+
+const sessionTypeOptions: Array<{ label: string, value: string }> = [
+  { label: 'Todos los tipos', value: 'all' },
+  ...['One Shot', 'Two Shot', 'Campaña', 'West Marches', 'Mesa Abierta'].map(type => ({ label: type, value: type }))
 ]
 
 const monthStart = computed(() => {
@@ -87,6 +93,10 @@ const matchesFilters = (session: GameSessionWithMaster) => {
     return false
   }
 
+  if (selectedSessionType.value !== 'all' && session.session_type?.trim() !== selectedSessionType.value) {
+    return false
+  }
+
   return true
 }
 
@@ -100,6 +110,7 @@ const hasActiveFilters = computed(() =>
   selectedMonth.value !== currentMonthValue()
   || selectedWeekday.value !== 'all'
   || selectedMode.value !== 'all'
+  || selectedSessionType.value !== 'all'
 )
 
 const loadSessions = async () => {
@@ -184,6 +195,19 @@ onMounted(() => {
         />
       </div>
 
+      <div class="flex flex-col gap-1.5">
+        <span class="label-metadata text-on-surface-dim">
+          Tipo de sesión
+        </span>
+        <USelectMenu
+          v-model="selectedSessionType"
+          :items="sessionTypeOptions"
+          value-key="value"
+          leading-icon="i-lucide-swords"
+          class="w-52"
+        />
+      </div>
+
       <UButton
         v-if="hasActiveFilters"
         label="Limpiar filtros"
@@ -191,7 +215,7 @@ onMounted(() => {
         color="neutral"
         variant="ghost"
         class="cursor-pointer"
-        @click="selectedMonth = currentMonthValue(); selectedWeekday = 'all'; selectedMode = 'all'"
+        @click="selectedMonth = currentMonthValue(); selectedWeekday = 'all'; selectedMode = 'all'; selectedSessionType = 'all'"
       />
     </div>
 

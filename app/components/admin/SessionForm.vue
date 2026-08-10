@@ -34,7 +34,7 @@ const systemOptions = computed(() => {
 })
 
 const sessionTypeOptions = computed(() => {
-  const defaults = ['one shot', 'two shot', 'campaña']
+  const defaults = ['One Shot', 'Two Shot', 'Campaña', 'West Marches', 'Mesa Abierta']
   const current = state.session_type?.trim()
   return current && !defaults.includes(current) ? [...defaults, current] : defaults
 })
