@@ -124,6 +124,9 @@ const parseRrule = (raw: string | null | undefined) => {
       })
       .filter((code): code is string => Boolean(code))
     const count = typeof options.count === 'number' && options.count > 0 ? options.count : null
+    if (periodicity === 'WEEKLY' && count === 1) {
+      periodicity = 'NONE'
+    }
     return { periodicity, days, count }
   } catch {
     return { periodicity: 'NONE' as Periodicity, days: [] as string[], count: null as number | null }
@@ -140,7 +143,7 @@ const isLoadingMasters = ref(true)
 const periodicity = ref<Periodicity>(initialParsed.periodicity)
 const days = ref<string[]>(initialParsed.days)
 const count = ref<number | '' | undefined>(initialParsed.count ?? '')
-const isRruleTouched = ref<boolean>(Boolean(props.session?.rrule))
+const isRruleTouched = ref<boolean>(false)
 
 const schema = z.object({
   title: z.string().min(1, 'El título es obligatorio'),
@@ -233,7 +236,21 @@ const frequencyForPeriodicity = (value: Periodicity): number | null => {
 }
 
 const buildRruleString = (): string => {
-  if (periodicity.value === 'NONE') return ''
+  const dtstart = state.fecha_inicio ? (parseLocalDate(state.fecha_inicio) ?? new Date()) : new Date()
+
+  if (periodicity.value === 'NONE') {
+    const startDay = startWeekdayCode.value
+    if (!startDay) return ''
+    const options: Record<string, unknown> = {
+      freq: RRule.WEEKLY,
+      interval: 1,
+      count: 1,
+      byweekday: [dayCodeToWeekday[startDay]],
+      dtstart
+    }
+    const serialized = new RRule(options).toString()
+    return serialized.split('\n').find(line => line.startsWith('RRULE:')) ?? ''
+  }
 
   const freq = frequencyForPeriodicity(periodicity.value)
   if (!freq) return ''
@@ -243,7 +260,7 @@ const buildRruleString = (): string => {
   const options: Record<string, unknown> = {
     freq,
     interval,
-    dtstart: state.fecha_inicio ? (parseLocalDate(state.fecha_inicio) ?? new Date()) : new Date()
+    dtstart
   }
 
   if (freq === RRule.WEEKLY && days.value.length > 0) {
@@ -275,7 +292,8 @@ const onPeriodicityChange = () => {
   syncRruleFromInputs()
 }
 
-const onCountChange = () => {
+const onCountChange = (value: string | number | null) => {
+  count.value = value === '' || value === null || value === undefined ? '' : Number(value)
   isRruleTouched.value = false
   syncRruleFromInputs()
 }
@@ -653,7 +671,7 @@ async function submitSession() {
             name="count"
           >
             <UInput
-              v-model="count"
+              :model-value="periodicity === 'NONE' ? 1 : count"
               type="number"
               min="1"
               class="w-full"
