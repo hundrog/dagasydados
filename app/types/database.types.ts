@@ -41,25 +41,31 @@ export type Database = {
         Row: {
           avatar_url: string | null
           created_at: string
+          descripcion: string | null
           full_name: string | null
           id: string
           phone: string | null
+          profile: Json | null
           user_name: string | null
         }
         Insert: {
           avatar_url?: string | null
           created_at?: string
+          descripcion?: string | null
           full_name?: string | null
           id?: string
           phone?: string | null
+          profile?: Json | null
           user_name?: string | null
         }
         Update: {
           avatar_url?: string | null
           created_at?: string
+          descripcion?: string | null
           full_name?: string | null
           id?: string
           phone?: string | null
+          profile?: Json | null
           user_name?: string | null
         }
         Relationships: []
