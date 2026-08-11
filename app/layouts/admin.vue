@@ -8,14 +8,22 @@ const route = useRoute()
 const open = ref(true)
 
 const isSessionEdit = computed(() => /^\/admin\/sessions\/.+\/edit$/.test(route.path))
+const isProfileEdit = computed(() => /^\/admin\/profile\/.+\/edit$/.test(route.path))
 
-const formSections = [
+const sessionFormSections = [
   { label: 'Información básica', id: 'informacion-basica' },
   { label: 'Clasificación', id: 'clasificacion' },
   { label: 'Programación', id: 'programacion' },
   { label: 'Logística', id: 'logistica' },
   { label: 'Jugadores', id: 'jugadores' },
   { label: 'Master', id: 'master' }
+]
+
+const profileFormSections = [
+  { label: 'Información del master', id: 'informacion-master' },
+  { label: 'Estilo de juego', id: 'estilo-juego' },
+  { label: 'Homebrew', id: 'homebrew' },
+  { label: 'Referencias', id: 'referencias' }
 ]
 
 function scrollToSection(id: string) {
@@ -32,7 +40,7 @@ const items = computed<NavigationMenuItem[]>(() => [
     active: route.path.startsWith('/admin/sessions'),
     defaultOpen: isSessionEdit.value,
     children: isSessionEdit.value
-      ? formSections.map(section => ({
+      ? sessionFormSections.map(section => ({
           label: section.label,
           onSelect: () => scrollToSection(section.id)
         }))
@@ -42,7 +50,14 @@ const items = computed<NavigationMenuItem[]>(() => [
     label: 'Dagger Masters',
     icon: 'i-lucide-user',
     to: '/admin/masters',
-    active: route.path.startsWith('/admin/masters')
+    active: route.path.startsWith('/admin/masters') || isProfileEdit.value,
+    defaultOpen: isProfileEdit.value,
+    children: isProfileEdit.value
+      ? profileFormSections.map(section => ({
+          label: section.label,
+          onSelect: () => scrollToSection(section.id)
+        }))
+      : undefined
   }
 ])
 

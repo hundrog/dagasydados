@@ -182,13 +182,6 @@ function getRowItems(row: Row<Master>) {
       type: 'separator'
     },
     {
-      label: 'Editar master',
-      disabled: !canModify(row.original),
-      onSelect() {
-        masterFormRef.value?.open(row.original)
-      }
-    },
-    {
       label: 'Editar perfil',
       disabled: !canModify(row.original),
       onSelect() {

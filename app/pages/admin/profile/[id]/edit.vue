@@ -1,12 +1,22 @@
 <script setup lang="ts">
 import * as z from 'zod'
-import type { MasterProfile } from '~/types/master'
+import { vMaska } from 'maska/vue'
+import type { Master, MasterProfile } from '~/types/master'
+
+type PhoneCode = {
+  name: string
+  code: string
+  emoji: string
+  dialCode: string
+  mask: string
+}
 
 const route = useRoute()
 const supabase = useSupabaseClient()
 const toast = useToast()
 const { isAdmin, refresh: refreshAdminStatus } = useIsAdmin()
 const user = useSupabaseUser()
+const { uploadMasterAvatar, deleteMasterAvatarByUrl } = useMasterAvatar()
 
 const masterId = computed(() => String(route.params.id))
 
@@ -15,8 +25,15 @@ const isLoading = ref(true)
 const errorMessage = ref<string | null>(null)
 const isSubmitting = ref(false)
 const canEdit = ref(false)
+const previousAvatarUrl = ref<string | null>(null)
+const avatarFile = ref<File | null>(null)
+const avatarRemoved = ref(false)
 
 const schema = z.object({
+  full_name: z.string().min(1, 'El nombre es obligatorio'),
+  user_name: z.string().optional(),
+  phone: z.string().optional(),
+  avatar_url: z.url('Debe ser una URL válida').optional().or(z.literal('')),
   estilo_juego: z.object({
     narrativo: z.number().int().min(1, 'La prioridad mínima es 1').max(4, 'La prioridad máxima es 4'),
     tactico: z.number().int().min(1, 'La prioridad mínima es 1').max(4, 'La prioridad máxima es 4'),
@@ -47,6 +64,10 @@ const schema = z.object({
 type Schema = z.infer<typeof schema>
 
 const initialState = (): Schema => ({
+  full_name: '',
+  user_name: '',
+  phone: '',
+  avatar_url: '',
   estilo_juego: { narrativo: 1, tactico: 2, roll: 3, puzzle: 4 },
   homebrew: { mecanicas: '', mundo: '' },
   referencias: { peliculas: [], libros: [], videojuegos: [], series_anime: [] }
@@ -129,6 +150,42 @@ const buildProfile = (): MasterProfile => ({
   }
 })
 
+const avatarPreview = computed(() => {
+  if (avatarFile.value) return URL.createObjectURL(avatarFile.value)
+  if (state.avatar_url) return state.avatar_url
+  return null
+})
+
+const onAvatarChange = () => {
+  if (avatarFile.value && avatarFile.value.size > 5 * 1024 * 1024) {
+    toast.add({
+      title: 'La imagen supera el tamaño máximo de 5 MB',
+      color: 'error',
+      icon: 'i-lucide-octagon-x'
+    })
+    avatarFile.value = null
+    return
+  }
+  if (avatarFile.value) {
+    avatarRemoved.value = false
+  }
+}
+
+const clearAvatar = () => {
+  avatarFile.value = null
+  state.avatar_url = ''
+  avatarRemoved.value = true
+}
+
+const stripCountryCode = (digits: string, dialCode: string) => {
+  const d = dialCode.replace(/\D/g, '')
+  return d && digits.length > d.length && digits.startsWith(d) ? digits.slice(d.length) : digits
+}
+
+const withMobilePrefix = (country: PhoneCode | undefined, digits: string) => {
+  return country?.code === 'MX' ? `1${digits}` : digits
+}
+
 const applyProfile = (profile: MasterProfile) => {
   state.estilo_juego = { ...profile.estilo_juego }
   state.homebrew = {
@@ -144,12 +201,33 @@ const applyProfile = (profile: MasterProfile) => {
   estiloOrder.value = orderFromEstilo(state.estilo_juego)
 }
 
+const hydrateMaster = (master: Master) => {
+  state.full_name = master.full_name ?? ''
+  state.user_name = master.user_name ?? ''
+  state.avatar_url = master.avatar_url ?? ''
+  avatarFile.value = null
+  avatarRemoved.value = false
+
+  const digits = master.phone?.replace(/\D/g, '') ?? ''
+  const match = (phoneCodes.value ?? []).find((c) => {
+    const d = c.dialCode.replace(/\D/g, '')
+    return d && digits.length > d.length && digits.startsWith(d)
+  })
+  const detected = match ?? { code: 'MX', dialCode: '+52' }
+  skipCountryWatch = true
+  countryCode.value = detected.code
+  state.phone = stripCountryCode(digits, detected.dialCode)
+  if (detected.code === 'MX' && state.phone.startsWith('1')) {
+    state.phone = state.phone.slice(1)
+  }
+}
+
 onMounted(async () => {
   await refreshAdminStatus()
 
   const { data, error } = await supabase
     .from('dagger_masters')
-    .select('id,full_name,user_name,profile')
+    .select('id,full_name,user_name,phone,avatar_url,profile')
     .eq('id', masterId.value)
     .maybeSingle()
 
@@ -173,6 +251,8 @@ onMounted(async () => {
     return
   }
 
+  previousAvatarUrl.value = data.avatar_url
+  hydrateMaster(data as Master)
   applyProfile((data.profile as MasterProfile | null) ?? initialState())
 })
 
@@ -182,17 +262,45 @@ async function submitProfile() {
   isSubmitting.value = true
   errorMessage.value = null
 
+  let uploadedUrl: string | null = null
+  if (avatarFile.value) {
+    try {
+      uploadedUrl = await uploadMasterAvatar(avatarFile.value)
+    } catch (uploadError) {
+      isSubmitting.value = false
+      errorMessage.value = uploadError instanceof Error ? uploadError.message : 'No se pudo subir el avatar'
+      return
+    }
+  }
+
+  const phone = (state.phone?.replace(/\D/g, '') && `${dialCode.value.replace(/\D/g, '')}${withMobilePrefix(country.value, state.phone.replace(/\D/g, ''))}`) || null
+
+  const payload = {
+    full_name: state.full_name.trim() || null,
+    user_name: state.user_name?.trim() || null,
+    phone,
+    avatar_url: avatarFile.value ? uploadedUrl : (avatarRemoved.value ? null : (state.avatar_url?.trim() || null)),
+    profile: buildProfile()
+  }
+
   const { error } = await supabase
     .from('dagger_masters')
-    .update({ profile: buildProfile() })
+    .update(payload)
     .eq('id', masterId.value)
 
-  isSubmitting.value = false
-
   if (error) {
+    if (uploadedUrl) await deleteMasterAvatarByUrl(uploadedUrl)
+    isSubmitting.value = false
     errorMessage.value = error.message
     return
   }
+
+  const replaced = uploadedUrl ? previousAvatarUrl.value !== uploadedUrl : avatarRemoved.value
+  if (replaced && previousAvatarUrl.value) {
+    await deleteMasterAvatarByUrl(previousAvatarUrl.value)
+  }
+
+  isSubmitting.value = false
 
   toast.add({
     title: 'Perfil actualizado',
@@ -206,6 +314,23 @@ async function submitProfile() {
 const goBack = () => {
   navigateTo('/admin/masters')
 }
+
+const countryCode = ref('MX')
+let skipCountryWatch = false
+
+const { data: phoneCodes, status, execute } = await useLazyFetch<PhoneCode[]>('/api/phone-codes')
+
+const country = computed(() => phoneCodes.value?.find(c => c.code === countryCode.value))
+const dialCode = computed(() => country.value?.dialCode || '+52')
+const mask = computed(() => country.value?.mask || '(##) #### ####')
+
+watch(countryCode, () => {
+  if (skipCountryWatch) {
+    skipCountryWatch = false
+    return
+  }
+  state.phone = ''
+})
 </script>
 
 <template>
@@ -217,7 +342,7 @@ const goBack = () => {
             Editar perfil de {{ masterName || 'Master' }}
           </h1>
           <p class="text-sm text-slate-500 mt-1">
-            Define tu estilo de juego, tu homebrew y tus referencias.
+            Actualiza tus datos y define tu perfil como master.
           </p>
         </div>
         <UButton
@@ -250,6 +375,125 @@ const goBack = () => {
         class="w-full space-y-8"
         @submit="submitProfile"
       >
+        <section
+          id="informacion-master"
+          class="space-y-4 scroll-mt-24"
+        >
+          <h2 class="text-lg font-semibold text-primary-900">
+            Información del master
+          </h2>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <UFormField
+              label="Nombre completo"
+              name="full_name"
+              required
+            >
+              <UInput
+                v-model="state.full_name"
+                class="w-full"
+              />
+            </UFormField>
+            <UFormField
+              label="Apodo"
+              name="user_name"
+            >
+              <UInput
+                v-model="state.user_name"
+                class="w-full"
+              />
+            </UFormField>
+            <UFormField
+              label="Teléfono"
+              name="phone"
+              class="md:col-span-2"
+            >
+              <UFieldGroup class="w-full">
+                <USelectMenu
+                  v-model="countryCode"
+                  :items="phoneCodes"
+                  value-key="code"
+                  :search-input="{
+                    placeholder: 'Search country...',
+                    icon: 'i-lucide-search',
+                    loading: status === 'pending'
+                  }"
+                  :filter-fields="['name', 'code', 'dialCode']"
+                  :content="{ align: 'start' }"
+                  :ui="{
+                    base: 'pe-8',
+                    content: 'w-48',
+                    placeholder: 'hidden',
+                    trailingIcon: 'size-4'
+                  }"
+                  trailing-icon="i-lucide-chevrons-up-down"
+                  @update:open="execute()"
+                >
+                  <span class="size-5 flex items-center text-lg">
+                    {{ country?.emoji || '\u{1F1FA}\u{1F1F8}' }}
+                  </span>
+
+                  <template #item-leading="{ item }">
+                    <span class="size-5 flex items-center text-lg">
+                      {{ item.emoji }}
+                    </span>
+                  </template>
+
+                  <template #item-label="{ item }">
+                    {{ item.name }} ({{ item.dialCode }})
+                  </template>
+                </USelectMenu>
+
+                <UInput
+                  v-model="state.phone"
+                  v-maska="mask"
+                  class="w-full"
+                  :placeholder="mask.replaceAll('#', '_')"
+                >
+                  <template #leading>
+                    {{ dialCode }}
+                  </template>
+                </UInput>
+              </UFieldGroup>
+            </UFormField>
+            <UFormField
+              label="Avatar"
+              name="avatar_url"
+              class="md:col-span-2"
+            >
+              <div class="space-y-4">
+                <div
+                  v-if="avatarPreview"
+                  class="relative w-fit"
+                >
+                  <img
+                    :src="avatarPreview"
+                    alt="Vista previa del avatar"
+                    class="size-24 rounded-full object-cover border border-slate-200"
+                  >
+                  <UButton
+                    icon="i-lucide-x"
+                    color="neutral"
+                    variant="ghost"
+                    size="sm"
+                    class="absolute -top-2 -right-2 cursor-pointer rounded-full"
+                    aria-label="Quitar avatar"
+                    :disabled="isSubmitting"
+                    @click="clearAvatar"
+                  />
+                </div>
+                <UFileUpload
+                  v-model="avatarFile"
+                  accept="image/*"
+                  :disabled="isSubmitting"
+                  label="Subir avatar"
+                  description="JPG, PNG o WebP · Máximo 5 MB"
+                  @change="onAvatarChange"
+                />
+              </div>
+            </UFormField>
+          </div>
+        </section>
+
         <section
           id="estilo-juego"
           class="space-y-4 scroll-mt-24"
