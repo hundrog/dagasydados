@@ -1,11 +1,12 @@
 <script setup lang="ts">
-import type { NavigationMenuItem } from '@nuxt/ui'
+import type { NavigationMenuItem, DropdownMenuItem } from '@nuxt/ui'
 
 const supabase = useSupabaseClient()
 const toast = useToast()
 const route = useRoute()
 const { isAdmin } = useIsAdmin()
 const user = useSupabaseUser()
+const colorMode = useColorMode()
 
 const open = ref(true)
 
@@ -84,6 +85,59 @@ const items = computed<NavigationMenuItem[]>(() => {
   return [profileItem(), gameSessionsItem()]
 })
 
+const userItems = computed<DropdownMenuItem[][]>(() => [
+  [
+    {
+      label: 'Profile',
+      icon: 'i-lucide-user',
+      to: `/admin/profile/${user.value?.sub}/edit`
+    }
+  ],
+  [
+    {
+      label: 'Appearance',
+      icon: 'i-lucide-sun-moon',
+      children: [
+        {
+          label: 'Light',
+          icon: 'i-lucide-sun',
+          type: 'checkbox',
+          checked: colorMode.value === 'light',
+          onUpdateChecked(checked: boolean) {
+            if (checked) {
+              colorMode.preference = 'light'
+            }
+          },
+          onSelect(e: Event) {
+            e.preventDefault()
+          }
+        },
+        {
+          label: 'Dark',
+          icon: 'i-lucide-moon',
+          type: 'checkbox',
+          checked: colorMode.value === 'dark',
+          onUpdateChecked(checked: boolean) {
+            if (checked) {
+              colorMode.preference = 'dark'
+            }
+          },
+          onSelect(e: Event) {
+            e.preventDefault()
+          }
+        }
+      ]
+    }
+  ],
+  [
+    {
+      label: 'Log out',
+      icon: 'i-lucide-log-out',
+      onSelect: signOut
+    }
+  ]
+])
+
 async function signOut() {
   const { error } = await supabase.auth.signOut()
 
@@ -119,14 +173,24 @@ async function signOut() {
         />
         <template #footer>
           <div class="flex-1" />
-          <UButton
-            label="Cerrar sesión"
-            icon="i-lucide-log-out"
-            color="neutral"
-            variant="ghost"
-            class="w-full justify-start cursor-pointer"
-            @click="signOut"
-          />
+          <UDropdownMenu
+            :items="userItems"
+            :content="{ align: 'center', collisionPadding: 12 }"
+            :ui="{ content: 'w-(--reka-dropdown-menu-trigger-width) min-w-48' }"
+          >
+            <UButton
+              v-bind="user"
+              :label="user?.name"
+              trailing-icon="i-lucide-chevrons-up-down"
+              color="neutral"
+              variant="ghost"
+              square
+              class="w-full data-[state=open]:bg-elevated overflow-hidden"
+              :ui="{
+                trailingIcon: 'text-dimmed ms-auto'
+              }"
+            />
+          </UDropdownMenu>
         </template>
       </USidebar>
 
