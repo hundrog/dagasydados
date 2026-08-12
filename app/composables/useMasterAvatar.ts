@@ -1,5 +1,4 @@
-const AVATARS_BUCKET = 'game-session-images'
-const AVATARS_FOLDER = 'avatars'
+const AVATARS_BUCKET = 'master-avatars'
 const AVATARS_MARKER = `/storage/v1/object/public/${AVATARS_BUCKET}/`
 
 const fileExtension = (name: string): string => {
@@ -28,7 +27,7 @@ export function useMasterAvatar() {
   }
 
   const uploadMasterAvatar = async (file: File): Promise<string> => {
-    const path = `${AVATARS_FOLDER}/${crypto.randomUUID()}${fileExtension(file.name)}`
+    const path = `${crypto.randomUUID()}${fileExtension(file.name)}`
     const { error } = await supabase.storage
       .from(AVATARS_BUCKET)
       .upload(path, file, {
