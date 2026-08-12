@@ -4,6 +4,8 @@ import type { NavigationMenuItem } from '@nuxt/ui'
 const supabase = useSupabaseClient()
 const toast = useToast()
 const route = useRoute()
+const { isAdmin } = useIsAdmin()
+const user = useSupabaseUser()
 
 const open = ref(true)
 
@@ -32,34 +34,55 @@ function scrollToSection(id: string) {
   document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
 }
 
-const items = computed<NavigationMenuItem[]>(() => [
-  {
-    label: 'Game Sessions',
-    icon: 'i-lucide-calendar',
-    to: '/admin/sessions',
-    active: route.path.startsWith('/admin/sessions'),
-    defaultOpen: isSessionEdit.value,
-    children: isSessionEdit.value
-      ? sessionFormSections.map(section => ({
-          label: section.label,
-          onSelect: () => scrollToSection(section.id)
-        }))
-      : undefined
-  },
-  {
-    label: 'Dagger Masters',
-    icon: 'i-lucide-user',
-    to: '/admin/masters',
-    active: route.path.startsWith('/admin/masters') || isProfileEdit.value,
-    defaultOpen: isProfileEdit.value,
-    children: isProfileEdit.value
-      ? profileFormSections.map(section => ({
-          label: section.label,
-          onSelect: () => scrollToSection(section.id)
-        }))
-      : undefined
+const gameSessionsItem = (): NavigationMenuItem => ({
+  label: 'Game Sessions',
+  icon: 'i-lucide-calendar',
+  to: '/admin/sessions',
+  active: route.path.startsWith('/admin/sessions'),
+  defaultOpen: isSessionEdit.value,
+  children: isSessionEdit.value
+    ? sessionFormSections.map(section => ({
+        label: section.label,
+        onSelect: () => scrollToSection(section.id)
+      }))
+    : undefined
+})
+
+const mastersItem = (): NavigationMenuItem => ({
+  label: 'Dagger Masters',
+  icon: 'i-lucide-user',
+  to: '/admin/masters',
+  active: route.path.startsWith('/admin/masters') || isProfileEdit.value,
+  defaultOpen: isProfileEdit.value,
+  children: isProfileEdit.value
+    ? profileFormSections.map(section => ({
+        label: section.label,
+        onSelect: () => scrollToSection(section.id)
+      }))
+    : undefined
+})
+
+const profileItem = (): NavigationMenuItem => ({
+  label: 'Perfil',
+  icon: 'i-lucide-user',
+  to: `/admin/profile/${user.value?.sub}/edit`,
+  active: isProfileEdit.value,
+  defaultOpen: isProfileEdit.value,
+  children: isProfileEdit.value
+    ? profileFormSections.map(section => ({
+        label: section.label,
+        onSelect: () => scrollToSection(section.id)
+      }))
+    : undefined
+})
+
+const items = computed<NavigationMenuItem[]>(() => {
+  if (isAdmin.value) {
+    return [mastersItem(), gameSessionsItem()]
   }
-])
+
+  return [profileItem(), gameSessionsItem()]
+})
 
 async function signOut() {
   const { error } = await supabase.auth.signOut()
