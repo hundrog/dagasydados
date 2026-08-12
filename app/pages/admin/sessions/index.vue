@@ -15,7 +15,7 @@ const { isAdmin } = storeToRefs(useAdminStore())
 const user = useSupabaseUser()
 const { deleteSessionImageByUrl } = useSessionImage()
 
-const canModify = (session: GameSessionWithMaster) => isAdmin.value || session.master_id === user.value?.id
+const canModify = (session: GameSessionWithMaster) => isAdmin.value || session.master_id === user.value?.sub
 
 const sessions = ref<GameSessionWithMaster[]>([])
 const isLoading = ref(true)
