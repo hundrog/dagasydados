@@ -6,9 +6,37 @@ const toast = useToast()
 const route = useRoute()
 const { isAdmin } = useIsAdmin()
 const user = useSupabaseUser()
+const { master, refresh: refreshMaster } = useCurrentMaster()
 const colorMode = useColorMode()
 
 const open = ref(true)
+
+const currentMasterName = computed(() =>
+  master.value?.full_name
+  || master.value?.user_name
+  || user.value?.user_metadata?.name
+  || user.value?.email
+  || 'Perfil'
+)
+
+const currentMasterInitials = computed(() => {
+  const value = master.value?.full_name || master.value?.user_name
+  if (!value) return 'P'
+
+  return value
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map(part => part[0]?.toUpperCase() ?? '')
+    .join('') || 'P'
+})
+
+watch(
+  () => route.fullPath,
+  () => {
+    void refreshMaster()
+  }
+)
 
 const isSessionEdit = computed(() => /^\/admin\/sessions\/.+\/edit$/.test(route.path))
 const isProfileEdit = computed(() => /^\/admin\/profile\/.+\/edit$/.test(route.path))
@@ -179,8 +207,12 @@ async function signOut() {
             :ui="{ content: 'w-(--reka-dropdown-menu-trigger-width) min-w-48' }"
           >
             <UButton
-              v-bind="user"
-              :label="user?.name"
+              :avatar="{
+                src: master?.avatar_url ?? undefined,
+                text: currentMasterInitials,
+                alt: currentMasterName
+              }"
+              :label="currentMasterName"
               trailing-icon="i-lucide-chevrons-up-down"
               color="neutral"
               variant="ghost"
