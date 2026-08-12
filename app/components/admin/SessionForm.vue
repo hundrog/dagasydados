@@ -6,7 +6,8 @@ import type { GameSession, GameSessionInsert, SessionMasterRef } from '~/types/s
 const supabase = useSupabaseClient()
 const toast = useToast()
 const { uploadSessionImage, deleteSessionImageByUrl } = useSessionImage()
-const { isAdmin, refresh: refreshAdminStatus } = useIsAdmin()
+const adminStore = useAdminStore()
+const { isAdmin } = storeToRefs(adminStore)
 const user = useSupabaseUser()
 
 const props = defineProps<{
@@ -27,7 +28,8 @@ const periodicityOptions: Array<{ label: string, value: Periodicity }> = [
   { label: 'Mensual', value: 'MONTHLY' }
 ]
 
-const { lookups, refresh: refreshLookups } = useLookups()
+const lookupsStore = useLookupsStore()
+const { lookups } = storeToRefs(lookupsStore)
 
 const systemOptions = computed(() => {
   const defaults = lookups.value?.systems ?? []
@@ -341,8 +343,8 @@ const buildPayload = (): GameSessionInsert => ({
 })
 
 onMounted(async () => {
-  await refreshAdminStatus()
-  void refreshLookups()
+  await adminStore.refresh()
+  void lookupsStore.refresh()
 
   let query = supabase
     .from('dagger_masters')

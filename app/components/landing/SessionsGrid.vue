@@ -42,7 +42,8 @@ const weekdayOptions: Array<{ label: string, value: number | 'all' }> = [
   { label: 'Domingo', value: 0 }
 ]
 
-const { lookups, refresh: refreshLookups } = useLookups()
+const lookupsStore = useLookupsStore()
+const { lookups } = storeToRefs(lookupsStore)
 
 const modeOptions = computed(() => [
   { label: 'Todas las modalidades', value: 'all' },
@@ -131,7 +132,7 @@ const loadSessions = async () => {
 }
 
 onMounted(() => {
-  void refreshLookups()
+  void lookupsStore.refresh()
   loadSessions()
 })
 </script>

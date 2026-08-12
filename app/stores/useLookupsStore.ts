@@ -1,5 +1,3 @@
-import type { Ref } from 'vue'
-
 export interface LookupMode {
   label: string
   value: string
@@ -12,21 +10,18 @@ export interface Lookups {
   modes: LookupMode[]
 }
 
-let cached: Lookups | null = null
-let pendingPromise: Promise<Lookups> | null = null
-
-export function useLookups() {
-  const lookups = ref<Lookups | null>(cached)
-  const isLoading = ref(cached === null)
+export const useLookupsStore = defineStore('lookups', () => {
+  const lookups = ref<Lookups | null>(null)
+  const isLoading = ref(false)
+  let pendingPromise: Promise<Lookups> | null = null
 
   const refresh = (): Promise<Lookups> => {
-    if (cached) return Promise.resolve(cached)
+    if (lookups.value) return Promise.resolve(lookups.value)
     if (pendingPromise) return pendingPromise
 
     pendingPromise = (async () => {
       try {
         const data = await $fetch<Lookups>('/api/lookups')
-        cached = data
         lookups.value = data
         return data
       } finally {
@@ -39,8 +34,8 @@ export function useLookups() {
   }
 
   return {
-    lookups: lookups as Readonly<Ref<Lookups | null>>,
-    isLoading: isLoading as Readonly<Ref<boolean>>,
+    lookups,
+    isLoading,
     refresh
   }
-}
+})

@@ -4,9 +4,10 @@ import type { NavigationMenuItem, DropdownMenuItem } from '@nuxt/ui'
 const supabase = useSupabaseClient()
 const toast = useToast()
 const route = useRoute()
-const { isAdmin } = useIsAdmin()
+const { isAdmin } = storeToRefs(useAdminStore())
 const user = useSupabaseUser()
-const { master, refresh: refreshMaster } = useCurrentMaster()
+const currentMasterStore = useCurrentMasterStore()
+const { master } = storeToRefs(currentMasterStore)
 const colorMode = useColorMode()
 
 const open = ref(true)
@@ -34,7 +35,7 @@ const currentMasterInitials = computed(() => {
 watch(
   () => route.fullPath,
   () => {
-    void refreshMaster()
+    void currentMasterStore.refresh()
   }
 )
 

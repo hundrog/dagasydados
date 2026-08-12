@@ -67,7 +67,7 @@ app/
 ├── components/
 │   ├── admin/          # Formularios y UI del panel
 │   └── landing/        # Componentes de la página pública
-├── composables/        # useIsAdmin, useSessionImage
+├── composables/        # useMasterAvatar, useSessionImage
 ├── layouts/            # admin, default
 ├── pages/
 │   ├── admin/          # masters, sessions (nuevo/editar), index
@@ -75,6 +75,7 @@ app/
 │   ├── index.vue       # Landing
 │   ├── login.vue
 │   └── confirm.vue     # Callback post-login
+├── stores/             # Pinia (admin, currentMaster, lookups)
 └── types/              # Tipos de la base de datos y del dominio
 ```
 

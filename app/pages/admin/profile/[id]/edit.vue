@@ -14,7 +14,8 @@ type PhoneCode = {
 const route = useRoute()
 const supabase = useSupabaseClient()
 const toast = useToast()
-const { isAdmin, refresh: refreshAdminStatus } = useIsAdmin()
+const adminStore = useAdminStore()
+const { isAdmin } = storeToRefs(adminStore)
 const user = useSupabaseUser()
 const { uploadMasterAvatar, deleteMasterAvatarByUrl } = useMasterAvatar()
 
@@ -223,7 +224,7 @@ const hydrateMaster = (master: Master) => {
 }
 
 onMounted(async () => {
-  await refreshAdminStatus()
+  await adminStore.refresh()
 
   const { data, error } = await supabase
     .from('dagger_masters')

@@ -1,10 +1,10 @@
-import type { Ref } from 'vue'
+import type { Master } from '~/types/master'
 
-export function useIsAdmin() {
+export const useCurrentMasterStore = defineStore('currentMaster', () => {
   const supabase = useSupabaseClient()
   const user = useSupabaseUser()
 
-  const isAdmin = ref(false)
+  const master = ref<Pick<Master, 'id' | 'full_name' | 'user_name' | 'avatar_url'> | null>(null)
   const isLoading = ref(false)
   let pendingPromise: Promise<void> | null = null
 
@@ -13,7 +13,7 @@ export function useIsAdmin() {
 
     const userId = user.value?.sub
     if (!userId) {
-      isAdmin.value = false
+      master.value = null
       return Promise.resolve()
     }
 
@@ -21,12 +21,12 @@ export function useIsAdmin() {
     pendingPromise = (async () => {
       try {
         const { data, error } = await supabase
-          .from('admins')
-          .select('id')
+          .from('dagger_masters')
+          .select('id,full_name,user_name,avatar_url')
           .eq('id', userId)
           .maybeSingle()
 
-        isAdmin.value = !error && data !== null
+        master.value = error ? null : (data ?? null)
       } finally {
         isLoading.value = false
         pendingPromise = null
@@ -45,8 +45,8 @@ export function useIsAdmin() {
   )
 
   return {
-    isAdmin: isAdmin as Readonly<Ref<boolean>>,
+    master,
     isLoading,
     refresh
   }
-}
+})

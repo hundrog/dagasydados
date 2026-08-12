@@ -11,7 +11,7 @@ const UDropdownMenu = resolveComponent('UDropdownMenu')
 
 const toast = useToast()
 const { copy } = useClipboard()
-const { isAdmin } = useIsAdmin()
+const { isAdmin } = storeToRefs(useAdminStore())
 const user = useSupabaseUser()
 const { deleteSessionImageByUrl } = useSessionImage()
 

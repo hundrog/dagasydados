@@ -4,6 +4,7 @@ export default defineNuxtConfig({
     '@nuxt/eslint',
     '@nuxt/ui',
     '@nuxtjs/supabase',
+    '@pinia/nuxt',
     'nuxt-security'
   ],
 

@@ -3,7 +3,7 @@ import type { GameSessionWithMaster } from '~/types/session'
 
 const route = useRoute()
 const supabase = useSupabaseClient()
-const { isAdmin } = useIsAdmin()
+const { isAdmin } = storeToRefs(useAdminStore())
 const user = useSupabaseUser()
 
 const session = ref<GameSessionWithMaster | null>(null)
