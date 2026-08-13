@@ -35,6 +35,7 @@ const schema = z.object({
   user_name: z.string().optional(),
   phone: z.string().optional(),
   avatar_url: z.url('Debe ser una URL válida').optional().or(z.literal('')),
+  plataforma_pago: z.string().optional(),
   estilo_juego: z.object({
     narrativo: z.number().int().min(1, 'La prioridad mínima es 1').max(4, 'La prioridad máxima es 4'),
     tactico: z.number().int().min(1, 'La prioridad mínima es 1').max(4, 'La prioridad máxima es 4'),
@@ -69,6 +70,7 @@ const initialState = (): Schema => ({
   user_name: '',
   phone: '',
   avatar_url: '',
+  plataforma_pago: '',
   estilo_juego: { narrativo: 1, tactico: 2, roll: 3, puzzle: 4 },
   homebrew: { mecanicas: '', mundo: '' },
   referencias: { peliculas: [], libros: [], videojuegos: [], series_anime: [] }
@@ -206,6 +208,7 @@ const hydrateMaster = (master: Master) => {
   state.full_name = master.full_name ?? ''
   state.user_name = master.user_name ?? ''
   state.avatar_url = master.avatar_url ?? ''
+  state.plataforma_pago = master.plataforma_pago ?? ''
   avatarFile.value = null
   avatarRemoved.value = false
 
@@ -228,7 +231,7 @@ onMounted(async () => {
 
   const { data, error } = await supabase
     .from('dagger_masters')
-    .select('id,full_name,user_name,phone,avatar_url,profile')
+    .select('id,full_name,user_name,phone,avatar_url,plataforma_pago,profile')
     .eq('id', masterId.value)
     .maybeSingle()
 
@@ -281,6 +284,7 @@ async function submitProfile() {
     user_name: state.user_name?.trim() || null,
     phone,
     avatar_url: avatarFile.value ? uploadedUrl : (avatarRemoved.value ? null : (state.avatar_url?.trim() || null)),
+    plataforma_pago: state.plataforma_pago?.trim() || null,
     profile: buildProfile()
   }
 
@@ -491,6 +495,19 @@ watch(countryCode, () => {
                   @change="onAvatarChange"
                 />
               </div>
+            </UFormField>
+            <UFormField
+              label="Plataforma de pago"
+              name="plataforma_pago"
+              class="md:col-span-2"
+              description="Link o cuenta donde quieres recibir el pago por tus sesiones."
+            >
+              <UInput
+                v-model="state.plataforma_pago"
+                class="w-full"
+                placeholder="Ej. tu.usuario@paypal.me, CLABE, link de MercadoPago..."
+                leading-icon="i-lucide-credit-card"
+              />
             </UFormField>
           </div>
         </section>

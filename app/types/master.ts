@@ -23,5 +23,6 @@ export type Master = {
   user_name: string | null
   phone: string | null
   avatar_url: string | null
+  plataforma_pago: string | null
   profile: MasterProfile | null
 }
