@@ -9,14 +9,19 @@ const props = defineProps<{
   sessionId?: string
 }>()
 
-const supabase = useSupabaseClient()
 const toast = useToast()
 const isOpen = ref(false)
 const isLoading = ref(false)
 
+const sanitizeName = (value: string) =>
+  value.replace(/[^\p{L}\p{N}\s\-_.]/gu, '').trim().slice(0, 80)
+
+const sanitizePhone = (value: string) =>
+  value.replace(/[^\d+\s-]/g, '').trim().slice(0, 20)
+
 const schema = z.object({
-  name: z.string().min(1, 'El nombre es requerido'),
-  telefono: z.string().min(1, 'El telefono es requerido')
+  name: z.string().min(1, 'El nombre es requerido').max(80),
+  telefono: z.string().min(1, 'El telefono es requerido').max(20)
 })
 
 type Schema = z.output<typeof schema>
@@ -44,34 +49,58 @@ async function handleReserve() {
 
   isLoading.value = true
 
-  const { error } = await supabase
-    .from('session_players')
-    .insert({
-      game_session_id: props.sessionId,
-      nombre: state.name.trim(),
-      telefono: state.telefono.trim()
+  const nombre = sanitizeName(state.name)
+  const telefono = sanitizePhone(state.telefono)
+
+  if (!nombre || !telefono) {
+    isLoading.value = false
+    toast.add({
+      title: 'Datos de reserva inválidos',
+      color: 'error',
+      icon: 'i-lucide-octagon-x'
     })
+    return
+  }
 
-  isLoading.value = false
+  try {
+    await $fetch('/api/reservations', {
+      method: 'POST',
+      body: { sessionId: props.sessionId, nombre, telefono }
+    })
+  } catch (error) {
+    isLoading.value = false
+    const err = error as { statusCode?: number, status?: number, data?: { message?: string } }
+    const status = err.statusCode ?? err.status
+    const description = err.data?.message
 
-  if (error) {
-    if (error.code === '23505') {
+    if (status === 409) {
       toast.add({
-        title: 'Ya estas registrado',
-        description: 'Este telefono ya esta registrado para esta sesion.',
+        title: 'No se pudo reservar',
+        description,
+        color: 'error',
+        icon: 'i-lucide-octagon-x'
+      })
+    } else if (status === 429) {
+      toast.add({
+        title: 'Demasiadas reservas',
+        description,
         color: 'error',
         icon: 'i-lucide-octagon-x'
       })
     } else {
       toast.add({
         title: 'Error al reservar',
-        description: error.message,
+        description: description ?? 'Intenta de nuevo más tarde',
         color: 'error',
         icon: 'i-lucide-octagon-x'
       })
     }
     return
-  } else if (import.meta.client) {
+  }
+
+  isLoading.value = false
+
+  if (import.meta.client) {
     window.open(wame.value, '_blank', 'noopener,noreferrer')
   }
 
