@@ -162,9 +162,9 @@ const avatarPreview = computed(() => {
 })
 
 const onAvatarChange = () => {
-  if (avatarFile.value && avatarFile.value.size > 5 * 1024 * 1024) {
+  if (avatarFile.value && avatarFile.value.size > 1 * 1024 * 1024) {
     toast.add({
-      title: 'La imagen supera el tamaño máximo de 5 MB',
+      title: 'La imagen supera el tamaño máximo de 1 MB',
       color: 'error',
       icon: 'i-lucide-octagon-x'
     })

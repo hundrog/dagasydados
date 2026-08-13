@@ -201,9 +201,9 @@ const onImageChange = () => {
     state.image_url = props.session?.image_url ?? ''
     return
   }
-  if (imageFile.value.size > 5 * 1024 * 1024) {
+  if (imageFile.value.size > 2 * 1024 * 1024) {
     toast.add({
-      title: 'La imagen supera el tamaño máximo de 5 MB',
+      title: 'La imagen supera el tamaño máximo de 2 MB',
       color: 'error',
       icon: 'i-lucide-octagon-x'
     })
