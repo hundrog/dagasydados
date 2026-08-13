@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { NavigationMenuItem, DropdownMenuItem } from '@nuxt/ui'
+import { useMediaQuery } from '@vueuse/core'
 
 const supabase = useSupabaseClient()
 const toast = useToast()
@@ -9,6 +10,8 @@ const user = useSupabaseUser()
 const currentMasterStore = useCurrentMasterStore()
 const { master } = storeToRefs(currentMasterStore)
 const colorMode = useColorMode()
+
+const isMobile = useMediaQuery('(max-width: 1023px)')
 
 const open = ref(true)
 
@@ -36,6 +39,9 @@ watch(
   () => route.fullPath,
   () => {
     void currentMasterStore.refresh()
+    if (isMobile.value) {
+      open.value = false
+    }
   }
 )
 
@@ -185,6 +191,16 @@ async function signOut() {
 
 <template>
   <div class="flex flex-col flex-1">
+    <div class="sticky top-0 z-10 flex items-center gap-2 px-4 py-3 lg:hidden">
+      <UButton
+        :icon="open ? 'i-lucide-x' : 'i-lucide-panel-right-open'"
+        color="neutral"
+        variant="ghost"
+        square
+        :aria-label="open ? 'Cerrar menú' : 'Abrir menú'"
+        @click="open = !open"
+      />
+    </div>
     <div class="flex flex-1 min-h-0">
       <USidebar
         v-model:open="open"
