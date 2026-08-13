@@ -11,7 +11,8 @@ const UDropdownMenu = resolveComponent('UDropdownMenu')
 
 const toast = useToast()
 const { copy } = useClipboard()
-const { isAdmin } = storeToRefs(useAdminStore())
+const adminStore = useAdminStore()
+const { isAdmin } = storeToRefs(adminStore)
 const user = useSupabaseUser()
 const { deleteSessionImageByUrl } = useSessionImage()
 
@@ -33,9 +34,15 @@ const loadSessions = async () => {
   isLoading.value = true
   errorMessage.value = null
 
-  const { data, error } = await supabase
+  let query = supabase
     .from('game_sessions')
     .select('id,title,system,session_type,fecha_inicio,hora_inicio,hora_fin,image_url,master:dagger_masters(id,full_name,user_name,avatar_url,phone)')
+
+  if (!isAdmin.value) {
+    query = query.eq('master_id', user.value?.sub ?? '__no_session__')
+  }
+
+  const { data, error } = await query
 
   if (error) {
     errorMessage.value = error.message
@@ -46,8 +53,9 @@ const loadSessions = async () => {
   isLoading.value = false
 }
 
-onMounted(() => {
-  loadSessions()
+onMounted(async () => {
+  await adminStore.refresh()
+  await loadSessions()
 })
 
 const confirmDelete = async () => {

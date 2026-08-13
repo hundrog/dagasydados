@@ -4,6 +4,9 @@ import SessionForm from '~/components/admin/SessionForm.vue'
 
 const route = useRoute()
 const supabase = useSupabaseClient()
+const adminStore = useAdminStore()
+const { isAdmin } = storeToRefs(adminStore)
+const user = useSupabaseUser()
 
 const sessionId = computed(() => String(route.params.id))
 const isNew = computed(() => sessionId.value === 'new')
@@ -29,10 +32,16 @@ const loadSession = async (id: string) => {
     return
   }
 
+  if (!isAdmin.value && data.master_id !== user.value?.sub) {
+    errorMessage.value = 'No se encontró la sesión'
+    return
+  }
+
   session.value = data as GameSession
 }
 
 onMounted(async () => {
+  await adminStore.refresh()
   if (!isNew.value) {
     await loadSession(sessionId.value)
   }
