@@ -114,7 +114,7 @@ const goBack = () => {
             :alt="session.title"
             class="w-full h-full object-cover"
           >
-          <div class="absolute inset-0 bg-linear-to-t from-surface-high via-surface-high/20 to-transparent" />
+          <div class="absolute inset-0 bg-linear-to-t from-surface-high/30 via-surface-high/10 to-transparent" />
         </div>
 
         <div class="flex flex-wrap items-start justify-between gap-4">
