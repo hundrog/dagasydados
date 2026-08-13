@@ -46,6 +46,7 @@ export type Database = {
           id: string
           phone: string | null
           plataforma_pago: string | null
+          plataforma_pago_cuenta: string | null
           profile: Json | null
           user_name: string | null
         }
@@ -57,6 +58,7 @@ export type Database = {
           id?: string
           phone?: string | null
           plataforma_pago?: string | null
+          plataforma_pago_cuenta?: string | null
           profile?: Json | null
           user_name?: string | null
         }
@@ -68,6 +70,7 @@ export type Database = {
           id?: string
           phone?: string | null
           plataforma_pago?: string | null
+          plataforma_pago_cuenta?: string | null
           profile?: Json | null
           user_name?: string | null
         }

@@ -36,6 +36,7 @@ const schema = z.object({
   phone: z.string().optional(),
   avatar_url: z.url('Debe ser una URL válida').optional().or(z.literal('')),
   plataforma_pago: z.string().optional(),
+  plataforma_pago_cuenta: z.string().optional(),
   estilo_juego: z.object({
     narrativo: z.number().int().min(1, 'La prioridad mínima es 1').max(4, 'La prioridad máxima es 4'),
     tactico: z.number().int().min(1, 'La prioridad mínima es 1').max(4, 'La prioridad máxima es 4'),
@@ -71,6 +72,7 @@ const initialState = (): Schema => ({
   phone: '',
   avatar_url: '',
   plataforma_pago: '',
+  plataforma_pago_cuenta: '',
   estilo_juego: { narrativo: 1, tactico: 2, roll: 3, puzzle: 4 },
   homebrew: { mecanicas: '', mundo: '' },
   referencias: { peliculas: [], libros: [], videojuegos: [], series_anime: [] }
@@ -209,6 +211,7 @@ const hydrateMaster = (master: Master) => {
   state.user_name = master.user_name ?? ''
   state.avatar_url = master.avatar_url ?? ''
   state.plataforma_pago = master.plataforma_pago ?? ''
+  state.plataforma_pago_cuenta = master.plataforma_pago_cuenta ?? ''
   avatarFile.value = null
   avatarRemoved.value = false
 
@@ -231,7 +234,7 @@ onMounted(async () => {
 
   const { data, error } = await supabase
     .from('dagger_masters')
-    .select('id,full_name,user_name,phone,avatar_url,plataforma_pago,profile')
+    .select('id,full_name,user_name,phone,avatar_url,plataforma_pago,plataforma_pago_cuenta,profile')
     .eq('id', masterId.value)
     .maybeSingle()
 
@@ -285,6 +288,7 @@ async function submitProfile() {
     phone,
     avatar_url: avatarFile.value ? uploadedUrl : (avatarRemoved.value ? null : (state.avatar_url?.trim() || null)),
     plataforma_pago: state.plataforma_pago?.trim() || null,
+    plataforma_pago_cuenta: state.plataforma_pago_cuenta?.trim() || null,
     profile: buildProfile()
   }
 
@@ -387,7 +391,7 @@ watch(countryCode, () => {
           <h2 class="text-lg font-semibold text-primary-900">
             Información del master
           </h2>
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 items-end">
             <UFormField
               label="Nombre completo"
               name="full_name"
@@ -499,14 +503,24 @@ watch(countryCode, () => {
             <UFormField
               label="Plataforma de pago"
               name="plataforma_pago"
-              class="md:col-span-2"
-              description="Link o cuenta donde quieres recibir el pago por tus sesiones."
+              description="Nombre de la plataforma donde recibes el pago (BBVA, PayPal, Ko-fi, etc.)."
             >
               <UInput
                 v-model="state.plataforma_pago"
                 class="w-full"
-                placeholder="Ej. tu.usuario@paypal.me, CLABE, link de MercadoPago..."
+                placeholder="Ej. BBVA, PayPal, Ko-fi..."
                 leading-icon="i-lucide-credit-card"
+              />
+            </UFormField>
+            <UFormField
+              label="Link o cuenta de pago"
+              name="plataforma_pago_cuenta"
+              description="Link o cuenta donde quieres recibir el pago por tus sesiones."
+            >
+              <UInput
+                v-model="state.plataforma_pago_cuenta"
+                class="w-full"
+                placeholder="Ej. tu.usuario@paypal.me, CLABE, link de MercadoPago..."
               />
             </UFormField>
           </div>

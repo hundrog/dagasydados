@@ -24,5 +24,6 @@ export type Master = {
   phone: string | null
   avatar_url: string | null
   plataforma_pago: string | null
+  plataforma_pago_cuenta: string | null
   profile: MasterProfile | null
 }

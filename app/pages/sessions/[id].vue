@@ -10,6 +10,23 @@ const session = ref<GameSessionWithMaster | null>(null)
 const isLoading = ref(true)
 const errorMessage = ref<string | null>(null)
 
+const toUrl = (value: string): string | null => {
+  const trimmed = value.trim()
+  if (!trimmed || /\s/.test(trimmed)) return null
+  if (/^https?:\/\//i.test(trimmed)) return trimmed
+  if (/^www\./i.test(trimmed)) return `https://${trimmed}`
+  if (/^[a-z0-9]([a-z0-9-]*[a-z0-9])?\.(?!\d)[a-z0-9-]{2,}(\.\S*)?/i.test(trimmed)) {
+    return `https://${trimmed}`
+  }
+  return null
+}
+
+const paymentName = computed(() => session.value?.master?.plataforma_pago?.trim() || '')
+const paymentCuenta = computed(() => session.value?.master?.plataforma_pago_cuenta?.trim() || '')
+const paymentCuentaUrl = computed(() => toUrl(paymentCuenta.value))
+
+const hasPayment = computed(() => Boolean(paymentName.value || paymentCuenta.value))
+
 const canModify = (session: GameSessionWithMaster) => isAdmin.value || session.master_id === user.value?.sub
 
 const {
@@ -27,7 +44,7 @@ const placeholderUrl = 'https://placehold.co/600x450/1e174a/9fa7ff?text=Sin+imag
 const loadSession = async () => {
   const { data, error } = await supabase
     .from('game_sessions')
-    .select('*,session_players(count),master:dagger_masters(id,full_name,user_name,avatar_url,phone)')
+    .select('*,session_players(count),master:dagger_masters(id,full_name,user_name,avatar_url,phone,plataforma_pago,plataforma_pago_cuenta)')
     .eq('id', String(route.params.id))
     .maybeSingle()
 
@@ -235,6 +252,30 @@ const goBack = () => {
                   class="font-body text-body-sm text-on-surface-dim truncate"
                 >
                   {{ session.master.full_name }}
+                </p>
+                <p
+                  v-if="hasPayment"
+                  class="label-metadata text-on-surface-dim flex items-center gap-1.5 mt-1"
+                >
+                  <UIcon
+                    name="i-lucide-credit-card"
+                    class="size-3 shrink-0"
+                  />
+                  <span v-if="paymentName">
+                    {{ paymentName }}{{ paymentCuenta ? ':' : '' }}
+                  </span>
+                  <a
+                    v-if="paymentCuentaUrl"
+                    :href="paymentCuentaUrl"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="underline hover:text-on-surface break-all"
+                  >
+                    {{ paymentCuenta }}
+                  </a>
+                  <span v-else-if="paymentCuenta">
+                    {{ paymentCuenta }}
+                  </span>
                 </p>
               </div>
             </div>

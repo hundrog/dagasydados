@@ -12,6 +12,8 @@ export type SessionMasterRef = {
   user_name: string | null
   avatar_url: string | null
   phone: string | null
+  plataforma_pago: string | null
+  plataforma_pago_cuenta: string | null
 }
 
 export type GameSessionWithMaster = GameSession & {
