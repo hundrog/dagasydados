@@ -59,6 +59,7 @@ const sessionFormSections = [
 
 const profileFormSections = [
   { label: 'Información del master', id: 'informacion-master' },
+  { label: 'Sobre ti', id: 'sobre-ti' },
   { label: 'Estilo de juego', id: 'estilo-juego' },
   { label: 'Homebrew', id: 'homebrew' },
   { label: 'Referencias', id: 'referencias' }

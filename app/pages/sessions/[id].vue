@@ -228,23 +228,56 @@ const goBack = () => {
               Master
             </h2>
             <div class="flex items-center gap-3">
-              <img
-                v-if="session.master?.avatar_url"
-                :src="session.master.avatar_url"
-                :alt="session.master.full_name || session.master.user_name"
-                class="size-10 rounded-full object-cover shrink-0"
+              <NuxtLink
+                v-if="session.master?.id"
+                :to="`/masters/${session.master.id}`"
+                class="shrink-0"
               >
-              <div
-                v-else
-                class="size-10 rounded-full bg-surface-variant flex items-center justify-center shrink-0"
-              >
-                <UIcon
-                  name="i-lucide-user"
-                  class="size-4 text-on-surface-dim"
-                />
-              </div>
+                <img
+                  v-if="session.master?.avatar_url"
+                  :src="session.master.avatar_url"
+                  :alt="session.master.full_name || session.master.user_name"
+                  class="size-10 rounded-full object-cover"
+                >
+                <div
+                  v-else
+                  class="size-10 rounded-full bg-surface-variant flex items-center justify-center"
+                >
+                  <UIcon
+                    name="i-lucide-user"
+                    class="size-4 text-on-surface-dim"
+                  />
+                </div>
+              </NuxtLink>
+              <template v-else>
+                <img
+                  v-if="session.master?.avatar_url"
+                  :src="session.master.avatar_url"
+                  :alt="session.master.full_name || session.master.user_name"
+                  class="size-10 rounded-full object-cover shrink-0"
+                >
+                <div
+                  v-else
+                  class="size-10 rounded-full bg-surface-variant flex items-center justify-center shrink-0"
+                >
+                  <UIcon
+                    name="i-lucide-user"
+                    class="size-4 text-on-surface-dim"
+                  />
+                </div>
+              </template>
               <div class="min-w-0">
-                <p class="font-body text-body-md text-on-surface truncate">
+                <NuxtLink
+                  v-if="session.master?.id"
+                  :to="`/masters/${session.master.id}`"
+                  class="font-body text-body-md text-on-surface truncate hover:text-primary transition-colors duration-200"
+                >
+                  {{ session.master?.user_name ? `@${session.master.user_name}` : (session.master?.full_name) }}
+                </NuxtLink>
+                <p
+                  v-else
+                  class="font-body text-body-md text-on-surface truncate"
+                >
                   {{ session.master?.user_name ? `@${session.master.user_name}` : (session.master?.full_name) }}
                 </p>
                 <p

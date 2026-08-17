@@ -37,6 +37,7 @@ const schema = z.object({
   avatar_url: z.url('Debe ser una URL válida').optional().or(z.literal('')),
   plataforma_pago: z.string().optional(),
   plataforma_pago_cuenta: z.string().optional(),
+  descripcion: z.string().optional(),
   estilo_juego: z.object({
     narrativo: z.number().int().min(1, 'La prioridad mínima es 1').max(4, 'La prioridad máxima es 4'),
     tactico: z.number().int().min(1, 'La prioridad mínima es 1').max(4, 'La prioridad máxima es 4'),
@@ -73,6 +74,7 @@ const initialState = (): Schema => ({
   avatar_url: '',
   plataforma_pago: '',
   plataforma_pago_cuenta: '',
+  descripcion: '',
   estilo_juego: { narrativo: 1, tactico: 2, roll: 3, puzzle: 4 },
   homebrew: { mecanicas: '', mundo: '' },
   referencias: { peliculas: [], libros: [], videojuegos: [], series_anime: [] }
@@ -212,6 +214,7 @@ const hydrateMaster = (master: Master) => {
   state.avatar_url = master.avatar_url ?? ''
   state.plataforma_pago = master.plataforma_pago ?? ''
   state.plataforma_pago_cuenta = master.plataforma_pago_cuenta ?? ''
+  state.descripcion = master.descripcion ?? ''
   avatarFile.value = null
   avatarRemoved.value = false
 
@@ -234,7 +237,7 @@ onMounted(async () => {
 
   const { data, error } = await supabase
     .from('dagger_masters')
-    .select('id,full_name,user_name,phone,avatar_url,plataforma_pago,plataforma_pago_cuenta,profile')
+    .select('id,full_name,user_name,phone,avatar_url,plataforma_pago,plataforma_pago_cuenta,descripcion,profile')
     .eq('id', masterId.value)
     .maybeSingle()
 
@@ -289,6 +292,7 @@ async function submitProfile() {
     avatar_url: avatarFile.value ? uploadedUrl : (avatarRemoved.value ? null : (state.avatar_url?.trim() || null)),
     plataforma_pago: state.plataforma_pago?.trim() || null,
     plataforma_pago_cuenta: state.plataforma_pago_cuenta?.trim() || null,
+    descripcion: state.descripcion?.trim() || null,
     profile: buildProfile()
   }
 
@@ -521,6 +525,29 @@ watch(countryCode, () => {
                 v-model="state.plataforma_pago_cuenta"
                 class="w-full"
                 placeholder="Ej. tu.usuario@paypal.me, CLABE, link de MercadoPago..."
+              />
+            </UFormField>
+          </div>
+        </section>
+
+        <section
+          id="sobre-ti"
+          class="space-y-4 scroll-mt-24"
+        >
+          <h2 class="text-lg font-semibold text-primary-900">
+            Sobre ti
+          </h2>
+          <div class="grid grid-cols-1 gap-4">
+            <UFormField
+              label="Descripción"
+              name="descripcion"
+              description="Cuéntanos sobre ti, tu experiencia como master y lo que te gusta de los TTRPG."
+            >
+              <UTextarea
+                v-model="state.descripcion"
+                class="w-full"
+                :rows="4"
+                placeholder="Ej. Llevo 10 años masterizando, me encantan las historias épicas y los puzzles ambientales..."
               />
             </UFormField>
           </div>

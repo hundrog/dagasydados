@@ -25,5 +25,6 @@ export type Master = {
   avatar_url: string | null
   plataforma_pago: string | null
   plataforma_pago_cuenta: string | null
+  descripcion: string | null
   profile: MasterProfile | null
 }
