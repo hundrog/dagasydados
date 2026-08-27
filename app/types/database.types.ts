@@ -249,7 +249,7 @@ export type Database = {
       }
     }
     Enums: {
-      master_status: 'created' | 'pending' | 'authorized'
+      master_status: 'created' | 'pending' | 'authorized' | 'rejected'
     }
     CompositeTypes: {
       [_ in never]: never
@@ -377,7 +377,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      master_status: ['created', 'pending', 'authorized']
+      master_status: ['created', 'pending', 'authorized', 'rejected']
     }
   }
 } as const

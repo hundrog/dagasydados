@@ -455,6 +455,15 @@ watch(countryCode, () => {
             icon="i-lucide-clock"
           />
 
+          <UAlert
+            v-else-if="masterStatus === 'rejected'"
+            color="error"
+            variant="subtle"
+            title="Solicitud rechazada"
+            description="Tu solicitud de autorización fue rechazada y no puedes volver a enviarla. Si crees que es un error, contacta a un administrador."
+            icon="i-lucide-shield-x"
+          />
+
           <UBadge
             v-else
             color="success"
