@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import * as z from 'zod'
 import { vMaska } from 'maska/vue'
-import type { Master, MasterProfile } from '~/types/master'
+import type { Master, MasterProfile, MasterStatus } from '~/types/master'
 
 type PhoneCode = {
   name: string
@@ -22,13 +22,45 @@ const { uploadMasterAvatar, deleteMasterAvatarByUrl } = useMasterAvatar()
 const masterId = computed(() => String(route.params.id))
 
 const masterName = ref<string | null>(null)
+const masterStatus = ref<MasterStatus | null>(null)
 const isLoading = ref(true)
 const errorMessage = ref<string | null>(null)
 const isSubmitting = ref(false)
+const isRequestingAuth = ref(false)
 const canEdit = ref(false)
 const previousAvatarUrl = ref<string | null>(null)
 const avatarFile = ref<File | null>(null)
 const avatarRemoved = ref(false)
+
+const isOwnProfile = computed(() => masterId.value === user.value?.sub)
+
+const requestAuthorization = async () => {
+  if (isRequestingAuth.value || masterStatus.value !== 'created') return
+
+  isRequestingAuth.value = true
+
+  const { error } = await supabase.rpc('request_master_authorization')
+
+  isRequestingAuth.value = false
+
+  if (error) {
+    toast.add({
+      title: 'No se pudo enviar la solicitud',
+      description: error.message,
+      color: 'error',
+      icon: 'i-lucide-octagon-x'
+    })
+    return
+  }
+
+  masterStatus.value = 'pending'
+  toast.add({
+    title: 'Solicitud enviada',
+    description: 'Tu solicitud de autorización está en revisión.',
+    color: 'success',
+    icon: 'i-lucide-circle-check'
+  })
+}
 
 const schema = z.object({
   full_name: z.string().min(1, 'El nombre es obligatorio'),
@@ -237,7 +269,7 @@ onMounted(async () => {
 
   const { data, error } = await supabase
     .from('dagger_masters')
-    .select('id,full_name,user_name,phone,avatar_url,plataforma_pago,plataforma_pago_cuenta,descripcion,profile')
+    .select('id,full_name,user_name,phone,avatar_url,plataforma_pago,plataforma_pago_cuenta,descripcion,profile,status')
     .eq('id', masterId.value)
     .maybeSingle()
 
@@ -254,6 +286,7 @@ onMounted(async () => {
   }
 
   masterName.value = data.full_name || data.user_name || 'Master'
+  masterStatus.value = data.status
   canEdit.value = isAdmin.value || data.id === user.value?.sub
 
   if (!canEdit.value) {
@@ -388,6 +421,48 @@ watch(countryCode, () => {
         class="w-full space-y-8"
         @submit="submitProfile"
       >
+        <div
+          v-if="masterStatus && isOwnProfile"
+          class="mb-8"
+        >
+          <UAlert
+            v-if="masterStatus === 'created'"
+            color="warning"
+            variant="subtle"
+            title="Aún no estás autorizado para publicar campañas"
+            description="Solicita autorización para poder crear sesiones y ser elegido como master. Un administrador revisará tu solicitud."
+            icon="i-lucide-shield-alert"
+          >
+            <template #actions>
+              <div class="w-full flex justify-end">
+                <UButton
+                  label="Solicitar autorización"
+                  color="warning"
+                  class="cursor-pointer"
+                  :loading="isRequestingAuth"
+                  @click="requestAuthorization"
+                />
+              </div>
+            </template>
+          </UAlert>
+
+          <UAlert
+            v-else-if="masterStatus === 'pending'"
+            color="warning"
+            variant="subtle"
+            title="Autorización en revisión"
+            description="Enviaste tu solicitud de autorización. Podrás crear campañas y ser elegido como master una vez que un administrador la apruebe."
+            icon="i-lucide-clock"
+          />
+
+          <UBadge
+            v-else
+            color="success"
+            variant="subtle"
+            label="Autorizado"
+            icon="i-lucide-shield-check"
+          />
+        </div>
         <section
           id="informacion-master"
           class="space-y-4 scroll-mt-24"

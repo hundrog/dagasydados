@@ -13,8 +13,12 @@ const toast = useToast()
 const { copy } = useClipboard()
 const adminStore = useAdminStore()
 const { isAdmin } = storeToRefs(adminStore)
+const currentMasterStore = useCurrentMasterStore()
+const { isAuthorized } = storeToRefs(currentMasterStore)
 const user = useSupabaseUser()
 const { deleteSessionImageByUrl } = useSessionImage()
+
+const canCreate = computed(() => isAdmin.value || isAuthorized.value)
 
 const canModify = (session: GameSessionWithMaster) => isAdmin.value || session.master_id === user.value?.sub
 
@@ -55,6 +59,7 @@ const loadSessions = async () => {
 
 onMounted(async () => {
   await adminStore.refresh()
+  await currentMasterStore.refresh()
   await loadSessions()
 })
 
@@ -241,12 +246,34 @@ function getRowItems(row: Row<GameSessionWithMaster>) {
 <template>
   <div class="flex-1 mt-12">
     <div class="justify-end flex my-8">
-      <UButton
-        label="Nueva Sesión"
-        icon="i-heroicons-plus"
-        class="cursor-pointer"
-        @click="goToCreate"
-      />
+      <template v-if="canCreate">
+        <UButton
+          label="Nueva Sesión"
+          icon="i-heroicons-plus"
+          class="cursor-pointer"
+          @click="goToCreate"
+        />
+      </template>
+      <UAlert
+        v-else
+        color="warning"
+        variant="subtle"
+        title="Cuenta sin autorizar"
+        description="Solo los masters autorizados pueden crear campañas. Solicita autorización desde tu perfil."
+        icon="i-lucide-shield-alert"
+        class="w-full"
+      >
+        <template #actions>
+          <div class="w-full flex justify-end">
+            <UButton
+              label="Ir a mi perfil"
+              icon="i-lucide-user"
+              class="cursor-pointer"
+              :to="`/admin/profile/${user?.sub}/edit`"
+            />
+          </div>
+        </template>
+      </UAlert>
     </div>
     <div
       v-if="isLoading"

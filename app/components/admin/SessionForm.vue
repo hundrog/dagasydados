@@ -8,6 +8,8 @@ const toast = useToast()
 const { uploadSessionImage, deleteSessionImageByUrl } = useSessionImage()
 const adminStore = useAdminStore()
 const { isAdmin } = storeToRefs(adminStore)
+const currentMasterStore = useCurrentMasterStore()
+const { isAuthorized } = storeToRefs(currentMasterStore)
 const user = useSupabaseUser()
 
 const props = defineProps<{
@@ -342,15 +344,28 @@ const buildPayload = (): GameSessionInsert => ({
   master_id: state.master_id
 })
 
+const isSessionCreation = computed(() => !props.session?.id)
+const authResolved = computed(() => !currentMasterStore.isLoading)
+const sessionCreationAllowed = computed(() => isAdmin.value || isAuthorized.value || !isSessionCreation.value)
+
 onMounted(async () => {
   await adminStore.refresh()
+  await currentMasterStore.refresh()
   void lookupsStore.refresh()
+
+  if (!isAdmin.value && !isAuthorized.value && isSessionCreation.value) {
+    isLoadingMasters.value = false
+    errorMessage.value = 'Tu cuenta no está autorizada para crear campañas. Solicita autorización desde tu perfil.'
+    return
+  }
 
   let query = supabase
     .from('dagger_masters')
     .select('id,full_name,user_name,avatar_url,phone')
 
-  if (!isAdmin.value) {
+  if (isAdmin.value) {
+    query = query.eq('status', 'authorized')
+  } else {
     query = query.eq('id', user.value?.sub ?? '__no_master__')
   }
 
@@ -462,7 +477,37 @@ async function submitSession() {
 </script>
 
 <template>
+  <div v-if="isSessionCreation && !sessionCreationAllowed">
+    <div
+      v-if="!authResolved"
+      class="p-4 text-sm text-slate-500"
+    >
+      Cargando...
+    </div>
+    <UAlert
+      v-else
+      color="warning"
+      variant="subtle"
+      title="Cuenta sin autorizar"
+      description="Solo los masters autorizados pueden crear campañas. Solicita autorización desde tu perfil para poder publicar sesiones."
+      icon="i-lucide-shield-alert"
+      class="mb-8"
+    >
+      <template #actions>
+        <div class="w-full flex justify-end">
+          <UButton
+            label="Ir a mi perfil"
+            icon="i-lucide-user"
+            class="cursor-pointer"
+            :to="`/admin/profile/${user?.sub}/edit`"
+          />
+        </div>
+      </template>
+    </UAlert>
+  </div>
+
   <UForm
+    v-else
     :schema="schema"
     :state="state"
     class="w-full space-y-8"

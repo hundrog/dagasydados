@@ -1,3 +1,7 @@
+import type { Database } from './database.types'
+
+export type MasterStatus = Database['public']['Enums']['master_status']
+
 export type MasterProfile = {
   estilo_juego: {
     narrativo: number
@@ -27,4 +31,5 @@ export type Master = {
   plataforma_pago_cuenta: string | null
   descripcion: string | null
   profile: MasterProfile | null
+  status: MasterStatus
 }

@@ -1,10 +1,10 @@
-import type { Master } from '~/types/master'
+import type { MasterStatus } from '~/types/master'
 
 export const useCurrentMasterStore = defineStore('currentMaster', () => {
   const supabase = useSupabaseClient()
   const user = useSupabaseUser()
 
-  const master = ref<Pick<Master, 'id' | 'full_name' | 'user_name' | 'avatar_url'> | null>(null)
+  const master = ref<{ id: string, full_name: string | null, user_name: string | null, avatar_url: string | null, status: MasterStatus } | null>(null)
   const isLoading = ref(false)
   let pendingPromise: Promise<void> | null = null
 
@@ -22,7 +22,7 @@ export const useCurrentMasterStore = defineStore('currentMaster', () => {
       try {
         const { data, error } = await supabase
           .from('dagger_masters')
-          .select('id,full_name,user_name,avatar_url')
+          .select('id,full_name,user_name,avatar_url,status')
           .eq('id', userId)
           .maybeSingle()
 
@@ -36,6 +36,8 @@ export const useCurrentMasterStore = defineStore('currentMaster', () => {
     return pendingPromise
   }
 
+  const isAuthorized = computed(() => master.value?.status === 'authorized')
+
   watch(
     () => user.value,
     () => {
@@ -47,6 +49,7 @@ export const useCurrentMasterStore = defineStore('currentMaster', () => {
   return {
     master,
     isLoading,
+    isAuthorized,
     refresh
   }
 })

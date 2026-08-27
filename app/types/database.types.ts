@@ -48,6 +48,7 @@ export type Database = {
           plataforma_pago: string | null
           plataforma_pago_cuenta: string | null
           profile: Json | null
+          status: Database['public']['Enums']['master_status']
           user_name: string | null
         }
         Insert: {
@@ -60,6 +61,7 @@ export type Database = {
           plataforma_pago?: string | null
           plataforma_pago_cuenta?: string | null
           profile?: Json | null
+          status?: Database['public']['Enums']['master_status']
           user_name?: string | null
         }
         Update: {
@@ -72,6 +74,7 @@ export type Database = {
           plataforma_pago?: string | null
           plataforma_pago_cuenta?: string | null
           profile?: Json | null
+          status?: Database['public']['Enums']['master_status']
           user_name?: string | null
         }
         Relationships: []
@@ -240,10 +243,13 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      request_master_authorization: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
     }
     Enums: {
-      [_ in never]: never
+      master_status: 'created' | 'pending' | 'authorized'
     }
     CompositeTypes: {
       [_ in never]: never
@@ -370,6 +376,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {}
+    Enums: {
+      master_status: ['created', 'pending', 'authorized']
+    }
   }
 } as const

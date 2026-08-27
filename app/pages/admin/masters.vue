@@ -3,12 +3,13 @@ import { h, onMounted, ref } from 'vue'
 import type { TableColumn } from '@nuxt/ui'
 import { useClipboard } from '@vueuse/core'
 import type { Row } from '@tanstack/vue-table'
-import type { Master } from '~/types/master'
+import type { Master, MasterStatus } from '~/types/master'
 import type MasterForm from '~/components/admin/MasterForm.vue'
 
 const supabase = useSupabaseClient()
 const UButton = resolveComponent('UButton')
 const UDropdownMenu = resolveComponent('UDropdownMenu')
+const UBadge = resolveComponent('UBadge')
 
 const toast = useToast()
 const { copy } = useClipboard()
@@ -16,6 +17,12 @@ const { isAdmin } = storeToRefs(useAdminStore())
 const user = useSupabaseUser()
 
 const canModify = (master: Master) => isAdmin.value || master.id === user.value?.sub
+
+const masterStatusMeta: Record<MasterStatus, { label: string, description: string, color: 'neutral' | 'warning' | 'success' }> = {
+  created: { label: 'Sin autorizar', description: 'El master aún no ha solicitado autorización.', color: 'neutral' },
+  pending: { label: 'Solicitud pendiente', description: 'El master pidió autorización y está en espera de aprobación.', color: 'warning' },
+  authorized: { label: 'Autorizado', description: 'El master puede crear campañas y ser elegido como master.', color: 'success' }
+}
 
 const masters = ref<Master[]>([])
 const isLoading = ref(true)
@@ -47,7 +54,7 @@ const loadMasters = async () => {
 
   const { data, error } = await supabase
     .from('dagger_masters')
-    .select('id,full_name,user_name,phone,avatar_url')
+    .select('id,full_name,user_name,phone,avatar_url,status')
 
   if (error) {
     errorMessage.value = error.message
@@ -56,6 +63,32 @@ const loadMasters = async () => {
   }
 
   isLoading.value = false
+}
+
+const setMasterStatus = async (master: Master, status: MasterStatus) => {
+  const { error } = await supabase
+    .from('dagger_masters')
+    .update({ status })
+    .eq('id', master.id)
+
+  if (error) {
+    toast.add({
+      title: 'No se pudo actualizar el estado del master',
+      description: error.message,
+      color: 'error',
+      icon: 'i-lucide-octagon-x'
+    })
+    return
+  }
+
+  toast.add({
+    title: status === 'authorized' ? 'Master autorizado' : 'Master desautorizado',
+    description: status === 'authorized' ? 'Ya puede crear campañas y ser elegido como master.' : 'Ya no puede crear ni ser elegido como master.',
+    color: 'success',
+    icon: 'i-lucide-circle-check'
+  })
+
+  await loadMasters()
 }
 
 onMounted(() => {
@@ -132,6 +165,21 @@ const columns: TableColumn<Master>[] = [
     }
   },
   {
+    accessorKey: 'status',
+    header: 'Estado',
+    cell: ({ row }) => {
+      const meta = masterStatusMeta[row.original.status]
+      return h(
+        UBadge,
+        {
+          color: meta.color,
+          variant: 'subtle',
+          label: meta.label
+        }
+      )
+    }
+  },
+  {
     id: 'actions',
     meta: {
       class: {
@@ -176,6 +224,27 @@ function getRowItems(row: Row<Master>) {
           color: 'success',
           icon: 'i-lucide-circle-check'
         })
+      }
+    },
+    {
+      type: 'separator'
+    },
+    {
+      label: 'Autorizar master',
+      icon: 'i-lucide-shield-check',
+      color: 'primary',
+      disabled: !isAdmin.value || row.original.status === 'authorized',
+      onSelect() {
+        setMasterStatus(row.original, 'authorized')
+      }
+    },
+    {
+      label: 'Desautorizar master',
+      icon: 'i-lucide-shield-x',
+      color: 'danger',
+      disabled: !isAdmin.value || row.original.status !== 'authorized',
+      onSelect() {
+        setMasterStatus(row.original, 'created')
       }
     },
     {

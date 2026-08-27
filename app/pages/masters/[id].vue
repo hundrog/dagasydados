@@ -93,7 +93,7 @@ const loadData = async () => {
   const [masterResult, sessionsResult] = await Promise.all([
     supabase
       .from('dagger_masters')
-      .select('id,full_name,user_name,phone,avatar_url,plataforma_pago,plataforma_pago_cuenta,descripcion,profile')
+      .select('id,full_name,user_name,phone,avatar_url,plataforma_pago,plataforma_pago_cuenta,descripcion,profile,status')
       .eq('id', masterId.value)
       .maybeSingle(),
     supabase

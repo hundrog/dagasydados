@@ -187,7 +187,7 @@ async function submitMaster() {
 
     const { data: refreshed, error: selectError } = await supabase
       .from('dagger_masters')
-      .select('id,full_name,user_name,phone,avatar_url')
+      .select('id,full_name,user_name,phone,avatar_url,status')
       .eq('id', masterId)
       .maybeSingle()
 
@@ -209,7 +209,7 @@ async function submitMaster() {
   const { data, error } = await supabase
     .from('dagger_masters')
     .insert(payload)
-    .select('id,full_name,user_name,phone,avatar_url')
+    .select('id,full_name,user_name,phone,avatar_url,status')
     .single()
 
   isSubmitting.value = false
