@@ -2,6 +2,7 @@
 import { h, onMounted, ref } from 'vue'
 import type { TableColumn } from '@nuxt/ui'
 import { useClipboard } from '@vueuse/core'
+import { getPaginationRowModel } from '@tanstack/vue-table'
 import type { Row } from '@tanstack/vue-table'
 import type { GameSessionWithMaster } from '~/types/session'
 
@@ -18,6 +19,7 @@ const currentMasterStore = useCurrentMasterStore()
 const { isAuthorized } = storeToRefs(currentMasterStore)
 const user = useSupabaseUser()
 const { deleteSessionImageByUrl } = useSessionImage()
+const table = useTemplateRef('table')
 
 const canCreate = computed(() => isAdmin.value || isAuthorized.value)
 
@@ -371,6 +373,11 @@ function getRowItems(row: Row<GameSessionWithMaster>) {
     }
   ]
 }
+
+const pagination = ref({
+  pageIndex: 0,
+  pageSize: 10
+})
 </script>
 
 <template>
@@ -482,10 +489,23 @@ function getRowItems(row: Row<GameSessionWithMaster>) {
         />
       </div>
       <UTable
+        ref="table"
         :data="filteredSessions"
         :columns="columns"
+        v-model:pagination="pagination"
+        :pagination-options="{
+          getPaginationRowModel: getPaginationRowModel()
+        }"
         class="flex-1"
       />
+      <div class="flex justify-end border-t border-default pt-4 px-4">
+      <UPagination
+        :page="(table?.tableApi?.getState().pagination.pageIndex || 0) + 1"
+        :items-per-page="table?.tableApi?.getState().pagination.pageSize"
+        :total="table?.tableApi?.getFilteredRowModel().rows.length"
+        @update:page="(p) => table?.tableApi?.setPageIndex(p - 1)"
+      />
+    </div>
     </template>
 
     <UModal
