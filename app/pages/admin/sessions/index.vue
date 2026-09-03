@@ -148,7 +148,7 @@ const loadSessions = async () => {
 
   let query = supabase
     .from('game_sessions')
-    .select('id,title,system,session_type,mode,rrule,fecha_inicio,hora_inicio,hora_fin,image_url,status,master:dagger_masters(id,full_name,user_name,avatar_url,phone)')
+    .select('id,title,system,session_type,mode,rrule,master_id,fecha_inicio,hora_inicio,hora_fin,image_url,status,master:dagger_masters(id,full_name,user_name,avatar_url,phone)')
 
   if (!isAdmin.value) {
     query = query.eq('master_id', user.value?.sub ?? '__no_session__')
