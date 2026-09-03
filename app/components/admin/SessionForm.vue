@@ -39,6 +39,10 @@ const systemOptions = computed(() => {
   return current && !defaults.includes(current) ? [...defaults, current] : defaults
 })
 
+function onCreateSystem(item: string) {
+  state.system = item
+}
+
 const sessionTypeOptions = computed(() => {
   const defaults = lookups.value?.session_types ?? []
   const current = state.session_type?.trim()
@@ -608,6 +612,7 @@ async function submitSession() {
             create-item
             class="w-full"
             placeholder="Selecciona o escribe un sistema"
+            @create="onCreateSystem"
           />
         </UFormField>
         <UFormField

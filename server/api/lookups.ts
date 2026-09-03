@@ -1,5 +1,5 @@
 const lookups = {
-  systems: ['Daggerheart', 'Mork Borg', 'Vaesen'],
+  systems: ['Daggerheart', 'Dungeons and Dragons', 'Mork Borg', 'Vaesen'],
   session_types: ['One Shot', 'Two Shot', 'Campaña', 'West Marches', 'Mesa Abierta'],
   audiences: ['Todo Público', 'Novatos', 'Experimentados'],
   modes: [
