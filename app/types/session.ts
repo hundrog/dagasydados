@@ -16,7 +16,17 @@ export type SessionMasterRef = {
   plataforma_pago_cuenta: string | null
 }
 
+export type SessionEventRef = {
+  id: string
+  name: string
+  description: string | null
+  start_datetime: string
+  end_datetime: string
+  image_url: string | null
+}
+
 export type GameSessionWithMaster = GameSession & {
   master: SessionMasterRef | null
   session_players?: Array<{ count: number }> | null
+  event?: SessionEventRef | null
 }

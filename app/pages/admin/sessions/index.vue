@@ -8,6 +8,7 @@ import type { GameSessionWithMaster } from '~/types/session'
 const supabase = useSupabaseClient()
 const UButton = resolveComponent('UButton')
 const UDropdownMenu = resolveComponent('UDropdownMenu')
+const UBadge = resolveComponent('UBadge')
 
 const toast = useToast()
 const { copy } = useClipboard()
@@ -40,7 +41,7 @@ const loadSessions = async () => {
 
   let query = supabase
     .from('game_sessions')
-    .select('id,title,system,session_type,fecha_inicio,hora_inicio,hora_fin,image_url,master:dagger_masters(id,full_name,user_name,avatar_url,phone)')
+    .select('id,title,system,session_type,fecha_inicio,hora_inicio,hora_fin,image_url,status,master:dagger_masters(id,full_name,user_name,avatar_url,phone)')
 
   if (!isAdmin.value) {
     query = query.eq('master_id', user.value?.sub ?? '__no_session__')
@@ -122,6 +123,21 @@ const columns: TableColumn<GameSessionWithMaster>[] = [
   {
     accessorKey: 'session_type',
     header: 'Session Type'
+  },
+  {
+    id: 'status',
+    header: 'Estado',
+    cell: ({ row }) => {
+      const isDraft = row.original.status === 'draft'
+      return h(
+        UBadge,
+        {
+          color: isDraft ? 'neutral' : 'primary',
+          variant: 'subtle'
+        },
+        () => isDraft ? 'Borrador' : 'Publicada'
+      )
+    }
   },
   {
     accessorKey: 'fecha_inicio',

@@ -46,6 +46,7 @@ const loadSession = async () => {
     .from('game_sessions')
     .select('*,session_players(count),master:dagger_masters(id,full_name,user_name,avatar_url,phone,plataforma_pago,plataforma_pago_cuenta)')
     .eq('id', String(route.params.id))
+    .eq('status', 'published')
     .maybeSingle()
 
   if (error) {

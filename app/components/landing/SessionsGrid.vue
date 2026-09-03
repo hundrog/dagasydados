@@ -107,6 +107,29 @@ const filteredSessions = computed(() =>
     .sort((a, b) => (parseLocalDate(a.fecha_inicio)?.getTime() ?? 0) - (parseLocalDate(b.fecha_inicio)?.getTime() ?? 0))
 )
 
+const eventGroups = computed(() => {
+  const groups: Array<{ id: string, event: GameSessionWithMaster['event'] & { name: string }, sessions: GameSessionWithMaster[] }> = []
+  const map = new Map<string, typeof groups[number]>()
+
+  for (const session of filteredSessions.value) {
+    const event = session.event
+    if (!event) continue
+    let group = map.get(event.id)
+    if (!group) {
+      group = { id: event.id, event, sessions: [] }
+      map.set(event.id, group)
+      groups.push(group)
+    }
+    group.sessions.push(session)
+  }
+
+  return groups
+})
+
+const nonEventSessions = computed(() =>
+  filteredSessions.value.filter(session => !session.event)
+)
+
 const hasActiveFilters = computed(() =>
   selectedMonth.value !== currentMonthValue()
   || selectedWeekday.value !== 'all'
@@ -120,7 +143,8 @@ const loadSessions = async () => {
 
   const { data, error } = await supabase
     .from('game_sessions')
-    .select('id,title,system,session_type,audience,mode,image_url,max_players,location,description,costo,fecha_inicio,hora_inicio,hora_fin,rrule,session_players(count),master:dagger_masters(id,full_name,user_name,avatar_url,phone)')
+    .select('id,title,system,session_type,audience,mode,image_url,max_players,location,description,costo,fecha_inicio,hora_inicio,hora_fin,rrule,event_id,event:events(id,name,description,start_datetime,end_datetime,image_url),session_players(count),master:dagger_masters(id,full_name,user_name,avatar_url,phone)')
+    .eq('status', 'published')
 
   if (error) {
     errorMessage.value = error.message
@@ -229,13 +253,32 @@ onMounted(() => {
     </div>
     <div
       v-else
-      class="w-full mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"
+      class="space-y-12"
     >
-      <LandingSessionCard
-        v-for="session in filteredSessions"
-        :key="session.id"
-        :session="session"
+      <LandingEventSection
+        v-for="group in eventGroups"
+        :key="group.id"
+        :event="group.event"
+        :sessions="group.sessions"
       />
+
+      <div
+        v-if="nonEventSessions.length > 0"
+        class="flex items-center gap-4 mb-6"
+      >
+        <div class="h-px flex-1 bg-primary/30" />
+      </div>
+
+      <div
+        v-if="nonEventSessions.length > 0"
+        class="w-full mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"
+      >
+        <LandingSessionCard
+          v-for="session in nonEventSessions"
+          :key="session.id"
+          :session="session"
+        />
+      </div>
     </div>
   </div>
 </template>

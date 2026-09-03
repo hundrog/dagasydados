@@ -100,6 +100,7 @@ const loadData = async () => {
       .from('game_sessions')
       .select('id,title,system,session_type,audience,mode,image_url,max_players,location,description,costo,fecha_inicio,hora_inicio,hora_fin,rrule,zona_horaria,created_at,session_players(count),master:dagger_masters(id,full_name,user_name,avatar_url,phone)')
       .eq('master_id', masterId.value)
+      .eq('status', 'published')
   ])
 
   if (masterResult.error) {

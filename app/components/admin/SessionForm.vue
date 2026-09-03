@@ -2,6 +2,8 @@
 import * as z from 'zod'
 import { RRule } from 'rrule'
 import type { GameSession, GameSessionInsert, SessionMasterRef } from '~/types/session'
+import type { Event } from '~/types/event'
+import { parseSessionRule } from '~/composables/useSessionFormat'
 
 const supabase = useSupabaseClient()
 const toast = useToast()
@@ -145,6 +147,8 @@ const isSubmitting = ref(false)
 const errorMessage = ref<string | null>(null)
 const masters = ref<SessionMasterRef[]>([])
 const isLoadingMasters = ref(true)
+const events = ref<Event[]>([])
+const isLoadingEvents = ref(true)
 
 const periodicity = ref<Periodicity>(initialParsed.periodicity)
 const days = ref<string[]>(initialParsed.days)
@@ -168,7 +172,9 @@ const schema = z.object({
   location: z.string().optional(),
   costo: z.union([z.number(), z.literal('')]).optional(),
   max_players: z.union([z.number(), z.literal('')]).optional(),
-  master_id: z.string().min(1, 'El master es obligatorio')
+  master_id: z.string().min(1, 'El master es obligatorio'),
+  event_id: z.string().optional().nullable(),
+  status: z.enum(['draft', 'published']).optional()
 })
 
 type Schema = z.infer<typeof schema>
@@ -190,9 +196,10 @@ const initialState = (): Schema => ({
   location: props.session?.location ?? '',
   costo: props.session?.costo ?? '',
   max_players: props.session?.max_players ?? '',
-  master_id: props.session?.master_id ?? ''
+  master_id: props.session?.master_id ?? '',
+  event_id: props.session?.event_id ?? null,
+  status: props.session?.status ?? 'draft'
 })
-
 const state = reactive<Schema>(initialState())
 
 const imageFile = ref<File | null>(null)
@@ -227,6 +234,17 @@ const masterItems = computed(() =>
     label: master.full_name || 'Sin nombre',
     value: master.id
   }))
+)
+
+const eventItems = computed(() =>
+  events.value.map(event => ({
+    label: event.name,
+    value: event.id
+  }))
+)
+
+const selectedEvent = computed(() =>
+  events.value.find(event => event.id === state.event_id) ?? null
 )
 
 const toNumberOrNull = (value: number | '' | undefined | null) => {
@@ -345,7 +363,53 @@ const buildPayload = (): GameSessionInsert => ({
   location: state.location?.trim() || null,
   costo: toNumberOrNull(state.costo),
   max_players: toNumberOrNull(state.max_players),
-  master_id: state.master_id
+  master_id: state.master_id,
+  event_id: state.event_id || null,
+  status: state.status ?? 'draft'
+})
+
+const hasScheduleConflict = computed(() => {
+  const event = selectedEvent.value
+  if (!event || !state.fecha_inicio) return false
+
+  const eventStart = new Date(event.start_datetime).getTime()
+  const eventEnd = new Date(event.end_datetime).getTime()
+
+  const dtstart = parseLocalDate(state.fecha_inicio)
+  if (!dtstart) return false
+
+  const startHours = state.hora_inicio ? state.hora_inicio.slice(0, 2) : '00'
+  const startMinutes = state.hora_inicio ? state.hora_inicio.slice(3, 5) : '00'
+  const endHours = state.hora_fin ? state.hora_fin.slice(0, 2) : '23'
+  const endMinutes = state.hora_fin ? state.hora_fin.slice(3, 5) : '59'
+
+  const sessionStart = new Date(dtstart)
+  sessionStart.setHours(Number(startHours), Number(startMinutes), 0, 0)
+  const sessionEnd = new Date(dtstart)
+  sessionEnd.setHours(Number(endHours), Number(endMinutes), 0, 0)
+
+  const timesOverlap = (date: Date) => {
+    const dayStart = new Date(date)
+    dayStart.setHours(sessionStart.getHours(), sessionStart.getMinutes(), 0, 0)
+    const dayEnd = new Date(date)
+    dayEnd.setHours(sessionEnd.getHours(), sessionEnd.getMinutes(), 0, 0)
+    return dayStart.getTime() < eventEnd && dayEnd.getTime() > eventStart
+  }
+
+  if (!state.rrule || state.rrule === '') {
+    return !timesOverlap(dtstart)
+  }
+
+  try {
+    const rule = parseSessionRule(state.rrule, dtstart)
+    if (!rule) return false
+    const occurrences = rule.between(new Date(eventStart), new Date(eventEnd), true)
+    const relevant = occurrences.filter(occ => occ.getTime() >= eventStart && occ.getTime() <= eventEnd)
+    if (relevant.length === 0) return true
+    return !relevant.some(timesOverlap)
+  } catch {
+    return false
+  }
 })
 
 const isSessionCreation = computed(() => !props.session?.id)
@@ -379,6 +443,16 @@ onMounted(async () => {
     masters.value = data as SessionMasterRef[]
   }
   isLoadingMasters.value = false
+
+  const { data: eventsData, error: eventsError } = await supabase
+    .from('events')
+    .select('*')
+    .order('start_datetime', { ascending: true })
+
+  if (!eventsError && eventsData) {
+    events.value = eventsData as Event[]
+  }
+  isLoadingEvents.value = false
 })
 
 async function submitSession() {
@@ -811,6 +885,33 @@ async function submitSession() {
           />
         </UFormField>
       </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <UFormField
+          label="Evento"
+          name="event_id"
+          hint="Opcional: asigna esta mesa a un evento."
+        >
+          <USelectMenu
+            v-model="state.event_id"
+            :items="eventItems"
+            value-key="value"
+            :loading="isLoadingEvents"
+            clear
+            class="w-full"
+            placeholder="Selecciona un evento"
+          />
+        </UFormField>
+      </div>
+
+      <UAlert
+        v-if="selectedEvent && hasScheduleConflict"
+        color="warning"
+        variant="subtle"
+        title="La sesión no cabe en el horario del evento"
+        description="La fecha u horario de esta sesión no coincide con el rango del evento seleccionado. Revisa la programación antes de guardar."
+        icon="i-lucide-triangle-alert"
+      />
     </section>
 
     <AdminSessionPlayers
@@ -856,21 +957,39 @@ async function submitSession() {
       {{ errorMessage }}
     </p>
 
-    <div class="flex justify-end gap-2 pt-4 border-t border-slate-200">
-      <UButton
-        label="Cancelar"
-        color="neutral"
-        variant="ghost"
-        class="cursor-pointer"
-        :disabled="isSubmitting"
-        @click="emit('cancel')"
-      />
-      <UButton
-        type="submit"
-        :label="props.session?.id ? 'Actualizar Sesión' : 'Guardar Sesión'"
-        class="cursor-pointer"
-        :loading="isSubmitting"
-      />
+    <div class="flex flex-wrap items-center justify-between gap-4 pt-4 border-t border-slate-200">
+      <UFormField
+        label="Estado"
+        name="status"
+        class="mb-0"
+      >
+        <USelectMenu
+          v-model="state.status"
+          :items="[
+            { label: 'Borrador', value: 'draft' },
+            { label: 'Publicada', value: 'published' }
+          ]"
+          value-key="value"
+          class="w-40"
+        />
+      </UFormField>
+
+      <div class="flex justify-end gap-2">
+        <UButton
+          label="Cancelar"
+          color="neutral"
+          variant="ghost"
+          class="cursor-pointer"
+          :disabled="isSubmitting"
+          @click="emit('cancel')"
+        />
+        <UButton
+          type="submit"
+          :label="props.session?.id ? 'Actualizar Sesión' : 'Guardar Sesión'"
+          class="cursor-pointer"
+          :loading="isSubmitting"
+        />
+      </div>
     </div>
   </UForm>
 </template>

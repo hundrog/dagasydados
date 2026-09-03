@@ -45,6 +45,17 @@ const {
     </div>
 
     <div class="flex flex-col flex-1 p-5 gap-3">
+      <span
+        v-if="session.event"
+        class="label-metadata text-primary flex items-center gap-1.5"
+      >
+        <UIcon
+          name="i-lucide-calendar-days"
+          class="size-3.5"
+        />
+        {{ session.event.name }}
+      </span>
+
       <div class="flex justify-start items-center flex-wrap gap-3">
         <UBadge>
           {{ session.system }}
