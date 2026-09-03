@@ -44,7 +44,7 @@ onMounted(() => {
 
 const playerSchema = z.object({
   nombre: z.string().min(1, 'El nombre es obligatorio'),
-  telefono: z.string().min(1, 'El teléfono es obligatorio')
+  telefono: z.string().min(1, 'El teléfono es obligatorio').trim().optional()
 })
 
 type PlayerSchema = z.infer<typeof playerSchema>
@@ -61,7 +61,7 @@ const playerFormState = reactive<PlayerSchema>({
 const openPlayerForm = (player?: SessionPlayer) => {
   editingPlayer.value = player ?? null
   playerFormState.nombre = player?.nombre ?? ''
-  playerFormState.telefono = player?.telefono ?? ''
+  playerFormState.telefono = ''
   playerFormError.value = null
   playerFormOpen.value = true
 }
@@ -72,39 +72,44 @@ const savePlayer = async () => {
   isSavingPlayer.value = true
   playerFormError.value = null
 
-  const payload = {
-    game_session_id: props.sessionId,
-    nombre: playerFormState.nombre.trim(),
-    telefono: playerFormState.telefono.trim()
-  }
-
-  const handlePlayerError = (error: { code?: string, message: string }) => {
-    playerFormError.value = error.code === '23505'
-      ? 'Este teléfono ya está registrado para esta sesión.'
-      : error.message
-  }
-
   if (editingPlayer.value) {
     const { error } = await supabase
       .from('session_players')
-      .update({ nombre: payload.nombre, telefono: payload.telefono })
+      .update({ nombre: playerFormState.nombre.trim() })
       .eq('id', editingPlayer.value.id)
 
     isSavingPlayer.value = false
 
     if (error) {
-      handlePlayerError(error)
+      playerFormError.value = error.message
       return
     }
   } else {
-    const { error } = await supabase
-      .from('session_players')
-      .insert(payload)
+    const telefono = playerFormState.telefono?.trim()
+    if (!telefono) {
+      isSavingPlayer.value = false
+      playerFormError.value = 'El teléfono es obligatorio'
+      return
+    }
+
+    const { data: result, error } = await supabase
+      .rpc('create_session_player', {
+        p_game_session_id: props.sessionId,
+        p_nombre: playerFormState.nombre.trim(),
+        p_telefono: telefono
+      })
 
     isSavingPlayer.value = false
 
+    const outcome = result as unknown as { ok: boolean, error?: string, message?: string } | null
     if (error) {
-      handlePlayerError(error)
+      playerFormError.value = error.message
+      return
+    }
+    if (outcome && !outcome.ok) {
+      playerFormError.value = outcome.error === 'duplicate'
+        ? 'Este teléfono ya está registrado para esta sesión.'
+        : (outcome.message ?? 'No se pudo agregar el jugador.')
       return
     }
   }
@@ -166,11 +171,6 @@ const playerColumns: TableColumn<SessionPlayer>[] = [
     accessorKey: 'nombre',
     header: 'Nombre',
     cell: ({ row }) => row.original.nombre || '-'
-  },
-  {
-    accessorKey: 'telefono',
-    header: 'Teléfono',
-    cell: ({ row }) => row.original.telefono || '-'
   },
   {
     id: 'actions',
@@ -287,15 +287,24 @@ function getPlayerRowItems(row: Row<SessionPlayer>) {
         </UFormField>
 
         <UFormField
+          v-if="!editingPlayer"
           label="Teléfono"
           name="telefono"
           required
+          hint="Solo se usa para evitar reservas duplicadas. No se almacena ni se muestra."
         >
           <UInput
             v-model="playerFormState.telefono"
             class="w-full"
           />
         </UFormField>
+
+        <p
+          v-else
+          class="text-xs text-slate-500"
+        >
+          El teléfono no se edita (se almacena de forma segura como hash).
+        </p>
 
         <p
           v-if="playerFormError"

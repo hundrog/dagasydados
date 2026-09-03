@@ -44,7 +44,7 @@ const placeholderUrl = 'https://placehold.co/600x450/1e174a/9fa7ff?text=Sin+imag
 const loadSession = async () => {
   const { data, error } = await supabase
     .from('game_sessions')
-    .select('*,session_players(count),master:dagger_masters(id,full_name,user_name,avatar_url,phone,plataforma_pago,plataforma_pago_cuenta)')
+    .select('*,master:dagger_masters(id,full_name,user_name,avatar_url,phone,plataforma_pago,plataforma_pago_cuenta)')
     .eq('id', String(route.params.id))
     .eq('status', 'published')
     .maybeSingle()
@@ -55,6 +55,13 @@ const loadSession = async () => {
     errorMessage.value = 'No se encontró la sesión'
   } else {
     session.value = data as unknown as GameSessionWithMaster
+
+    const { data: count } = await supabase
+      .rpc('session_player_count', { p_session_id: String(route.params.id) })
+
+    if (session.value) {
+      session.value.player_count = count ?? 0
+    }
   }
 
   isLoading.value = false

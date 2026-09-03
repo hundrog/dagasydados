@@ -255,7 +255,7 @@ export type Database = {
           game_session_id: string
           id: string
           nombre: string
-          telefono: string
+          telefono_hash: string
           updated_at: string | null
         }
         Insert: {
@@ -263,7 +263,7 @@ export type Database = {
           game_session_id: string
           id?: string
           nombre: string
-          telefono: string
+          telefono_hash: string
           updated_at?: string | null
         }
         Update: {
@@ -271,7 +271,7 @@ export type Database = {
           game_session_id?: string
           id?: string
           nombre?: string
-          telefono?: string
+          telefono_hash?: string
           updated_at?: string | null
         }
         Relationships: [
@@ -290,6 +290,23 @@ export type Database = {
     }
     Functions: {
       request_master_authorization: { Args: never, Returns: undefined }
+      create_session_player: {
+        Args: {
+          p_game_session_id: string
+          p_nombre: string
+          p_telefono: string
+        }
+        Returns: {
+          ok: boolean
+          error?: string
+          message?: string
+          id?: string
+        }
+      }
+      session_player_count: {
+        Args: { p_session_id: string }
+        Returns: number
+      }
     }
     Enums: {
       master_status: 'created' | 'pending' | 'authorized' | 'rejected'
