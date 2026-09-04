@@ -13,6 +13,7 @@ const UDropdownMenu = resolveComponent('UDropdownMenu')
 const props = defineProps<{
   sessionId: string
   id?: string
+  hideAnonymous?: boolean
 }>()
 
 const players = ref<SessionPlayer[]>([])
@@ -283,7 +284,10 @@ function getPlayerRowItems(row: Row<SessionPlayer>) {
       />
     </div>
 
-    <div class="flex items-center gap-3 rounded-lg border border-dashed border-slate-300 px-4 py-3">
+    <div
+      v-if="!hideAnonymous"
+      class="flex items-center gap-3 rounded-lg border border-dashed border-slate-300 px-4 py-3"
+    >
       <div class="flex items-center gap-2">
         <UIcon
           name="i-lucide-users"

@@ -202,6 +202,8 @@ const initialState = (): Schema => ({
 })
 const state = reactive<Schema>(initialState())
 
+const anonymousPlayers = ref(props.session?.anonymous_players ?? 0)
+
 const imageFile = ref<File | null>(null)
 
 const imagePreview = computed(() => {
@@ -365,7 +367,8 @@ const buildPayload = (): GameSessionInsert => ({
   max_players: toNumberOrNull(state.max_players),
   master_id: state.master_id,
   event_id: state.event_id || null,
-  status: state.status ?? 'draft'
+  status: state.status ?? 'draft',
+  anonymous_players: anonymousPlayers.value
 })
 
 const hasScheduleConflict = computed(() => {
@@ -904,6 +907,45 @@ async function submitSession() {
         </UFormField>
       </div>
 
+      <div class="flex items-center gap-3 rounded-lg border border-dashed border-slate-300 px-4 py-3">
+        <div class="flex items-center gap-2">
+          <UIcon
+            name="i-lucide-users"
+            class="size-4 text-on-surface-dim"
+          />
+          <span class="text-sm font-medium text-on-surface">
+            Jugadores anónimos
+          </span>
+        </div>
+        <div class="flex items-center gap-1.5">
+          <UButton
+            icon="i-lucide-minus"
+            size="sm"
+            color="neutral"
+            variant="soft"
+            class="cursor-pointer"
+            :disabled="anonymousPlayers <= 0"
+            aria-label="Quitar jugador anónimo"
+            @click="anonymousPlayers = Math.max(0, anonymousPlayers - 1)"
+          />
+          <span class="min-w-8 text-center text-sm font-semibold">
+            {{ anonymousPlayers }}
+          </span>
+          <UButton
+            icon="i-lucide-plus"
+            size="sm"
+            color="neutral"
+            variant="soft"
+            class="cursor-pointer"
+            aria-label="Agregar jugador anónimo"
+            @click="anonymousPlayers++"
+          />
+        </div>
+        <p class="text-xs text-slate-500">
+          Se suman al total y a la capacidad máxima.
+        </p>
+      </div>
+
       <UAlert
         v-if="selectedEvent && hasScheduleConflict"
         color="warning"
@@ -918,13 +960,14 @@ async function submitSession() {
       v-if="props.session?.id"
       id="jugadores"
       :session-id="props.session.id"
+      :hide-anonymous="true"
     />
 
     <p
       v-else
       class="text-sm text-slate-500"
     >
-      Guarda la sesión primero para poder administrar los jugadores inscritos.
+      Guarda la sesión para poder agregar jugadores registrados.
     </p>
 
     <section
