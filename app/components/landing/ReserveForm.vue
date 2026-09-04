@@ -7,11 +7,21 @@ const props = defineProps<{
   sessionType?: string
   sessionTitle?: string
   sessionId?: string
+  maxPlayers?: number | null
+  currentPlayers?: number
 }>()
 
 const toast = useToast()
 const isOpen = ref(false)
 const isLoading = ref(false)
+
+const isFull = computed(() =>
+  props.maxPlayers != null && (props.currentPlayers ?? 0) >= props.maxPlayers
+)
+
+const canReserve = computed(() =>
+  !!props.phone && !isFull.value
+)
 
 const sanitizeName = (value: string) =>
   value.replace(/[^\p{L}\p{N}\s\-_.]/gu, '').trim().slice(0, 80)
@@ -43,9 +53,11 @@ const wame = computed(() => {
 })
 
 async function handleReserve() {
-  if (!props.phone || !props.sessionId || !state.name?.trim() || !state.telefono?.trim()) {
+  if (!props.sessionId || !state.name?.trim() || !state.telefono?.trim()) {
     return
   }
+
+  if (!canReserve.value) return
 
   isLoading.value = true
 
@@ -125,6 +137,7 @@ async function handleReserve() {
       block
       label="Aparta tu lugar"
       class="mt-3 cursor-pointer"
+      :disabled="!canReserve"
       @click.stop="isOpen = true"
     />
 
@@ -160,7 +173,7 @@ async function handleReserve() {
           type="button"
           block
           :loading="isLoading"
-          :disabled="!state.name?.length || !state.telefono?.length"
+          :disabled="!canReserve || !state.name?.length || !state.telefono?.length"
           class="cursor-pointer"
           @click="handleReserve"
         >

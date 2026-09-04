@@ -219,8 +219,7 @@ const anonymousPlayerOptions = computed(() => {
 })
 
 const onAnonymousChange = (value: unknown) => {
-  const item = value as { value: number } | null
-  anonymousPlayers.value = item ? Number(item.value) : 0
+  anonymousPlayers.value = typeof value === 'number' ? value : Number(value ?? 0)
 }
 
 const imageFile = ref<File | null>(null)

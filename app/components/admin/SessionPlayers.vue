@@ -52,8 +52,7 @@ const anonymousPlayerOptions = computed(() => {
 })
 
 const onAnonymousChange = (value: unknown) => {
-  const item = value as { value: number } | null
-  const next = item ? Number(item.value) : 0
+  const next = typeof value === 'number' ? value : Number(value ?? 0)
   if (next < 0) return
   adjustAnonymous(next - anonymousCount.value)
 }
