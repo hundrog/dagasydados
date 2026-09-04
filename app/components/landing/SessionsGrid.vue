@@ -143,13 +143,25 @@ const loadSessions = async () => {
 
   const { data, error } = await supabase
     .from('game_sessions')
-    .select('id,title,system,session_type,audience,mode,image_url,max_players,location,description,costo,fecha_inicio,hora_inicio,hora_fin,rrule,event_id,event:events(id,name,description,start_datetime,end_datetime,image_url),session_players(count),master:dagger_masters(id,full_name,user_name,avatar_url,phone)')
+    .select('id,title,system,session_type,audience,mode,image_url,max_players,location,description,costo,fecha_inicio,hora_inicio,hora_fin,rrule,event_id,event:events(id,name,description,start_datetime,end_datetime,image_url),master:dagger_masters(id,full_name,user_name,avatar_url,phone)')
     .eq('status', 'published')
 
   if (error) {
     errorMessage.value = error.message
   } else {
-    sessions.value = (data ?? []) as unknown as GameSessionWithMaster[]
+    const rawSessions = (data ?? []) as unknown as GameSessionWithMaster[]
+
+    const counts = await Promise.all(
+      rawSessions.map(async (s) => {
+        const { data: count } = await supabase.rpc('session_player_count', { p_session_id: s.id })
+        return { id: s.id, count: count ?? 0 }
+      })
+    )
+
+    sessions.value = rawSessions.map(s => ({
+      ...s,
+      player_count: counts.find(c => c.id === s.id)?.count ?? 0
+    }))
   }
 
   isLoading.value = false

@@ -28,5 +28,6 @@ export type SessionEventRef = {
 export type GameSessionWithMaster = GameSession & {
   master: SessionMasterRef | null
   session_players?: Array<{ count: number }> | null
+  player_count?: number | null
   event?: SessionEventRef | null
 }

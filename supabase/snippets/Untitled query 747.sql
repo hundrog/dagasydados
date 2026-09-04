@@ -1,0 +1,1 @@
+SELECT public.finalize_session_players_hash();

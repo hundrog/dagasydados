@@ -100,7 +100,9 @@ export const useSessionFormat = (sessionRef: MaybeRefOrGetter<GameSessionWithMas
     return timeRange
   })
 
-  const currentPlayers = computed(() => session.value?.session_players?.[0]?.count ?? 0)
+  const currentPlayers = computed(() =>
+    session.value?.player_count ?? session.value?.session_players?.[0]?.count ?? 0
+  )
 
   const modeColor = computed(() => {
     switch (session.value?.mode) {

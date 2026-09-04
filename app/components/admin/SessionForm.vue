@@ -202,6 +202,26 @@ const initialState = (): Schema => ({
 })
 const state = reactive<Schema>(initialState())
 
+const anonymousPlayers = ref(props.session?.anonymous_players ?? 0)
+
+const anonymousPlayerOptions = computed(() => {
+  const max = Number(state.max_players)
+  const limit = Number.isFinite(max) && max > 0 ? max : 0
+  const options = Array.from({ length: limit + 1 }, (_, i) => ({
+    label: String(i),
+    value: i
+  }))
+  const current = anonymousPlayers.value
+  if (current > limit && !options.some(o => o.value === current)) {
+    options.push({ label: String(current), value: current })
+  }
+  return options
+})
+
+const onAnonymousChange = (value: unknown) => {
+  anonymousPlayers.value = typeof value === 'number' ? value : Number(value ?? 0)
+}
+
 const imageFile = ref<File | null>(null)
 
 const imagePreview = computed(() => {
@@ -365,7 +385,8 @@ const buildPayload = (): GameSessionInsert => ({
   max_players: toNumberOrNull(state.max_players),
   master_id: state.master_id,
   event_id: state.event_id || null,
-  status: state.status ?? 'draft'
+  status: state.status ?? 'draft',
+  anonymous_players: anonymousPlayers.value
 })
 
 const hasScheduleConflict = computed(() => {
@@ -865,29 +886,6 @@ async function submitSession() {
           />
         </UFormField>
         <UFormField
-          label="Costo"
-          name="costo"
-        >
-          <UInput
-            v-model="state.costo"
-            type="number"
-            class="w-full"
-          />
-        </UFormField>
-        <UFormField
-          label="Máximo de jugadores"
-          name="max_players"
-        >
-          <UInput
-            v-model="state.max_players"
-            type="number"
-            class="w-full"
-          />
-        </UFormField>
-      </div>
-
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <UFormField
           label="Evento"
           name="event_id"
           hint="Opcional: asigna esta mesa a un evento."
@@ -900,6 +898,42 @@ async function submitSession() {
             clear
             class="w-full"
             placeholder="Selecciona un evento"
+          />
+        </UFormField>
+        <UFormField
+          label="Costo"
+          name="costo"
+        >
+          <UInput
+            v-model="state.costo"
+            type="number"
+            class="w-full"
+          />
+        </UFormField>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <UFormField
+          label="Máximo de jugadores"
+          name="max_players"
+        >
+          <UInput
+            v-model="state.max_players"
+            type="number"
+            class="w-full"
+          />
+        </UFormField>
+        <UFormField
+          label="Jugadores anónimos"
+          name="anonymous_players"
+        >
+          <USelectMenu
+            :model-value="anonymousPlayers"
+            :items="anonymousPlayerOptions"
+            value-key="value"
+            class="w-full"
+            aria-label="Cantidad de jugadores anónimos"
+            @update:model-value="onAnonymousChange"
           />
         </UFormField>
       </div>
@@ -918,13 +952,14 @@ async function submitSession() {
       v-if="props.session?.id"
       id="jugadores"
       :session-id="props.session.id"
+      :hide-anonymous="true"
     />
 
     <p
       v-else
       class="text-sm text-slate-500"
     >
-      Guarda la sesión primero para poder administrar los jugadores inscritos.
+      Guarda la sesión para poder agregar jugadores registrados.
     </p>
 
     <section

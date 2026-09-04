@@ -11,11 +11,9 @@ const RATE_LIMIT_MAX = 5
 const RATE_LIMIT_WINDOW_MS = 60_000
 const rateLimitHits = new Map<string, { count: number, resetAt: number }>()
 
-const sanitizeName = (value: string) =>
-  value.replace(/[^\p{L}\p{N}\s\-_.]/gu, '').trim().slice(0, 80)
-
-const sanitizePhone = (value: string) =>
-  value.replace(/[^\d+\s-]/g, '').trim().slice(0, 20)
+type CreatePlayerResult
+  = { ok: true, id: string }
+    | { ok: false, error: string, message: string }
 
 export default defineEventHandler(async (event) => {
   const ip = getRequestIP(event, { xForwardedFor: true }) ?? 'unknown'
@@ -55,10 +53,10 @@ export default defineEventHandler(async (event) => {
 
   const supabase = await serverSupabaseClient(event)
 
-  type SessionRow = { id: string, max_players: number | null }
+  type SessionRow = { id: string }
   const { data } = await supabase
     .from('game_sessions')
-    .select('id, max_players')
+    .select('id')
     .eq('id', parsed.data.sessionId)
     .maybeSingle()
 
@@ -67,29 +65,27 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 404, statusMessage: 'Not Found', message: 'Sesión no encontrada' })
   }
 
-  if (session.max_players != null) {
-    const { count } = await supabase
-      .from('session_players')
-      .select('id', { count: 'exact', head: true })
-      .eq('game_session_id', session.id)
-
-    if (count != null && count >= session.max_players) {
-      throw createError({ statusCode: 409, statusMessage: 'Conflict', message: 'Esta sesión ya está llena' })
-    }
-  }
-
-  const { error } = await supabase
-    .from('session_players')
-    .insert({ game_session_id: session.id, nombre, telefono })
+  const { data: result, error } = await supabase
+    .rpc('create_session_player', {
+      p_game_session_id: parsed.data.sessionId,
+      p_nombre: nombre,
+      p_telefono: telefono
+    })
 
   if (error) {
-    if (error.code === '23505') {
-      throw createError({ statusCode: 409, statusMessage: 'Conflict', message: 'Este teléfono ya está registrado para esta sesión' })
-    }
-    if (error.code === '23514') {
-      throw createError({ statusCode: 409, statusMessage: 'Conflict', message: 'Esta sesión ya está llena' })
-    }
     throw createError({ statusCode: 500, statusMessage: 'Internal Server Error', message: 'No se pudo registrar la reserva' })
+  }
+
+  const outcome = result as unknown as CreatePlayerResult
+  if (!outcome.ok) {
+    switch (outcome.error) {
+      case 'duplicate':
+        throw createError({ statusCode: 409, statusMessage: 'Conflict', message: 'Este teléfono ya está registrado para esta sesión' })
+      case 'full':
+        throw createError({ statusCode: 409, statusMessage: 'Conflict', message: 'Esta sesión ya está llena' })
+      default:
+        throw createError({ statusCode: 400, statusMessage: 'Bad Request', message: outcome.message ?? 'Datos de reserva inválidos' })
+    }
   }
 
   return { ok: true }
