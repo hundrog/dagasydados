@@ -11,12 +11,6 @@ const RATE_LIMIT_MAX = 5
 const RATE_LIMIT_WINDOW_MS = 60_000
 const rateLimitHits = new Map<string, { count: number, resetAt: number }>()
 
-const sanitizeName = (value: string) =>
-  value.replace(/[^\p{L}\p{N}\s\-_.]/gu, '').trim().slice(0, 80)
-
-const sanitizePhone = (value: string) =>
-  value.replace(/[^\d+\s-]/g, '').trim().slice(0, 20)
-
 type CreatePlayerResult
   = { ok: true, id: string }
     | { ok: false, error: string, message: string }

@@ -23,12 +23,6 @@ const canReserve = computed(() =>
   !!props.phone && !isFull.value
 )
 
-const sanitizeName = (value: string) =>
-  value.replace(/[^\p{L}\p{N}\s\-_.]/gu, '').trim().slice(0, 80)
-
-const sanitizePhone = (value: string) =>
-  value.replace(/[^\d+\s-]/g, '').trim().slice(0, 20)
-
 const schema = z.object({
   name: z.string().min(1, 'El nombre es requerido').max(80),
   telefono: z.string().min(1, 'El telefono es requerido').max(20)
