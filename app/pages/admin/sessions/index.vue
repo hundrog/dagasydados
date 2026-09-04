@@ -490,22 +490,22 @@ const pagination = ref({
       </div>
       <UTable
         ref="table"
+        v-model:pagination="pagination"
         :data="filteredSessions"
         :columns="columns"
-        v-model:pagination="pagination"
         :pagination-options="{
           getPaginationRowModel: getPaginationRowModel()
         }"
         class="flex-1"
       />
       <div class="flex justify-end border-t border-default pt-4 px-4">
-      <UPagination
-        :page="(table?.tableApi?.getState().pagination.pageIndex || 0) + 1"
-        :items-per-page="table?.tableApi?.getState().pagination.pageSize"
-        :total="table?.tableApi?.getFilteredRowModel().rows.length"
-        @update:page="(p) => table?.tableApi?.setPageIndex(p - 1)"
-      />
-    </div>
+        <UPagination
+          :page="(table?.tableApi?.getState().pagination.pageIndex || 0) + 1"
+          :items-per-page="table?.tableApi?.getState().pagination.pageSize"
+          :total="table?.tableApi?.getFilteredRowModel().rows.length"
+          @update:page="(p) => table?.tableApi?.setPageIndex(p - 1)"
+        />
+      </div>
     </template>
 
     <UModal

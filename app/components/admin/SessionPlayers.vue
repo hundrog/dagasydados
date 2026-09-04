@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { h, onMounted, ref } from 'vue'
+import { computed, h, onMounted, ref } from 'vue'
 import * as z from 'zod'
 import type { TableColumn } from '@nuxt/ui'
 import type { Row } from '@tanstack/vue-table'
@@ -26,11 +26,36 @@ const isUpdatingAnonymous = ref(false)
 const loadAnonymousCount = async () => {
   const { data } = await supabase
     .from('game_sessions')
-    .select('anonymous_players')
+    .select('anonymous_players, max_players')
     .eq('id', props.sessionId)
     .maybeSingle()
 
   anonymousCount.value = data?.anonymous_players ?? 0
+  maxPlayers.value = data?.max_players ?? null
+}
+
+const maxPlayers = ref<number | null>(null)
+
+const anonymousPlayerOptions = computed(() => {
+  const limit = Number.isFinite(maxPlayers.value) && (maxPlayers.value ?? 0) > 0
+    ? Number(maxPlayers.value)
+    : 0
+  const options = Array.from({ length: limit + 1 }, (_, i) => ({
+    label: String(i),
+    value: i
+  }))
+  const current = anonymousCount.value
+  if (current > limit && !options.some(o => o.value === current)) {
+    options.push({ label: String(current), value: current })
+  }
+  return options
+})
+
+const onAnonymousChange = (value: unknown) => {
+  const item = value as { value: number } | null
+  const next = item ? Number(item.value) : 0
+  if (next < 0) return
+  adjustAnonymous(next - anonymousCount.value)
 }
 
 const adjustAnonymous = async (delta: number) => {
@@ -286,45 +311,22 @@ function getPlayerRowItems(row: Row<SessionPlayer>) {
 
     <div
       v-if="!hideAnonymous"
-      class="flex items-center gap-3 rounded-lg border border-dashed border-slate-300 px-4 py-3"
+      class="grid grid-cols-1 md:grid-cols-2 gap-4"
     >
-      <div class="flex items-center gap-2">
-        <UIcon
-          name="i-lucide-users"
-          class="size-4 text-on-surface-dim"
-        />
-        <span class="text-sm font-medium text-on-surface">
-          Jugadores anónimos
-        </span>
-      </div>
-      <div class="flex items-center gap-1.5">
-        <UButton
-          icon="i-lucide-minus"
-          size="sm"
-          color="neutral"
-          variant="soft"
-          class="cursor-pointer"
+      <UFormField
+        label="Jugadores anónimos"
+        name="anonymous_players"
+      >
+        <USelectMenu
+          :model-value="anonymousCount"
+          :items="anonymousPlayerOptions"
+          value-key="value"
+          class="w-full"
           :disabled="isUpdatingAnonymous"
-          aria-label="Quitar jugador anónimo"
-          @click="adjustAnonymous(-1)"
+          aria-label="Cantidad de jugadores anónimos"
+          @update:model-value="onAnonymousChange"
         />
-        <span class="min-w-8 text-center text-sm font-semibold">
-          {{ anonymousCount }}
-        </span>
-        <UButton
-          icon="i-lucide-plus"
-          size="sm"
-          color="neutral"
-          variant="soft"
-          class="cursor-pointer"
-          :disabled="isUpdatingAnonymous"
-          aria-label="Agregar jugador anónimo"
-          @click="adjustAnonymous(1)"
-        />
-      </div>
-      <p class="text-xs text-slate-500">
-        Se suman al total y a la capacidad máxima.
-      </p>
+      </UFormField>
     </div>
 
     <div

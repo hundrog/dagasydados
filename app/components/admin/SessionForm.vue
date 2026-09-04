@@ -204,6 +204,25 @@ const state = reactive<Schema>(initialState())
 
 const anonymousPlayers = ref(props.session?.anonymous_players ?? 0)
 
+const anonymousPlayerOptions = computed(() => {
+  const max = Number(state.max_players)
+  const limit = Number.isFinite(max) && max > 0 ? max : 0
+  const options = Array.from({ length: limit + 1 }, (_, i) => ({
+    label: String(i),
+    value: i
+  }))
+  const current = anonymousPlayers.value
+  if (current > limit && !options.some(o => o.value === current)) {
+    options.push({ label: String(current), value: current })
+  }
+  return options
+})
+
+const onAnonymousChange = (value: unknown) => {
+  const item = value as { value: number } | null
+  anonymousPlayers.value = item ? Number(item.value) : 0
+}
+
 const imageFile = ref<File | null>(null)
 
 const imagePreview = computed(() => {
@@ -868,29 +887,6 @@ async function submitSession() {
           />
         </UFormField>
         <UFormField
-          label="Costo"
-          name="costo"
-        >
-          <UInput
-            v-model="state.costo"
-            type="number"
-            class="w-full"
-          />
-        </UFormField>
-        <UFormField
-          label="Máximo de jugadores"
-          name="max_players"
-        >
-          <UInput
-            v-model="state.max_players"
-            type="number"
-            class="w-full"
-          />
-        </UFormField>
-      </div>
-
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <UFormField
           label="Evento"
           name="event_id"
           hint="Opcional: asigna esta mesa a un evento."
@@ -905,45 +901,42 @@ async function submitSession() {
             placeholder="Selecciona un evento"
           />
         </UFormField>
+        <UFormField
+          label="Costo"
+          name="costo"
+        >
+          <UInput
+            v-model="state.costo"
+            type="number"
+            class="w-full"
+          />
+        </UFormField>
       </div>
 
-      <div class="flex items-center gap-3 rounded-lg border border-dashed border-slate-300 px-4 py-3">
-        <div class="flex items-center gap-2">
-          <UIcon
-            name="i-lucide-users"
-            class="size-4 text-on-surface-dim"
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <UFormField
+          label="Máximo de jugadores"
+          name="max_players"
+        >
+          <UInput
+            v-model="state.max_players"
+            type="number"
+            class="w-full"
           />
-          <span class="text-sm font-medium text-on-surface">
-            Jugadores anónimos
-          </span>
-        </div>
-        <div class="flex items-center gap-1.5">
-          <UButton
-            icon="i-lucide-minus"
-            size="sm"
-            color="neutral"
-            variant="soft"
-            class="cursor-pointer"
-            :disabled="anonymousPlayers <= 0"
-            aria-label="Quitar jugador anónimo"
-            @click="anonymousPlayers = Math.max(0, anonymousPlayers - 1)"
+        </UFormField>
+        <UFormField
+          label="Jugadores anónimos"
+          name="anonymous_players"
+        >
+          <USelectMenu
+            :model-value="anonymousPlayers"
+            :items="anonymousPlayerOptions"
+            value-key="value"
+            class="w-full"
+            aria-label="Cantidad de jugadores anónimos"
+            @update:model-value="onAnonymousChange"
           />
-          <span class="min-w-8 text-center text-sm font-semibold">
-            {{ anonymousPlayers }}
-          </span>
-          <UButton
-            icon="i-lucide-plus"
-            size="sm"
-            color="neutral"
-            variant="soft"
-            class="cursor-pointer"
-            aria-label="Agregar jugador anónimo"
-            @click="anonymousPlayers++"
-          />
-        </div>
-        <p class="text-xs text-slate-500">
-          Se suman al total y a la capacidad máxima.
-        </p>
+        </UFormField>
       </div>
 
       <UAlert
