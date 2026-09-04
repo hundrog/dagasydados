@@ -161,6 +161,7 @@ export type Database = {
       }
       game_sessions: {
         Row: {
+          anonymous_players: number
           audience: string | null
           campaign: string | null
           costo: number | null
@@ -185,6 +186,7 @@ export type Database = {
           zona_horaria: string | null
         }
         Insert: {
+          anonymous_players?: number
           audience?: string | null
           campaign?: string | null
           costo?: number | null
@@ -209,6 +211,7 @@ export type Database = {
           zona_horaria?: string | null
         }
         Update: {
+          anonymous_players?: number
           audience?: string | null
           campaign?: string | null
           costo?: number | null

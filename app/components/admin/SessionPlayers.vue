@@ -19,6 +19,43 @@ const players = ref<SessionPlayer[]>([])
 const isLoadingPlayers = ref(false)
 const playersError = ref<string | null>(null)
 
+const anonymousCount = ref(0)
+const isUpdatingAnonymous = ref(false)
+
+const loadAnonymousCount = async () => {
+  const { data } = await supabase
+    .from('game_sessions')
+    .select('anonymous_players')
+    .eq('id', props.sessionId)
+    .maybeSingle()
+
+  anonymousCount.value = data?.anonymous_players ?? 0
+}
+
+const adjustAnonymous = async (delta: number) => {
+  if (isUpdatingAnonymous.value) return
+  isUpdatingAnonymous.value = true
+
+  const next = anonymousCount.value + delta
+  if (next < 0) {
+    isUpdatingAnonymous.value = false
+    return
+  }
+
+  const { error } = await supabase
+    .from('game_sessions')
+    .update({ anonymous_players: next })
+    .eq('id', props.sessionId)
+
+  if (!error) {
+    anonymousCount.value = next
+  } else {
+    playersError.value = error.message
+  }
+
+  isUpdatingAnonymous.value = false
+}
+
 const loadPlayers = async () => {
   isLoadingPlayers.value = true
   playersError.value = null
@@ -40,6 +77,7 @@ const loadPlayers = async () => {
 
 onMounted(() => {
   loadPlayers()
+  loadAnonymousCount()
 })
 
 const playerSchema = z.object({
@@ -243,6 +281,46 @@ function getPlayerRowItems(row: Row<SessionPlayer>) {
         class="cursor-pointer"
         @click="openPlayerForm()"
       />
+    </div>
+
+    <div class="flex items-center gap-3 rounded-lg border border-dashed border-slate-300 px-4 py-3">
+      <div class="flex items-center gap-2">
+        <UIcon
+          name="i-lucide-users"
+          class="size-4 text-on-surface-dim"
+        />
+        <span class="text-sm font-medium text-on-surface">
+          Jugadores anónimos
+        </span>
+      </div>
+      <div class="flex items-center gap-1.5">
+        <UButton
+          icon="i-lucide-minus"
+          size="sm"
+          color="neutral"
+          variant="soft"
+          class="cursor-pointer"
+          :disabled="isUpdatingAnonymous"
+          aria-label="Quitar jugador anónimo"
+          @click="adjustAnonymous(-1)"
+        />
+        <span class="min-w-8 text-center text-sm font-semibold">
+          {{ anonymousCount }}
+        </span>
+        <UButton
+          icon="i-lucide-plus"
+          size="sm"
+          color="neutral"
+          variant="soft"
+          class="cursor-pointer"
+          :disabled="isUpdatingAnonymous"
+          aria-label="Agregar jugador anónimo"
+          @click="adjustAnonymous(1)"
+        />
+      </div>
+      <p class="text-xs text-slate-500">
+        Se suman al total y a la capacidad máxima.
+      </p>
     </div>
 
     <div
