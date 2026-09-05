@@ -65,7 +65,7 @@ describe.skipIf(!available)('create_session_player (integration)', () => {
   const getStoredRows = async (sessionId: string) => {
     const { data, error } = await adminClient
       .from('session_players')
-      .select('id, nombre, telefono_hash')
+      .select('id, nombre, telefono, telefono_hash')
       .eq('game_session_id', sessionId)
     if (error) throw new Error(`No se pudo leer fixtures: ${error.message}`)
     return data ?? []
@@ -104,13 +104,14 @@ describe.skipIf(!available)('create_session_player (integration)', () => {
       expect(rows[0].nombre).toBe('Ana Pérez')
     })
 
-    it('el teléfono se almacena como hash, nunca en texto plano', async () => {
+    it('el teléfono se almacena en claro y también como hash', async () => {
       const sessionId = await createSession()
       const telefono = '5551234567'
 
       await callCreatePlayer(sessionId, 'Juan López', telefono)
       const rows = await getStoredRows(sessionId)
 
+      expect(rows[0].telefono).toBe(telefono)
       expect(rows[0].telefono_hash).toBeTruthy()
       expect(rows[0].telefono_hash).not.toBe(telefono)
       expect(rows[0].telefono_hash).toMatch(/^[0-9a-f]{64}$/)

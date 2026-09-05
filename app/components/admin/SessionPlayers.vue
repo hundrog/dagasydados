@@ -4,6 +4,7 @@ import * as z from 'zod'
 import type { TableColumn } from '@nuxt/ui'
 import type { Row } from '@tanstack/vue-table'
 import type { SessionPlayer } from '~/types/session'
+import type { PhoneInputExpose } from '~/types/phone'
 
 const supabase = useSupabaseClient()
 const toast = useToast()
@@ -116,6 +117,7 @@ const playerFormOpen = ref(false)
 const isSavingPlayer = ref(false)
 const playerFormError = ref<string | null>(null)
 const editingPlayer = ref<SessionPlayer | null>(null)
+const phoneInput = ref<PhoneInputExpose | null>(null)
 const playerFormState = reactive<PlayerSchema>({
   nombre: '',
   telefono: ''
@@ -148,7 +150,7 @@ const savePlayer = async () => {
       return
     }
   } else {
-    const telefono = playerFormState.telefono?.trim()
+    const telefono = phoneInput.value?.fullNumber
     if (!telefono) {
       isSavingPlayer.value = false
       playerFormError.value = 'El teléfono es obligatorio'
@@ -234,6 +236,20 @@ const playerColumns: TableColumn<SessionPlayer>[] = [
     accessorKey: 'nombre',
     header: 'Nombre',
     cell: ({ row }) => row.original.nombre || '-'
+  },
+  {
+    accessorKey: 'telefono',
+    header: 'Teléfono',
+    cell: ({ row }) => {
+      const telefono = row.original.telefono
+      if (!telefono) return '-'
+      return h('a', {
+        href: `https://wa.me/${telefono.replace(/\D/g, '')}`,
+        target: '_blank',
+        rel: 'noopener noreferrer',
+        class: 'inline-flex items-center gap-1 text-primary-700 hover:underline cursor-pointer'
+      }, telefono)
+    }
   },
   {
     id: 'actions',
@@ -369,24 +385,21 @@ function getPlayerRowItems(row: Row<SessionPlayer>) {
           />
         </UFormField>
 
-        <UFormField
+        <PhoneInput
           v-if="!editingPlayer"
-          label="Teléfono"
+          ref="phoneInput"
+          v-model="playerFormState.telefono"
           name="telefono"
+          label="Teléfono"
           required
-          hint="Solo se usa para evitar reservas duplicadas. No se almacena ni se muestra."
-        >
-          <UInput
-            v-model="playerFormState.telefono"
-            class="w-full"
-          />
-        </UFormField>
+          hint="Visible solo para el master. Se usa para contactarte y evitar duplicados."
+        />
 
         <p
           v-else
           class="text-xs text-slate-500"
         >
-          El teléfono no se edita (se almacena de forma segura como hash).
+          El teléfono no se edita.
         </p>
 
         <p

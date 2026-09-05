@@ -253,6 +253,7 @@ export type Database = {
           game_session_id: string
           id: string
           nombre: string
+          telefono: string | null
           telefono_hash: string
           updated_at: string | null
         }
@@ -261,6 +262,7 @@ export type Database = {
           game_session_id: string
           id?: string
           nombre: string
+          telefono?: string | null
           telefono_hash: string
           updated_at?: string | null
         }
@@ -269,6 +271,7 @@ export type Database = {
           game_session_id?: string
           id?: string
           nombre?: string
+          telefono?: string | null
           telefono_hash?: string
           updated_at?: string | null
         }

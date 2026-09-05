@@ -1,15 +1,7 @@
 <script setup lang="ts">
 import * as z from 'zod'
-import { vMaska } from 'maska/vue'
 import type { Master } from '~/types/master'
-
-type PhoneCode = {
-  name: string
-  code: string
-  emoji: string
-  dialCode: string
-  mask: string
-}
+import type { PhoneInputExpose } from '~/types/phone'
 
 const supabase = useSupabaseClient()
 const toast = useToast()
@@ -30,7 +22,7 @@ const successMessage = ref<string | null>(null)
 const currentMaster = ref<Master | null>(null)
 const avatarFile = ref<File | null>(null)
 const avatarRemoved = ref(false)
-let skipCountryWatch = false
+const phoneInput = ref<PhoneInputExpose | null>(null)
 
 const isEdit = computed(() => !!currentMaster.value)
 
@@ -61,15 +53,6 @@ const resetForm = () => {
   successMessage.value = null
 }
 
-const stripCountryCode = (digits: string, dialCode: string) => {
-  const d = dialCode.replace(/\D/g, '')
-  return d && digits.length > d.length && digits.startsWith(d) ? digits.slice(d.length) : digits
-}
-
-const withMobilePrefix = (country: PhoneCode | undefined, digits: string) => {
-  return country?.code === 'MX' ? `1${digits}` : digits
-}
-
 const hydrateState = (master: Master) => {
   state.full_name = master.full_name ?? ''
   state.user_name = master.user_name ?? ''
@@ -79,18 +62,7 @@ const hydrateState = (master: Master) => {
   errorMessage.value = null
   successMessage.value = null
 
-  const digits = master.phone?.replace(/\D/g, '') ?? ''
-  const match = (phoneCodes.value ?? []).find((c) => {
-    const d = c.dialCode.replace(/\D/g, '')
-    return d && digits.length > d.length && digits.startsWith(d)
-  })
-  const detected = match ?? { code: 'MX', dialCode: '+52' }
-  skipCountryWatch = true
-  countryCode.value = detected.code
-  state.phone = stripCountryCode(digits, detected.dialCode)
-  if (detected.code === 'MX' && state.phone.startsWith('1')) {
-    state.phone = state.phone.slice(1)
-  }
+  phoneInput.value?.hydrateFromFull(master.phone ?? '')
 }
 
 const avatarPreview = computed(() => {
@@ -154,7 +126,7 @@ async function submitMaster() {
   const payload = {
     full_name: state.full_name?.trim() || null,
     user_name: state.user_name?.trim() || null,
-    phone: (state.phone?.replace(/\D/g, '') && `${dialCode.value.replace(/\D/g, '')}${withMobilePrefix(country.value, state.phone.replace(/\D/g, ''))}`) || null,
+    phone: phoneInput.value?.fullNumber || null,
     avatar_url: avatarFile.value ? uploadedUrl : (avatarRemoved.value ? null : (state.avatar_url?.trim() || null))
   }
 
@@ -226,28 +198,6 @@ async function submitMaster() {
 }
 
 defineExpose({ open })
-
-const countryCode = ref('MX')
-
-const { data: phoneCodes, status, execute } = await useLazyFetch<PhoneCode[]>('/api/phone-codes')
-
-const country = computed(() => phoneCodes.value?.find(c => c.code === countryCode.value))
-const dialCode = computed(() => country.value?.dialCode || '+52')
-const mask = computed(() => country.value?.mask || '(##) #### ####')
-
-function onOpen() {
-  if (!phoneCodes.value?.length) {
-    execute()
-  }
-}
-
-watch(countryCode, () => {
-  if (skipCountryWatch) {
-    skipCountryWatch = false
-    return
-  }
-  state.phone = ''
-})
 </script>
 
 <template>
@@ -291,58 +241,12 @@ watch(countryCode, () => {
           />
         </UFormField>
 
-        <UFormField
-          label="Teléfono"
+        <PhoneInput
+          ref="phoneInput"
+          v-model="state.phone"
           name="phone"
-        >
-          <UFieldGroup class="w-full">
-            <USelectMenu
-              v-model="countryCode"
-              :items="phoneCodes"
-              value-key="code"
-              :search-input="{
-                placeholder: 'Search country...',
-                icon: 'i-lucide-search',
-                loading: status === 'pending'
-              }"
-              :filter-fields="['name', 'code', 'dialCode']"
-              :content="{ align: 'start' }"
-              :ui="{
-                base: 'pe-8',
-                content: 'w-48',
-                placeholder: 'hidden',
-                trailingIcon: 'size-4'
-              }"
-              trailing-icon="i-lucide-chevrons-up-down"
-              @update:open="onOpen"
-            >
-              <span class="size-5 flex items-center text-lg">
-                {{ country?.emoji || '\u{1F1FA}\u{1F1F8}' }}
-              </span>
-
-              <template #item-leading="{ item }">
-                <span class="size-5 flex items-center text-lg">
-                  {{ item.emoji }}
-                </span>
-              </template>
-
-              <template #item-label="{ item }">
-                {{ item.name }} ({{ item.dialCode }})
-              </template>
-            </USelectMenu>
-
-            <UInput
-              v-model="state.phone"
-              v-maska="mask"
-              class="w-full"
-              :placeholder="mask.replaceAll('#', '_')"
-            >
-              <template #leading>
-                {{ dialCode }}
-              </template>
-            </UInput>
-          </UFieldGroup>
-        </UFormField>
+          label="Teléfono"
+        />
 
         <UFormField
           label="Avatar"
