@@ -21,7 +21,8 @@ const schema = z.object({
   description: z.string().optional(),
   image_url: z.string().optional(),
   start_datetime: z.string().min(1, 'La fecha de inicio es obligatoria'),
-  end_datetime: z.string().min(1, 'La fecha de fin es obligatoria')
+  end_datetime: z.string().min(1, 'La fecha de fin es obligatoria'),
+  featured: z.boolean()
 })
 
 type Schema = z.infer<typeof schema>
@@ -36,7 +37,8 @@ const initialState = (): Schema => ({
   description: props.event?.description ?? '',
   image_url: props.event?.image_url ?? '',
   start_datetime: toDatetimeLocal(props.event?.start_datetime),
-  end_datetime: toDatetimeLocal(props.event?.end_datetime)
+  end_datetime: toDatetimeLocal(props.event?.end_datetime),
+  featured: props.event?.featured ?? false
 })
 
 const state = reactive<Schema>(initialState())
@@ -110,7 +112,8 @@ async function submitEvent() {
     description: state.description?.trim() || null,
     image_url: (uploadedUrl ?? state.image_url)?.trim() || null,
     start_datetime: toTimestamp(state.start_datetime),
-    end_datetime: toTimestamp(state.end_datetime)
+    end_datetime: toTimestamp(state.end_datetime),
+    featured: state.featured
   }
 
   if (props.event?.id) {
@@ -292,6 +295,18 @@ async function submitEvent() {
               :rows="4"
               placeholder="Describe el evento, su temática, actividades..."
             />
+          </UFormField>
+
+          <UFormField
+            class="md:col-span-2"
+          >
+            <div class="rounded-lg border border-slate-200 p-4">
+              <USwitch
+                v-model="state.featured"
+                label="Destacado"
+                description="Muestra este evento de forma destacada en la portada."
+              />
+            </div>
           </UFormField>
         </div>
       </section>

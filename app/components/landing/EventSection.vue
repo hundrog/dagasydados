@@ -45,9 +45,14 @@ const formatRange = () => {
           />
           Evento
         </span>
-        <h2 class="font-display text-headline-sm text-primary leading-tight truncate max-w-full">
-          {{ props.event.name }}
-        </h2>
+        <NuxtLink
+          :to="`/events/${props.event.id}`"
+          class="hover:underline decoration-primary/50 underline-offset-4"
+        >
+          <h2 class="font-display text-headline-sm text-primary leading-tight truncate max-w-full">
+            {{ props.event.name }}
+          </h2>
+        </NuxtLink>
         <span
           v-if="formatRange()"
           class="label-metadata text-on-surface-dim flex items-center gap-1.5"
