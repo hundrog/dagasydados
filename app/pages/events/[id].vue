@@ -2,6 +2,7 @@
 import type { Event } from '~/types/event'
 import type { GameSessionWithMaster } from '~/types/session'
 import { useClipboard } from '@vueuse/core'
+import { formatEventRange } from '~/composables/useEventFormat'
 
 const route = useRoute()
 const supabase = useSupabaseClient()
@@ -17,40 +18,14 @@ const placeholderUrl = 'https://placehold.co/1600x900/1e174a/9fa7ff?text=Sin+ima
 
 const formatDate = (value: string | null | undefined) => {
   if (!value) return ''
-  const date = new Date(value)
-  if (Number.isNaN(date.getTime())) return ''
+  const date = parseLocalDate(value)
+  if (!date) return ''
   return date.toLocaleDateString('es-ES', {
     weekday: 'long',
     day: 'numeric',
     month: 'long',
     year: 'numeric'
   })
-}
-
-const formatRange = () => {
-  const start = new Date(event.value?.start_datetime ?? '')
-  const end = new Date(event.value?.end_datetime ?? '')
-  if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) return ''
-
-  const sameDay = start.toDateString() === end.toDateString()
-  const date = start.toLocaleDateString('es-ES', {
-    day: '2-digit',
-    month: 'long',
-    year: 'numeric'
-  })
-  const hour = (d: Date) => d.toLocaleTimeString('es-ES', {
-    hour: '2-digit',
-    minute: '2-digit'
-  })
-
-  if (sameDay) return `${date} · ${hour(start)} - ${hour(end)}`
-
-  const endDate = end.toLocaleDateString('es-ES', {
-    day: '2-digit',
-    month: 'long',
-    year: 'numeric'
-  })
-  return `${date} - ${endDate}`
 }
 
 const loadEvent = async () => {
@@ -79,7 +54,7 @@ const loadEvent = async () => {
 
   const { data: sessionData, error: sessionError } = await supabase
     .from('game_sessions')
-    .select('id,title,system,session_type,audience,mode,image_url,max_players,location,description,costo,fecha_inicio,hora_inicio,hora_fin,rrule,event_id,event:events(id,name,description,start_datetime,end_datetime,image_url),master:dagger_masters(id,full_name,user_name,avatar_url,phone)')
+    .select('id,title,system,session_type,audience,mode,image_url,max_players,location,description,costo,fecha_inicio,hora_inicio,hora_fin,rrule,event_id,event:events(id,name,description,fecha_inicio,hora_inicio,fecha_fin,hora_fin,zona_horaria,image_url),master:dagger_masters(id,full_name,user_name,avatar_url,phone)')
     .eq('event_id', String(route.params.id))
     .eq('status', 'published')
 
@@ -180,14 +155,14 @@ const copyUrl = async () => {
             {{ event.name }}
           </h1>
           <p
-            v-if="formatRange()"
+            v-if="formatEventRange(event)"
             class="label-metadata text-on-surface-dim flex items-center gap-1.5 mt-2"
           >
             <UIcon
               name="i-lucide-clock"
               class="size-3.5"
             />
-            {{ formatRange() }}
+            {{ formatEventRange(event) }}
           </p>
         </div>
 

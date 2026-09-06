@@ -1,36 +1,11 @@
 <script setup lang="ts">
 import type { GameSessionWithMaster } from '~/types/session'
+import { formatEventRange } from '~/composables/useEventFormat'
 
 const props = defineProps<{
   event: GameSessionWithMaster['event'] & { name: string }
   sessions: GameSessionWithMaster[]
 }>()
-
-const formatRange = () => {
-  const start = new Date(props.event.start_datetime)
-  const end = new Date(props.event.end_datetime)
-  if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) return ''
-
-  const sameDay = start.toDateString() === end.toDateString()
-  const date = start.toLocaleDateString('es-ES', {
-    day: '2-digit',
-    month: 'long',
-    year: 'numeric'
-  })
-  const hour = (d: Date) => d.toLocaleTimeString('es-ES', {
-    hour: '2-digit',
-    minute: '2-digit'
-  })
-
-  if (sameDay) return `${date} · ${hour(start)} - ${hour(end)}`
-
-  const endDate = end.toLocaleDateString('es-ES', {
-    day: '2-digit',
-    month: 'long',
-    year: 'numeric'
-  })
-  return `${date} - ${endDate}`
-}
 </script>
 
 <template>
@@ -54,14 +29,14 @@ const formatRange = () => {
           </h2>
         </NuxtLink>
         <span
-          v-if="formatRange()"
+          v-if="formatEventRange(props.event)"
           class="label-metadata text-on-surface-dim flex items-center gap-1.5"
         >
           <UIcon
             name="i-lucide-clock"
             class="size-3"
           />
-          {{ formatRange() }}
+          {{ formatEventRange(props.event) }}
         </span>
       </div>
       <div class="h-px flex-1 bg-primary/30" />

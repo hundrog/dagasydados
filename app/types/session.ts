@@ -20,8 +20,11 @@ export type SessionEventRef = {
   id: string
   name: string
   description: string | null
-  start_datetime: string
-  end_datetime: string
+  fecha_inicio: string
+  fecha_fin: string
+  hora_inicio: string | null
+  hora_fin: string | null
+  zona_horaria: string | null
   image_url: string | null
 }
 

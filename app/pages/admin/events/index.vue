@@ -5,6 +5,7 @@ import { useClipboard } from '@vueuse/core'
 import type { Row } from '@tanstack/vue-table'
 import type { Event } from '~/types/event'
 import { useEventImage } from '~/composables/useEventImage'
+import { parseLocalDate } from '~/utils/date'
 
 const supabase = useSupabaseClient()
 const UButton = resolveComponent('UButton')
@@ -38,7 +39,7 @@ const loadEvents = async () => {
   const { data, error } = await supabase
     .from('events')
     .select('*')
-    .order('start_datetime', { ascending: false })
+    .order('fecha_inicio', { ascending: false })
 
   if (error) {
     errorMessage.value = error.message
@@ -96,16 +97,14 @@ const goToEdit = (id: string) => {
   navigateTo(`/admin/events/${id}/edit`)
 }
 
-const formatDatetime = (value: string | null) => {
+const formatDate = (value: string | null) => {
   if (!value) return '-'
-  const date = new Date(value)
-  if (Number.isNaN(date.getTime())) return '-'
-  return date.toLocaleString('es-ES', {
+  const date = parseLocalDate(value)
+  if (!date) return '-'
+  return date.toLocaleDateString('es-ES', {
     day: '2-digit',
     month: 'short',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit'
+    year: 'numeric'
   })
 }
 
@@ -117,12 +116,16 @@ const columns: TableColumn<Event>[] = [
   {
     id: 'start',
     header: 'Inicio',
-    cell: ({ row }) => formatDatetime(row.original.start_datetime)
+    cell: ({ row }) =>
+      formatDate(row.original.fecha_inicio)
+      + (row.original.hora_inicio ? ` · ${row.original.hora_inicio.slice(0, 5)}` : '')
   },
   {
     id: 'end',
     header: 'Fin',
-    cell: ({ row }) => formatDatetime(row.original.end_datetime)
+    cell: ({ row }) =>
+      formatDate(row.original.fecha_fin)
+      + (row.original.hora_fin ? ` · ${row.original.hora_fin.slice(0, 5)}` : '')
   },
   {
     id: 'actions',

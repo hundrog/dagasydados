@@ -78,35 +78,44 @@ export type Database = {
         Row: {
           created_at: string | null
           description: string | null
-          end_datetime: string
+          fecha_fin: string
+          fecha_inicio: string
           featured: boolean
+          hora_fin: string | null
+          hora_inicio: string | null
           id: string
           image_url: string | null
           name: string
-          start_datetime: string
           updated_at: string | null
+          zona_horaria: string | null
         }
         Insert: {
           created_at?: string | null
           description?: string | null
-          end_datetime: string
+          fecha_fin: string
+          fecha_inicio: string
           featured?: boolean
+          hora_fin?: string | null
+          hora_inicio?: string | null
           id?: string
           image_url?: string | null
           name: string
-          start_datetime: string
           updated_at?: string | null
+          zona_horaria?: string | null
         }
         Update: {
           created_at?: string | null
           description?: string | null
-          end_datetime?: string
+          fecha_fin?: string
+          fecha_inicio?: string
           featured?: boolean
+          hora_fin?: string | null
+          hora_inicio?: string | null
           id?: string
           image_url?: string | null
           name?: string
-          start_datetime?: string
           updated_at?: string | null
+          zona_horaria?: string | null
         }
         Relationships: []
       }

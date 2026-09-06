@@ -389,12 +389,26 @@ const buildPayload = (): GameSessionInsert => ({
   anonymous_players: anonymousPlayers.value
 })
 
+const combineLocal = (date: string, time: string | null | undefined): Date | null => {
+  const parsed = parseLocalDate(date)
+  if (!parsed) return null
+  if (time) {
+    const [hoursStr, minutesStr] = time.split(':')
+    const hours = Number(hoursStr)
+    if (!Number.isNaN(hours)) {
+      parsed.setHours(hours, Number.isNaN(Number(minutesStr)) ? 0 : Number(minutesStr), 0, 0)
+    }
+  }
+  return parsed
+}
+
 const hasScheduleConflict = computed(() => {
   const event = selectedEvent.value
   if (!event || !state.fecha_inicio) return false
 
-  const eventStart = new Date(event.start_datetime).getTime()
-  const eventEnd = new Date(event.end_datetime).getTime()
+  const eventStart = combineLocal(event.fecha_inicio, event.hora_inicio)
+  const eventEnd = combineLocal(event.fecha_fin, event.hora_fin)
+  if (!eventStart || !eventEnd) return false
 
   const dtstart = parseLocalDate(state.fecha_inicio)
   if (!dtstart) return false
@@ -414,7 +428,7 @@ const hasScheduleConflict = computed(() => {
     dayStart.setHours(sessionStart.getHours(), sessionStart.getMinutes(), 0, 0)
     const dayEnd = new Date(date)
     dayEnd.setHours(sessionEnd.getHours(), sessionEnd.getMinutes(), 0, 0)
-    return dayStart.getTime() < eventEnd && dayEnd.getTime() > eventStart
+    return dayStart.getTime() < eventEnd.getTime() && dayEnd.getTime() > eventStart.getTime()
   }
 
   if (!state.rrule || state.rrule === '') {
@@ -425,7 +439,7 @@ const hasScheduleConflict = computed(() => {
     const rule = parseSessionRule(state.rrule, dtstart)
     if (!rule) return false
     const occurrences = rule.between(new Date(eventStart), new Date(eventEnd), true)
-    const relevant = occurrences.filter(occ => occ.getTime() >= eventStart && occ.getTime() <= eventEnd)
+    const relevant = occurrences.filter(occ => occ.getTime() >= eventStart.getTime() && occ.getTime() <= eventEnd.getTime())
     if (relevant.length === 0) return true
     return !relevant.some(timesOverlap)
   } catch {
@@ -468,7 +482,7 @@ onMounted(async () => {
   const { data: eventsData, error: eventsError } = await supabase
     .from('events')
     .select('*')
-    .order('start_datetime', { ascending: true })
+    .order('fecha_inicio', { ascending: true })
 
   if (!eventsError && eventsData) {
     events.value = eventsData as Event[]
