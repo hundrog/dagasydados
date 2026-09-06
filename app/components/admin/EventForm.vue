@@ -2,6 +2,7 @@
 import * as z from 'zod'
 import type { Event } from '~/types/event'
 import { useEventImage } from '~/composables/useEventImage'
+import { parseLocalDate } from '~/utils/date'
 
 const supabase = useSupabaseClient()
 const toast = useToast()
@@ -20,23 +21,26 @@ const schema = z.object({
   name: z.string().min(1, 'El nombre es obligatorio'),
   description: z.string().optional(),
   image_url: z.string().optional(),
-  start_datetime: z.string().min(1, 'La fecha de inicio es obligatoria'),
-  end_datetime: z.string().min(1, 'La fecha de fin es obligatoria')
+  fecha_inicio: z.string().min(1, 'La fecha de inicio es obligatoria'),
+  hora_inicio: z.string().optional(),
+  fecha_fin: z.string().min(1, 'La fecha de fin es obligatoria'),
+  hora_fin: z.string().optional(),
+  zona_horaria: z.string().optional(),
+  featured: z.boolean()
 })
 
 type Schema = z.infer<typeof schema>
-
-const toDatetimeLocal = (value: string | null | undefined): string => {
-  if (!value) return ''
-  return value.slice(0, 16)
-}
 
 const initialState = (): Schema => ({
   name: props.event?.name ?? '',
   description: props.event?.description ?? '',
   image_url: props.event?.image_url ?? '',
-  start_datetime: toDatetimeLocal(props.event?.start_datetime),
-  end_datetime: toDatetimeLocal(props.event?.end_datetime)
+  fecha_inicio: props.event?.fecha_inicio ?? '',
+  hora_inicio: props.event?.hora_inicio ?? '',
+  fecha_fin: props.event?.fecha_fin ?? '',
+  hora_fin: props.event?.hora_fin ?? '',
+  zona_horaria: props.event?.zona_horaria ?? '',
+  featured: props.event?.featured ?? false
 })
 
 const state = reactive<Schema>(initialState())
@@ -71,9 +75,17 @@ const clearImage = () => {
 const errorMessage = ref<string | null>(null)
 const isSubmitting = ref(false)
 
-const toTimestamp = (value: string): string => {
-  const date = new Date(value)
-  return date.toISOString()
+const combineLocal = (date: string, time: string | null | undefined): Date | null => {
+  const parsed = parseLocalDate(date)
+  if (!parsed) return null
+  if (time) {
+    const [hoursStr, minutesStr] = time.split(':')
+    const hours = Number(hoursStr)
+    if (!Number.isNaN(hours)) {
+      parsed.setHours(hours, Number.isNaN(Number(minutesStr)) ? 0 : Number(minutesStr), 0, 0)
+    }
+  }
+  return parsed
 }
 
 async function submitEvent() {
@@ -81,12 +93,15 @@ async function submitEvent() {
 
   errorMessage.value = null
 
-  if (!state.start_datetime || !state.end_datetime) {
+  if (!state.fecha_inicio || !state.fecha_fin) {
     errorMessage.value = 'Las fechas de inicio y fin son obligatorias'
     return
   }
 
-  if (new Date(state.end_datetime) <= new Date(state.start_datetime)) {
+  const start = combineLocal(state.fecha_inicio, state.hora_inicio)
+  const end = combineLocal(state.fecha_fin, state.hora_fin)
+
+  if (!start || !end || end.getTime() <= start.getTime()) {
     errorMessage.value = 'La fecha de fin debe ser posterior a la fecha de inicio'
     return
   }
@@ -109,8 +124,12 @@ async function submitEvent() {
     name: state.name.trim(),
     description: state.description?.trim() || null,
     image_url: (uploadedUrl ?? state.image_url)?.trim() || null,
-    start_datetime: toTimestamp(state.start_datetime),
-    end_datetime: toTimestamp(state.end_datetime)
+    fecha_inicio: state.fecha_inicio,
+    hora_inicio: state.hora_inicio?.trim() || null,
+    fecha_fin: state.fecha_fin,
+    hora_fin: state.hora_fin?.trim() || null,
+    zona_horaria: state.zona_horaria?.trim() || null,
+    featured: state.featured
   }
 
   if (props.event?.id) {
@@ -258,26 +277,59 @@ async function submitEvent() {
           </UFormField>
 
           <UFormField
-            label="Fecha y hora de inicio"
-            name="start_datetime"
+            label="Fecha de inicio"
+            name="fecha_inicio"
             required
           >
             <UInput
-              v-model="state.start_datetime"
-              type="datetime-local"
+              v-model="state.fecha_inicio"
+              type="date"
               class="w-full"
             />
           </UFormField>
 
           <UFormField
-            label="Fecha y hora de fin"
-            name="end_datetime"
+            label="Hora de inicio"
+            name="hora_inicio"
+          >
+            <UInput
+              v-model="state.hora_inicio"
+              type="time"
+              class="w-full"
+            />
+          </UFormField>
+
+          <UFormField
+            label="Fecha de fin"
+            name="fecha_fin"
             required
           >
             <UInput
-              v-model="state.end_datetime"
-              type="datetime-local"
+              v-model="state.fecha_fin"
+              type="date"
               class="w-full"
+            />
+          </UFormField>
+
+          <UFormField
+            label="Hora de fin"
+            name="hora_fin"
+          >
+            <UInput
+              v-model="state.hora_fin"
+              type="time"
+              class="w-full"
+            />
+          </UFormField>
+
+          <UFormField
+            label="Zona horaria"
+            name="zona_horaria"
+          >
+            <UInput
+              v-model="state.zona_horaria"
+              class="w-full"
+              placeholder="UTC, America/Mexico_City..."
             />
           </UFormField>
 
@@ -292,6 +344,18 @@ async function submitEvent() {
               :rows="4"
               placeholder="Describe el evento, su temática, actividades..."
             />
+          </UFormField>
+
+          <UFormField
+            class="md:col-span-2"
+          >
+            <div class="rounded-lg border border-slate-200 p-4">
+              <USwitch
+                v-model="state.featured"
+                label="Destacado"
+                description="Muestra este evento de forma destacada en la portada."
+              />
+            </div>
           </UFormField>
         </div>
       </section>
