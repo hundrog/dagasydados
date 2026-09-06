@@ -1,4 +1,9 @@
+import path from 'node:path'
+import { fileURLToPath } from 'node:url'
 import { defineConfig } from 'vitest/config'
+
+const rootDir = fileURLToPath(new URL('.', import.meta.url))
+const appDir = path.resolve(rootDir, 'app')
 
 // Carga .env/.env.local/.env.test para que los integration tests encuentren
 // SUPABASE_TEST_* en local sin tener que exportarlos manualmente.
@@ -12,6 +17,12 @@ for (const file of ['.env', '.env.local', '.env.test']) {
 }
 
 export default defineConfig({
+  resolve: {
+    alias: {
+      '~': appDir,
+      '@': appDir
+    }
+  },
   test: {
     environment: 'node',
     include: ['app/**/*.test.ts', 'server/**/*.test.ts', 'supabase/**/*.test.ts', '**/__tests__/**/*.test.ts'],
