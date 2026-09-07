@@ -3,12 +3,12 @@ import type { NavigationMenuItem } from '@nuxt/ui'
 
 const items = computed<NavigationMenuItem[]>(() => [
   {
-    label: 'Administrar',
-    to: '/admin/sessions'
+    label: 'Eventos',
+    to: '/events'
   },
   {
-    label: 'Comunidad',
-    to: '#comunidad'
+    label: 'Administrar',
+    to: '/admin/sessions'
   }
 ])
 </script>

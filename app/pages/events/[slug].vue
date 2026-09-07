@@ -8,6 +8,7 @@ const route = useRoute()
 const supabase = useSupabaseClient()
 const toast = useToast()
 const { copy } = useClipboard()
+const { isAdmin } = storeToRefs(useAdminStore())
 
 const event = ref<Event | null>(null)
 const sessions = ref<GameSessionWithMaster[]>([])
@@ -97,7 +98,7 @@ onMounted(() => {
 })
 
 const goBack = () => {
-  navigateTo('/#mesas')
+  navigateTo('/events')
 }
 
 const copyUrl = async () => {
@@ -123,13 +124,13 @@ const copyUrl = async () => {
           @click="goBack"
         />
         <UButton
-          label="Copiar URL"
-          icon="i-lucide-link"
+          v-if="isAdmin && event"
+          label="Editar evento"
+          icon="i-lucide-pencil"
           color="neutral"
           variant="ghost"
           class="cursor-pointer mb-6"
-          :disabled="isLoading"
-          @click="copyUrl"
+          :to="`/admin/events/${event.id}/edit`"
         />
       </div>
 
@@ -163,16 +164,27 @@ const copyUrl = async () => {
           <h1 class="font-display text-display-sm text-on-surface leading-tight">
             {{ event.name }}
           </h1>
-          <p
-            v-if="formatEventRange(event)"
-            class="label-metadata text-on-surface-dim flex items-center gap-1.5 mt-2"
-          >
-            <UIcon
-              name="i-lucide-clock"
-              class="size-3.5"
+          <div class="flex flex-wrap items-center justify-between gap-3 mt-2">
+            <p
+              v-if="formatEventRange(event)"
+              class="label-metadata text-on-surface-dim flex items-center gap-1.5"
+            >
+              <UIcon
+                name="i-lucide-clock"
+                class="size-3.5"
+              />
+              {{ formatEventRange(event) }}
+            </p>
+            <UButton
+              label="Copiar URL"
+              icon="i-lucide-link"
+              color="neutral"
+              variant="ghost"
+              size="sm"
+              class="cursor-pointer"
+              @click="copyUrl"
             />
-            {{ formatEventRange(event) }}
-          </p>
+          </div>
         </div>
 
         <p
