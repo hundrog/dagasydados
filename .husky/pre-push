@@ -1,3 +1,28 @@
+branch="$(git symbolic-ref --short HEAD)"
+[ "$branch" = "main" ] && exit 0
+
+prefix="${branch%%-*}"
+[ "$prefix" = "$branch" ] && {
+  echo "ERROR: El nombre de branch '$branch' no incluye un número de ticket (ej. EVE-1001)."
+  exit 1
+}
+echo "$prefix" | grep -qE '^[0-9]+$' && {
+  echo "ERROR: El branch '$branch' debe comenzar con un prefijo de dominio (ej. EVE-1001), no con el número."
+  exit 1
+}
+
+domains_file="$(dirname "$0")/domains.config"
+if [ ! -f "$domains_file" ]; then
+  echo "ERROR: Falta el archivo .husky/domains.config con los dominios permitidos."
+  exit 1
+fi
+if ! grep -qxF "$prefix" "$domains_file"; then
+  echo "ERROR: Prefijo de dominio '$prefix' no reconocido."
+  echo "       Dominios válidos: $(grep -v '^#' "$domains_file" | tr '\n' ' ')"
+  echo "       Suma tu dominio a .husky/domains.config o usa uno existente."
+  exit 1
+fi
+
 pnpm run lint && \
 pnpm run typecheck && \
 pnpm run test:run
