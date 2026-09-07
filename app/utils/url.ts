@@ -32,3 +32,34 @@ export function generateShortCode(length = 6): string {
   }
   return result
 }
+
+export const SLUG_MAX_LENGTH = 80
+
+export function ensureUniqueSlug(base: string, taken: string[]): string {
+  if (!taken.includes(base)) return base
+
+  let suffix = 2
+  let candidate = `${base.slice(0, SLUG_MAX_LENGTH - 2)}-${suffix}`
+  while (taken.includes(candidate)) {
+    suffix++
+    candidate = `${base.slice(0, SLUG_MAX_LENGTH - 2)}-${suffix}`
+    if (suffix > 10_000) {
+      throw new Error('No se pudo generar un slug único')
+    }
+  }
+  return candidate
+}
+
+export function ensureUniqueShortCode(taken: string[], length = 6): string {
+  if (taken.length >= SHORT_CODE_CHARS.length ** length) {
+    throw new Error('No hay más códigos cortos disponibles')
+  }
+
+  let code = generateShortCode(length)
+  let attempts = 0
+  while (taken.includes(code) && attempts < 1_000) {
+    code = generateShortCode(length)
+    attempts++
+  }
+  return code
+}

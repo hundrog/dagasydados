@@ -3,7 +3,7 @@ import * as z from 'zod'
 import type { Event } from '~/types/event'
 import { useEventImage } from '~/composables/useEventImage'
 import { parseLocalDate } from '~/utils/date'
-import { generateSlug, generateShortCode } from '~/utils/url'
+import { generateSlug, generateShortCode, ensureUniqueSlug, ensureUniqueShortCode } from '~/utils/url'
 
 const supabase = useSupabaseClient()
 const toast = useToast()
@@ -128,30 +128,21 @@ async function submitEvent() {
     return
   }
 
-  const finalSlug = state.slug?.trim() || generateSlug(state.name)
-  const finalShortCode = state.short_code?.trim() || generateShortCode()
-
-  const { data: existingSlug } = await supabase
+  const { data: allEvents } = await supabase
     .from('events')
-    .select('id')
-    .eq('slug', finalSlug)
-    .maybeSingle()
+    .select('id, slug, short_code')
 
-  if (existingSlug && existingSlug.id !== props.event?.id) {
-    errorMessage.value = `Ya existe un evento con el slug "${finalSlug}". Elige otro.`
+  if (allEvents === null) {
+    errorMessage.value = 'No se pudo verificar la unicidad de la URL'
     return
   }
 
-  const { data: existingCode } = await supabase
-    .from('events')
-    .select('id')
-    .eq('short_code', finalShortCode)
-    .maybeSingle()
+  const otherEvents = allEvents.filter(e => e.id !== props.event?.id)
+  const takenSlugs = otherEvents.map(e => e.slug).filter((s): s is string => Boolean(s))
+  const takenCodes = otherEvents.map(e => e.short_code).filter((s): s is string => Boolean(s))
 
-  if (existingCode && existingCode.id !== props.event?.id) {
-    errorMessage.value = `Ya existe un evento con el código corto "${finalShortCode}". Intenta de nuevo.`
-    return
-  }
+  const finalSlug = ensureUniqueSlug(state.slug?.trim() || generateSlug(state.name), takenSlugs)
+  const finalShortCode = state.short_code?.trim() || ensureUniqueShortCode(takenCodes)
 
   isSubmitting.value = true
 
