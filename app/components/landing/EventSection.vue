@@ -21,7 +21,7 @@ const props = defineProps<{
           Evento
         </span>
         <NuxtLink
-          :to="`/events/${props.event.id}`"
+          :to="`/events/${props.event.slug ?? props.event.id}`"
           class="hover:underline decoration-primary/50 underline-offset-4"
         >
           <h2 class="font-display text-headline-sm text-primary leading-tight truncate max-w-full">

@@ -19,6 +19,7 @@ export type SessionMasterRef = {
 export type SessionEventRef = {
   id: string
   name: string
+  slug: string | null
   description: string | null
   fecha_inicio: string
   fecha_fin: string

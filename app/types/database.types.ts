@@ -86,6 +86,8 @@ export type Database = {
           id: string
           image_url: string | null
           name: string
+          short_code: string | null
+          slug: string | null
           updated_at: string | null
           zona_horaria: string | null
         }
@@ -100,6 +102,8 @@ export type Database = {
           id?: string
           image_url?: string | null
           name: string
+          short_code?: string | null
+          slug?: string | null
           updated_at?: string | null
           zona_horaria?: string | null
         }
@@ -114,6 +118,8 @@ export type Database = {
           id?: string
           image_url?: string | null
           name?: string
+          short_code?: string | null
+          slug?: string | null
           updated_at?: string | null
           zona_horaria?: string | null
         }

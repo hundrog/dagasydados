@@ -166,14 +166,14 @@ function getRowItems(row: Row<Event>) {
       label: 'Ver evento',
       icon: 'i-lucide-eye',
       onSelect() {
-        navigateTo(`/events/${row.original.id}`)
+        navigateTo(`/events/${row.original.slug ?? row.original.id}`)
       }
     },
     {
       label: 'Copiar link del evento',
       icon: 'i-lucide-link',
       onSelect() {
-        const url = `${window.location.origin}/events/${row.original.id}`
+        const url = `${window.location.origin}/events/${row.original.slug ?? row.original.id}`
         copy(url)
 
         toast.add({
