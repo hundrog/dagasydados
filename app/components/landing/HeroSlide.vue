@@ -4,11 +4,11 @@ import { formatEventRange } from '~/composables/useEventFormat'
 
 const props = defineProps<{ event: Event }>()
 
-const placeholderUrl = 'https://placehold.co/1600x900/1e174a/9fa7ff?text=Sin+imagen'
+const placeholderUrl = 'https://placehold.co/1200x900/1e174a/9fa7ff?text=Sin+imagen'
 </script>
 
 <template>
-  <div class="relative min-h-130 flex items-center justify-center px-4 overflow-hidden">
+  <div class="relative aspect-[4/3] w-full flex items-center justify-center px-4 overflow-hidden">
     <NuxtLink
       :to="`/events/${props.event.slug ?? props.event.id}`"
       class="absolute inset-0 block group"

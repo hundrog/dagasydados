@@ -438,10 +438,15 @@ const hasScheduleConflict = computed(() => {
   try {
     const rule = parseSessionRule(state.rrule, dtstart)
     if (!rule) return false
-    const occurrences = rule.between(new Date(eventStart), new Date(eventEnd), true)
-    const relevant = occurrences.filter(occ => occ.getTime() >= eventStart.getTime() && occ.getTime() <= eventEnd.getTime())
-    if (relevant.length === 0) return true
-    return !relevant.some(timesOverlap)
+
+    const eventStartDay = new Date(eventStart)
+    eventStartDay.setHours(0, 0, 0, 0)
+    const eventEndDay = new Date(eventEnd)
+    eventEndDay.setHours(23, 59, 59, 999)
+
+    const occurrences = rule.between(new Date(eventStartDay), new Date(eventEndDay), true)
+    const relevant = occurrences.filter(timesOverlap)
+    return relevant.length === 0
   } catch {
     return false
   }
