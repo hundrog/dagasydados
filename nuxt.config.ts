@@ -78,6 +78,7 @@ export default defineNuxtConfig({
     },
     headers: {
       contentSecurityPolicy: {
+        'script-src': ["'self'", "'unsafe-inline'", 'https://static.cloudflareinsights.com'],
         'img-src': ["'self'", 'data:', 'blob:', 'http://127.0.0.1:54321', 'https://dklnezquirguwvndctkb.supabase.co', 'https://placehold.co/', 'https://images.unsplash.com/'],
         'connect-src': ["'self'", 'http://127.0.0.1:54321', 'https://dklnezquirguwvndctkb.supabase.co', 'wss://dklnezquirguwvndctkb.supabase.co'],
         'media-src': ["'self'", 'http://127.0.0.1:54321', 'https://dklnezquirguwvndctkb.supabase.co']
