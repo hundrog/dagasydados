@@ -163,6 +163,27 @@ function getRowItems(row: Row<Event>) {
       label: 'Actions'
     },
     {
+      label: 'Ver evento',
+      icon: 'i-lucide-eye',
+      onSelect() {
+        navigateTo(`/events/${row.original.id}`)
+      }
+    },
+    {
+      label: 'Copiar link del evento',
+      icon: 'i-lucide-link',
+      onSelect() {
+        const url = `${window.location.origin}/events/${row.original.id}`
+        copy(url)
+
+        toast.add({
+          title: 'Link copiado al portapapeles!',
+          color: 'success',
+          icon: 'i-lucide-circle-check'
+        })
+      }
+    },
+    {
       label: 'Copiar ID',
       onSelect() {
         copy(row.original.id)
