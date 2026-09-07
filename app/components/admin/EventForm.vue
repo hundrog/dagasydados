@@ -29,6 +29,7 @@ const schema = z.object({
   hora_fin: z.string().optional(),
   zona_horaria: z.string().optional(),
   featured: z.boolean(),
+  show_text: z.boolean(),
   short_code: z.string().optional()
 })
 
@@ -45,6 +46,7 @@ const initialState = (): Schema => ({
   hora_fin: props.event?.hora_fin ?? '',
   zona_horaria: props.event?.zona_horaria ?? '',
   featured: props.event?.featured ?? false,
+  show_text: props.event?.show_text ?? false,
   short_code: props.event?.short_code ?? ''
 })
 
@@ -169,7 +171,8 @@ async function submitEvent() {
     fecha_fin: state.fecha_fin,
     hora_fin: state.hora_fin?.trim() || null,
     zona_horaria: state.zona_horaria?.trim() || null,
-    featured: state.featured
+    featured: state.featured,
+    show_text: state.show_text
   }
 
   if (props.event?.id) {
@@ -422,6 +425,13 @@ async function submitEvent() {
                 v-model="state.featured"
                 label="Destacado"
                 description="Muestra este evento de forma destacada en la portada."
+              />
+              <USwitch
+                v-model="state.show_text"
+                class="mt-4"
+                label="Mostrar texto"
+                description="Muestra los detalles del evento sobre la imagen en la portada. Requiere activar Destacado."
+                :disabled="!state.featured"
               />
             </div>
           </UFormField>
