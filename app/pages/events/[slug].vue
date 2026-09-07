@@ -28,15 +28,24 @@ const formatDate = (value: string | null | undefined) => {
   })
 }
 
+const resolveEvent = async (param: string) => {
+  const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(param)
+  const field = isUuid ? 'id' : 'slug'
+
+  const { data, error } = await supabase
+    .from('events')
+    .select('*')
+    .eq(field, param)
+    .maybeSingle()
+
+  return { data, error }
+}
+
 const loadEvent = async () => {
   isLoading.value = true
   errorMessage.value = null
 
-  const { data: eventData, error: eventError } = await supabase
-    .from('events')
-    .select('*')
-    .eq('id', String(route.params.id))
-    .maybeSingle()
+  const { data: eventData, error: eventError } = await resolveEvent(String(route.params.slug))
 
   if (eventError) {
     errorMessage.value = eventError.message
@@ -54,8 +63,8 @@ const loadEvent = async () => {
 
   const { data: sessionData, error: sessionError } = await supabase
     .from('game_sessions')
-    .select('id,title,system,session_type,audience,mode,image_url,max_players,location,description,costo,fecha_inicio,hora_inicio,hora_fin,rrule,event_id,event:events(id,name,description,fecha_inicio,hora_inicio,fecha_fin,hora_fin,zona_horaria,image_url),master:dagger_masters(id,full_name,user_name,avatar_url,phone)')
-    .eq('event_id', String(route.params.id))
+    .select('id,title,system,session_type,audience,mode,image_url,max_players,location,description,costo,fecha_inicio,hora_inicio,hora_fin,rrule,event_id,event:events(id,name,slug,description,fecha_inicio,hora_inicio,fecha_fin,hora_fin,zona_horaria,image_url),master:dagger_masters(id,full_name,user_name,avatar_url,phone)')
+    .eq('event_id', eventData.id)
     .eq('status', 'published')
 
   if (sessionError) {

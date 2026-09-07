@@ -3,6 +3,7 @@ import * as z from 'zod'
 import type { Event } from '~/types/event'
 import { useEventImage } from '~/composables/useEventImage'
 import { parseLocalDate } from '~/utils/date'
+import { generateSlug, generateShortCode, ensureUniqueSlug, ensureUniqueShortCode } from '~/utils/url'
 
 const supabase = useSupabaseClient()
 const toast = useToast()
@@ -19,6 +20,7 @@ const emit = defineEmits<{
 
 const schema = z.object({
   name: z.string().min(1, 'El nombre es obligatorio'),
+  slug: z.string().min(1, 'El slug es obligatorio').max(255),
   description: z.string().optional(),
   image_url: z.string().optional(),
   fecha_inicio: z.string().min(1, 'La fecha de inicio es obligatoria'),
@@ -26,13 +28,15 @@ const schema = z.object({
   fecha_fin: z.string().min(1, 'La fecha de fin es obligatoria'),
   hora_fin: z.string().optional(),
   zona_horaria: z.string().optional(),
-  featured: z.boolean()
+  featured: z.boolean(),
+  short_code: z.string().optional()
 })
 
 type Schema = z.infer<typeof schema>
 
 const initialState = (): Schema => ({
   name: props.event?.name ?? '',
+  slug: props.event?.slug ?? '',
   description: props.event?.description ?? '',
   image_url: props.event?.image_url ?? '',
   fecha_inicio: props.event?.fecha_inicio ?? '',
@@ -40,10 +44,28 @@ const initialState = (): Schema => ({
   fecha_fin: props.event?.fecha_fin ?? '',
   hora_fin: props.event?.hora_fin ?? '',
   zona_horaria: props.event?.zona_horaria ?? '',
-  featured: props.event?.featured ?? false
+  featured: props.event?.featured ?? false,
+  short_code: props.event?.short_code ?? ''
 })
 
 const state = reactive<Schema>(initialState())
+
+const slugTouched = ref(false)
+
+watch(
+  () => state.name,
+  (val) => {
+    if (!slugTouched.value && val) {
+      state.slug = generateSlug(val)
+    }
+  }
+)
+
+onMounted(() => {
+  if (!props.event?.id && !state.short_code) {
+    state.short_code = generateShortCode()
+  }
+})
 
 const imageFile = ref<File | null>(null)
 
@@ -106,6 +128,22 @@ async function submitEvent() {
     return
   }
 
+  const { data: allEvents } = await supabase
+    .from('events')
+    .select('id, slug, short_code')
+
+  if (allEvents === null) {
+    errorMessage.value = 'No se pudo verificar la unicidad de la URL'
+    return
+  }
+
+  const otherEvents = allEvents.filter(e => e.id !== props.event?.id)
+  const takenSlugs = otherEvents.map(e => e.slug).filter((s): s is string => Boolean(s))
+  const takenCodes = otherEvents.map(e => e.short_code).filter((s): s is string => Boolean(s))
+
+  const finalSlug = ensureUniqueSlug(state.slug?.trim() || generateSlug(state.name), takenSlugs)
+  const finalShortCode = state.short_code?.trim() || ensureUniqueShortCode(takenCodes)
+
   isSubmitting.value = true
 
   let uploadedUrl: string | null = null
@@ -122,6 +160,8 @@ async function submitEvent() {
 
   const payload = {
     name: state.name.trim(),
+    slug: finalSlug,
+    short_code: finalShortCode,
     description: state.description?.trim() || null,
     image_url: (uploadedUrl ?? state.image_url)?.trim() || null,
     fecha_inicio: state.fecha_inicio,
@@ -237,6 +277,34 @@ async function submitEvent() {
               v-model="state.name"
               class="w-full"
               placeholder="Ej. Convento de Rol 2026"
+              @update:model-value="slugTouched = false"
+            />
+          </UFormField>
+
+          <UFormField
+            label="Slug (URL)"
+            name="slug"
+            required
+            :hint="`/${state.slug || '...'}`"
+          >
+            <UInput
+              v-model="state.slug"
+              class="w-full"
+              placeholder="Ej. convento-de-rol-2026"
+              @update:model-value="slugTouched = true"
+            />
+          </UFormField>
+
+          <UFormField
+            label="Código corto"
+            name="short_code"
+            :hint="`/${state.short_code || '...'}`"
+          >
+            <UInput
+              v-model="state.short_code"
+              class="w-full font-mono"
+              placeholder="Ej. a3x9k2"
+              disabled
             />
           </UFormField>
 
