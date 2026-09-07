@@ -55,7 +55,7 @@ onMounted(() => {
 
     <div
       v-else
-      class="relative min-h-130 flex flex-col items-center justify-center px-4 overflow-hidden"
+      class="relative aspect-[4/3] w-full flex flex-col items-center justify-center px-4 overflow-hidden"
     >
       <div class="absolute inset-0 z-0">
         <img
