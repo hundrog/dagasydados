@@ -2,8 +2,6 @@ import { Octokit } from '@octokit/core'
 import { z } from 'zod'
 import { serverSupabaseUser } from '#supabase/server'
 
-const config = useRuntimeConfig()
-
 const bodySchema = z.object({
   title: z.string().min(1).max(100),
   body: z.string().min(1).max(500),
@@ -42,9 +40,12 @@ export default defineEventHandler(async (event) => {
     issueBody
   ].filter(Boolean).join('\n')
 
-  const octokit = new Octokit({ auth: config.githubIssuesToken })
-  const owner = config.githubOwner
-  const repo = config.githubRepo
+  const config = useRuntimeConfig()
+  const token = process.env.NUXT_GITHUB_ISSUES_TOKEN ?? config.githubIssuesToken
+  const owner = process.env.NUXT_GITHUB_OWNER ?? config.githubOwner
+  const repo = process.env.NUXT_GITHUB_REPO ?? config.githubRepo
+
+  const octokit = new Octokit({ auth: token })
   const uri = `POST /repos/${owner}/${repo}/issues`
 
   try {
@@ -70,7 +71,7 @@ export default defineEventHandler(async (event) => {
       message: ghError.response?.data?.message,
       owner,
       repo,
-      hasToken: !!config.githubIssuesToken
+      hasToken: !!token
     })
     throw createError({ statusCode: 502, statusMessage: 'Bad Gateway', message: 'No se pudo crear el reporte' })
   }
