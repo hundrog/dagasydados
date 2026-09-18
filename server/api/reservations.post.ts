@@ -7,37 +7,16 @@ const bodySchema = z.object({
   telefono: z.string().min(1).max(20)
 })
 
-const RATE_LIMIT_MAX = 5
-const RATE_LIMIT_WINDOW_MS = 60_000
-const rateLimitHits = new Map<string, { count: number, resetAt: number }>()
-
 type CreatePlayerResult
   = { ok: true, id: string }
     | { ok: false, error: string, message: string }
 
 export default defineEventHandler(async (event) => {
-  const ip = getRequestIP(event, { xForwardedFor: true }) ?? 'unknown'
-  const now = Date.now()
-
-  if (rateLimitHits.size > 10_000) {
-    for (const [key, entry] of rateLimitHits) {
-      if (entry.resetAt < now) rateLimitHits.delete(key)
-    }
-  }
-
-  const current = rateLimitHits.get(ip)
-  if (current && current.resetAt > now) {
-    if (current.count >= RATE_LIMIT_MAX) {
-      throw createError({
-        statusCode: 429,
-        statusMessage: 'Too Many Requests',
-        message: 'Demasiadas reservas. Intenta de nuevo en un momento.'
-      })
-    }
-    current.count += 1
-  } else {
-    rateLimitHits.set(ip, { count: 1, resetAt: now + RATE_LIMIT_WINDOW_MS })
-  }
+  useRateLimit(event, {
+    max: 5,
+    windowMs: 60_000,
+    message: 'Demasiadas reservas. Intenta de nuevo en un momento.'
+  })
 
   const body = await readBody(event).catch(() => null)
   const parsed = bodySchema.safeParse(body)

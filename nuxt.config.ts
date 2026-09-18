@@ -42,9 +42,12 @@ export default defineNuxtConfig({
   css: ['~/assets/css/main.css'],
 
   runtimeConfig: {
+    githubIssuesToken: '',
+    githubOwner: '',
+    githubRepo: '',
     public: {
-      supabaseUrl: process.env.SUPABASE_URL,
-      supabaseKey: process.env.SUPABASE_KEY
+      supabaseUrl: '',
+      supabaseKey: ''
     }
   },
 
