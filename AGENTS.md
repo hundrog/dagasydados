@@ -16,6 +16,8 @@ y debe estar registrado en `.husky/domains.config` (el hook `pre-push` lo valida
 | `SES`   | sesiones (general)         |
 | `INF`   | infraestructura / devops / CI |
 | `CHR`   | chores / mantenimiento     |
+| `SUP`   | soporte / feedback / issues |
+| `PLA`   | plataforma (general / transversal) |
 
 **Nuevo dominio**: añade una línea en `.husky/domains.config` y actualiza esta tabla.
 

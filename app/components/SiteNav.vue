@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import type { NavigationMenuItem } from '@nuxt/ui'
 
+const issueForm = ref<{ open: () => void } | null>(null)
+
 const items = computed<NavigationMenuItem[]>(() => [
   {
     label: 'Eventos',
@@ -31,6 +33,14 @@ const items = computed<NavigationMenuItem[]>(() => [
         class="hidden sm:block"
       />
       <UButton
+        icon="i-lucide-bug"
+        label="Reportar problema"
+        color="neutral"
+        variant="soft"
+        class="cursor-pointer"
+        @click="issueForm?.open()"
+      />
+      <UButton
         icon="i-simple-icons-whatsapp"
         size="md"
         color="success"
@@ -48,6 +58,14 @@ const items = computed<NavigationMenuItem[]>(() => [
         class="-mx-2.5"
       />
       <UButton
+        icon="i-lucide-bug"
+        label="Reportar problema"
+        color="neutral"
+        variant="soft"
+        class="cursor-pointer"
+        @click="issueForm?.open()"
+      />
+      <UButton
         icon="i-simple-icons-whatsapp"
         size="md"
         color="success"
@@ -58,4 +76,6 @@ const items = computed<NavigationMenuItem[]>(() => [
       <UColorModeButton />
     </template>
   </UHeader>
+
+  <LandingIssueForm ref="issueForm" />
 </template>
