@@ -16,3 +16,4 @@ allowBuilds:
   unrs-resolver: true
   supabase: true
   vue-demi: true
+  workerd: true
