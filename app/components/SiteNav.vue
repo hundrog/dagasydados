@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { NavigationMenuItem } from '@nuxt/ui'
 
+const user = useSupabaseUser()
 const issueForm = ref<{ open: () => void } | null>(null)
 
 const items = computed<NavigationMenuItem[]>(() => [
@@ -33,6 +34,7 @@ const items = computed<NavigationMenuItem[]>(() => [
         class="hidden sm:block"
       />
       <UButton
+        v-if="user"
         icon="i-lucide-bug"
         label="Reportar problema"
         color="neutral"
@@ -58,6 +60,7 @@ const items = computed<NavigationMenuItem[]>(() => [
         class="-mx-2.5"
       />
       <UButton
+        v-if="user"
         icon="i-lucide-bug"
         label="Reportar problema"
         color="neutral"

@@ -1,5 +1,6 @@
 import { Octokit } from '@octokit/core'
 import { z } from 'zod'
+import { serverSupabaseUser } from '#supabase/server'
 
 const config = useRuntimeConfig()
 
@@ -11,6 +12,15 @@ const bodySchema = z.object({
 })
 
 export default defineEventHandler(async (event) => {
+  const user = await serverSupabaseUser(event)
+  if (!user) {
+    throw createError({
+      statusCode: 401,
+      statusMessage: 'Unauthorized',
+      message: 'Debes iniciar sesión para reportar un problema.'
+    })
+  }
+
   useRateLimit(event, {
     max: 5,
     windowMs: 60_000,
