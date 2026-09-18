@@ -60,7 +60,18 @@ export default defineEventHandler(async (event) => {
       }
     })
     return { ok: true, url: data.html_url }
-  } catch {
+  } catch (error) {
+    const ghError = error as {
+      status?: number
+      response?: { data?: { message?: string } }
+    }
+    console.error('[issues] GitHub error', {
+      status: ghError.status,
+      message: ghError.response?.data?.message,
+      owner,
+      repo,
+      hasToken: !!config.githubIssuesToken
+    })
     throw createError({ statusCode: 502, statusMessage: 'Bad Gateway', message: 'No se pudo crear el reporte' })
   }
 })
