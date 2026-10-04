@@ -10,6 +10,34 @@ overrides:
   '@vue/server-renderer': 3.5.42
   '@vue/shared': 3.5.42
 
+# Estos paquetes importan h3 sin declararlo, así que en runtime lo resuelven
+# desde el directorio hoisteado de pnpm (node_modules/.pnpm/node_modules), donde
+# @nuxt/eslint -> devframe instala h3 v2. El evento de nitro es h3 v1
+# (nitropack@2.x), y h3 v2 espera event.req.headers.get() sobre un Headers de
+# Fetch en vez del objeto de Node, provocando "event.req.headers.get is not a
+# function". Se les declara h3 explícitamente para que resuelvan la misma
+# versión que usa el runtime. devframe sí necesita h3 v2, por eso no se aplica
+# un override global.
+packageExtensions:
+  '@nuxt/icon':
+    dependencies:
+      h3: '^1.15.11'
+  '@nuxt/schema':
+    dependencies:
+      h3: '^1.15.11'
+  '@nuxtjs/supabase':
+    dependencies:
+      h3: '^1.15.11'
+  nuxt:
+    dependencies:
+      h3: '^1.15.11'
+  nuxt-csurf:
+    dependencies:
+      h3: '^1.15.11'
+  nuxt-security:
+    dependencies:
+      h3: '^1.15.11'
+
 allowBuilds:
   '@parcel/watcher': true
   esbuild: true
