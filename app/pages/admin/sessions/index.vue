@@ -40,29 +40,11 @@ const isDeleting = ref(false)
 const lookupsStore = useLookupsStore()
 const { lookups } = storeToRefs(lookupsStore)
 
-const currentMonthValue = () => {
-  const now = new Date()
-  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
-}
+const { selectedMonth, monthOptions, resolveRange, isDefault, reset: resetMonth } = useMonthFilter()
 
-const selectedMonth = ref(currentMonthValue())
 const selectedWeekday = ref<number | 'all'>('all')
 const selectedMode = ref<string>('all')
 const selectedSessionType = ref<string>('all')
-
-const monthOptions = computed(() => {
-  const now = new Date()
-  const options: Array<{ label: string, value: string }> = []
-  for (let offset = 0; offset < 7; offset++) {
-    const date = new Date(now.getFullYear(), now.getMonth() + offset, 1)
-    const label = date.toLocaleDateString('es-ES', { month: 'long', year: 'numeric' })
-    options.push({
-      label: label.charAt(0).toUpperCase() + label.slice(1),
-      value: `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
-    })
-  }
-  return options
-})
 
 const weekdayOptions: Array<{ label: string, value: number | 'all' }> = [
   { label: 'Todos los días', value: 'all' },
@@ -85,21 +67,14 @@ const sessionTypeOptions = computed(() => [
   ...(lookups.value?.session_types ?? []).map(type => ({ label: type, value: type }))
 ])
 
-const monthStart = computed(() => {
-  const [year, month] = selectedMonth.value.split('-').map(Number)
-  return new Date(Number(year), Number(month) - 1, 1)
-})
-
-const monthEnd = computed(() => {
-  const [year, month] = selectedMonth.value.split('-').map(Number)
-  return new Date(Number(year), Number(month), 0, 23, 59, 59, 999)
-})
-
 const occurrencesInMonth = (session: GameSessionWithMaster): Date[] => {
+  const range = resolveRange()
+  if (!range) return []
+
   const start = parseLocalDate(session.fecha_inicio)
   if (!start) return []
 
-  const isInMonth = start >= monthStart.value && start <= monthEnd.value
+  const isInMonth = start >= range.start && start <= range.end
   if (!session.rrule) {
     return isInMonth ? [start] : []
   }
@@ -109,7 +84,7 @@ const occurrencesInMonth = (session: GameSessionWithMaster): Date[] => {
     return isInMonth ? [start] : []
   }
 
-  return rule.between(monthStart.value, monthEnd.value, true)
+  return rule.between(range.start, range.end, true)
 }
 
 const matchesFilters = (session: GameSessionWithMaster) => {
@@ -138,7 +113,7 @@ const filteredSessions = computed(() =>
 )
 
 const hasActiveFilters = computed(() =>
-  selectedMonth.value !== currentMonthValue()
+  !isDefault()
   || selectedWeekday.value !== 'all'
   || selectedMode.value !== 'all'
   || selectedSessionType.value !== 'all'
@@ -485,7 +460,7 @@ const pagination = ref({
           color="neutral"
           variant="ghost"
           class="cursor-pointer"
-          @click="selectedMonth = currentMonthValue(); selectedWeekday = 'all'; selectedMode = 'all'; selectedSessionType = 'all'"
+          @click="resetMonth(); selectedWeekday = 'all'; selectedMode = 'all'; selectedSessionType = 'all'"
         />
       </div>
       <UTable
