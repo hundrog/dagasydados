@@ -23,6 +23,47 @@ if ! grep -qxF "$prefix" "$domains_file"; then
   exit 1
 fi
 
+pre_push=0
+if [ ! -t 0 ] && read -r _local_ref _local_sha _remote_ref _remote_sha; then
+  pre_push=1
+fi
+
+stashed=0
+
+restore_stash() {
+  [ "$stashed" = "1" ] || return 0
+
+  if git stash pop --index || git stash pop; then
+    stashed=0
+    echo "Cambios sin comitear restaurados desde el stash temporal."
+    return 0
+  fi
+
+  echo "ERROR: no se pudieron restaurar los cambios sin comitear."
+  echo "       Siguen en el stash; recuperalos con: git stash list && git stash pop"
+  exit 1
+}
+
+if [ "$pre_push" = "1" ] && [ -z "$SKIP_STASH" ] && [ -n "$(git status --porcelain)" ]; then
+  echo "Detectados cambios sin comitear; se guardan en un stash temporal para validar sólo el código comiteado:"
+  git status --short
+
+  stash_before="$(git rev-parse -q --verify refs/stash || true)"
+  if ! git stash push --include-untracked -m "husky pre-push: validar HEAD"; then
+    echo "ERROR: no se pudo guardar el stash de los cambios sin comitear (¿rebase o merge en curso?)."
+    echo "       Commitea o stashea tus cambios y vuelve a intentar."
+    exit 1
+  fi
+
+  if [ "$(git rev-parse -q --verify refs/stash || true)" = "$stash_before" ]; then
+    echo "No se creó ningún stash; se valida el estado actual del working tree."
+  else
+    stashed=1
+  fi
+fi
+
+trap restore_stash EXIT INT TERM
+
 pnpm run lint && \
 pnpm run typecheck && \
 pnpm run test:run
