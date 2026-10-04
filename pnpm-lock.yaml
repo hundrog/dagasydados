@@ -47,6 +47,9 @@ importers:
       '@vueuse/core':
         specifier: ^14.4.0
         version: 14.4.0(vue@3.5.42(typescript@6.0.3))
+      h3:
+        specifier: 1.15.11
+        version: 1.15.11
       maska:
         specifier: ^3.2.0
         version: 3.2.0

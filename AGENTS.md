@@ -37,3 +37,6 @@ Conventional Commits estándar (forzado por commitlint en el hook `commit-msg`):
 ### Pull Requests
 Título del PR siguiendo la misma convención que los commits (ej. `feat: agregado de eventos`).
 Los checks locales corren vía `sh .husky/pre-push` (lint + typecheck + tests).
+En ejecución manual los checks validan el working tree; sólo cuando el hook lo dispara un
+`git push` se guardan los cambios sin comitear en un stash temporal para validar únicamente el
+código comiteado (y se restauran al terminar). `SKIP_STASH=1 git push` desactiva ese stash.
