@@ -17,6 +17,15 @@ const selectedWeekday = ref<number | 'all'>('all')
 const selectedMode = ref<string>('all')
 const selectedSessionType = ref<string>('all')
 
+type SortOption = { label: string, value: 'players' | 'date' }
+
+const selectedSort = ref<SortOption['value']>('players')
+
+const sortOptions: SortOption[] = [
+  { label: 'Más vacías primero', value: 'players' },
+  { label: 'Fecha más cercana primero', value: 'date' }
+]
+
 const monthOptions = computed(() => {
   const now = new Date()
   const options: Array<{ label: string, value: string }> = []
@@ -101,11 +110,32 @@ const matchesFilters = (session: GameSessionWithMaster) => {
   return true
 }
 
-const filteredSessions = computed(() =>
-  sessions.value
-    .filter(matchesFilters)
-    .sort((a, b) => (parseLocalDate(a.fecha_inicio)?.getTime() ?? 0) - (parseLocalDate(b.fecha_inicio)?.getTime() ?? 0))
-)
+const startTimestamp = (session: GameSessionWithMaster) =>
+  parseLocalDate(session.fecha_inicio)?.getTime() ?? 0
+
+const openSeats = (session: GameSessionWithMaster) => {
+  if (!session.max_players) return Number.POSITIVE_INFINITY
+  return session.max_players - (session.player_count ?? 0)
+}
+
+const compareByDate = (a: GameSessionWithMaster, b: GameSessionWithMaster) =>
+  startTimestamp(a) - startTimestamp(b)
+
+const compareByOpenSeats = (a: GameSessionWithMaster, b: GameSessionWithMaster) => {
+  const seatsDiff = openSeats(b) - openSeats(a)
+  if (!Number.isNaN(seatsDiff) && seatsDiff !== 0) return seatsDiff
+  return compareByDate(a, b)
+}
+
+const sortComparators: Record<SortOption['value'], (a: GameSessionWithMaster, b: GameSessionWithMaster) => number> = {
+  players: compareByOpenSeats,
+  date: compareByDate
+}
+
+const filteredSessions = computed(() => {
+  const matches = sessions.value.filter(matchesFilters)
+  return [...matches].sort(sortComparators[selectedSort.value])
+})
 
 const eventGroups = computed(() => {
   const groups: Array<{ id: string, event: GameSessionWithMaster['event'] & { name: string }, sessions: GameSessionWithMaster[] }> = []
@@ -193,7 +223,20 @@ onMounted(() => {
     Aún no hay sesiones publicadas.
   </div>
   <div v-else>
-    <div class="card p-4 mb-8 flex flex-wrap items-end gap-4 justify-around max-w-4xl mx-auto">
+    <div class="card p-4 mb-8 flex flex-wrap items-end gap-4 justify-around max-w-7xl mx-auto">
+      <div class="flex flex-col gap-1.5">
+        <span class="label-metadata text-on-surface-dim">
+          Ordenar por
+        </span>
+        <USelectMenu
+          v-model="selectedSort"
+          :items="sortOptions"
+          value-key="value"
+          leading-icon="i-lucide-arrow-up-down"
+          class="w-52"
+        />
+      </div>
+
       <div class="flex flex-col gap-1.5">
         <span class="label-metadata text-on-surface-dim">
           Mes
