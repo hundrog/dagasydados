@@ -1,0 +1,29 @@
+{
+  "name": "dagasydados",
+  "main": ".output/server/index.mjs",
+  "compatibility_date": "2026-09-18",
+  "assets": {
+    "directory": ".output/public",
+    "binding": "ASSETS"
+  },
+  "vars": {
+    "NUXT_GITHUB_OWNER": "hundrog",
+    "NUXT_GITHUB_REPO": "dagasydados"
+  },
+  "observability": {
+    "enabled": false,
+    "head_sampling_rate": 1,
+    "redact_query_string": false,
+    "logs": {
+      "enabled": true,
+      "head_sampling_rate": 1,
+      "invocation_logs": true,
+      "persist": true
+    },
+    "traces": {
+      "enabled": true,
+      "head_sampling_rate": 1,
+      "persist": true
+    }
+  }
+}

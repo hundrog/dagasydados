@@ -41,9 +41,18 @@ export default defineEventHandler(async (event) => {
   ].filter(Boolean).join('\n')
 
   const config = useRuntimeConfig()
-  const token = process.env.NUXT_GITHUB_ISSUES_TOKEN ?? config.githubIssuesToken
-  const owner = process.env.NUXT_GITHUB_OWNER ?? config.githubOwner
-  const repo = process.env.NUXT_GITHUB_REPO ?? config.githubRepo
+  const token = config.githubIssuesToken
+  const owner = config.githubOwner
+  const repo = config.githubRepo
+
+  if (!token || !owner || !repo) {
+    console.error('[issues] GitHub config incompleta', { owner, repo, hasToken: !!token })
+    throw createError({
+      statusCode: 500,
+      statusMessage: 'Internal Server Error',
+      message: 'El servidor no está configurado para crear reportes.'
+    })
+  }
 
   const octokit = new Octokit({ auth: token })
   const uri = `POST /repos/${owner}/${repo}/issues`
