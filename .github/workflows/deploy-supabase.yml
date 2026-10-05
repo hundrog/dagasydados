@@ -10,7 +10,6 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     env:
-      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
       SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
       PROJECT_ID: ${{ secrets.SUPABASE_PROJECT_ID }}
 
@@ -23,8 +22,12 @@ jobs:
         with:
           version: latest
 
-      - name: Link project
-        run: supabase link --project-ref $PROJECT_ID
-
+      # Se aplica por conexión directa (session pooler) en lugar de `supabase link` +
+      # `migration up --linked`: así el workflow no necesita un personal access token de
+      # la Management API, que era el paso que fallaba. Actualizar el host si el proyecto
+      # cambia de región o de plan.
       - name: Apply migrations
-        run: supabase migration up --linked --project-ref $PROJECT_ID
+        run: |
+          DB_URL="postgresql://postgres.${PROJECT_ID}:$(jq -rn --arg p "$SUPABASE_DB_PASSWORD" '$p|@uri')@aws-1-us-west-2.pooler.supabase.com:5432/postgres"
+          echo "Applying migrations to project ${PROJECT_ID}"
+          supabase db push --db-url "$DB_URL" --include-all
