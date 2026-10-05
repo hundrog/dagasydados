@@ -28,5 +28,6 @@ useSeoMeta({
     <NuxtLayout>
       <NuxtPage />
     </NuxtLayout>
+    <SiteFooter />
   </UApp>
 </template>
