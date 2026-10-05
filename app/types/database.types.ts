@@ -81,6 +81,7 @@ export type Database = {
           fecha_fin: string
           fecha_inicio: string
           featured: boolean
+          highlight_sessions: boolean
           hora_fin: string | null
           hora_inicio: string | null
           id: string
@@ -98,6 +99,7 @@ export type Database = {
           fecha_fin: string
           fecha_inicio: string
           featured?: boolean
+          highlight_sessions?: boolean
           hora_fin?: string | null
           hora_inicio?: string | null
           id?: string
@@ -115,6 +117,7 @@ export type Database = {
           fecha_fin?: string
           fecha_inicio?: string
           featured?: boolean
+          highlight_sessions?: boolean
           hora_fin?: string | null
           hora_inicio?: string | null
           id?: string
