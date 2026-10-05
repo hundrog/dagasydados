@@ -257,10 +257,12 @@ const masterItems = computed(() =>
 )
 
 const eventItems = computed(() =>
-  events.value.map(event => ({
-    label: event.name,
-    value: event.id
-  }))
+  events.value
+    .filter(event => event.id === state.event_id || isEventUpcoming(event))
+    .map(event => ({
+      label: isEventUpcoming(event) ? event.name : `${event.name} (finalizado)`,
+      value: event.id
+    }))
 )
 
 const selectedEvent = computed(() =>
@@ -907,7 +909,7 @@ async function submitSession() {
         <UFormField
           label="Evento"
           name="event_id"
-          hint="Opcional: asigna esta mesa a un evento."
+          hint="Opcional: asigna esta mesa a un evento vigente."
         >
           <USelectMenu
             v-model="state.event_id"

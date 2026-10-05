@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest'
-import { hasDedicatedSection } from '../eventSessions'
+import { hasDedicatedSection, isEventUpcoming } from '../eventSessions'
+import { localDateValue } from '../date'
 import type { GameSessionWithMaster } from '~/types/session'
 
 const session = (event: GameSessionWithMaster['event']): GameSessionWithMaster =>
@@ -30,5 +31,28 @@ describe('hasDedicatedSection', () => {
 
   it('devuelve false si el evento mezcla sus sesiones con las demás', () => {
     expect(hasDedicatedSection(session(event(false)))).toBe(false)
+  })
+})
+
+describe('isEventUpcoming', () => {
+  it('devuelve true si el evento termina en una fecha futura', () => {
+    expect(isEventUpcoming({ fecha_fin: '2099-01-15' })).toBe(true)
+  })
+
+  it('devuelve true si el evento termina hoy', () => {
+    expect(isEventUpcoming({ fecha_fin: localDateValue() })).toBe(true)
+  })
+
+  it('devuelve false si el evento ya terminó', () => {
+    expect(isEventUpcoming({ fecha_fin: '2020-01-15' })).toBe(false)
+  })
+
+  it('devuelve false si la fecha de fin es inválida', () => {
+    expect(isEventUpcoming({ fecha_fin: 'no-es-fecha' })).toBe(false)
+  })
+
+  it('compara contra el día indicado, no contra la hora actual', () => {
+    expect(isEventUpcoming({ fecha_fin: '2026-06-10' }, new Date(2026, 5, 10, 23, 30))).toBe(true)
+    expect(isEventUpcoming({ fecha_fin: '2026-06-09' }, new Date(2026, 5, 10, 0, 15))).toBe(false)
   })
 })
