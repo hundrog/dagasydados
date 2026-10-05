@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { GameSessionWithMaster } from '~/types/session'
+import { hasDedicatedSection } from '~/utils/eventSessions'
 
 const supabase = useSupabaseClient()
 
@@ -117,6 +118,7 @@ const eventGroups = computed(() => {
   const map = new Map<string, typeof groups[number]>()
 
   for (const session of filteredSessions.value) {
+    if (!hasDedicatedSection(session)) continue
     const event = session.event
     if (!event) continue
     let group = map.get(event.id)
@@ -131,8 +133,8 @@ const eventGroups = computed(() => {
   return groups
 })
 
-const nonEventSessions = computed(() =>
-  filteredSessions.value.filter(session => !session.event)
+const mixedSessions = computed(() =>
+  filteredSessions.value.filter(session => !hasDedicatedSection(session))
 )
 
 const hasActiveFilters = computed(() =>
@@ -148,7 +150,7 @@ const loadSessions = async () => {
 
   const { data, error } = await supabase
     .from('game_sessions')
-    .select('id,title,system,session_type,audience,mode,image_url,max_players,location,description,costo,fecha_inicio,hora_inicio,hora_fin,rrule,event_id,event:events(id,name,description,fecha_inicio,hora_inicio,fecha_fin,hora_fin,zona_horaria,image_url),master:dagger_masters(id,full_name,user_name,avatar_url,phone)')
+    .select('id,title,system,session_type,audience,mode,image_url,max_players,location,description,costo,fecha_inicio,hora_inicio,hora_fin,rrule,event_id,event:events(id,name,slug,description,fecha_inicio,hora_inicio,fecha_fin,hora_fin,zona_horaria,image_url,highlight_sessions),master:dagger_masters(id,full_name,user_name,avatar_url,phone)')
     .eq('status', 'published')
 
   if (error) {
@@ -293,18 +295,18 @@ onMounted(() => {
       />
 
       <div
-        v-if="nonEventSessions.length > 0"
+        v-if="eventGroups.length > 0 && mixedSessions.length > 0"
         class="flex items-center gap-4 mb-6"
       >
         <div class="h-px flex-1 bg-primary/30" />
       </div>
 
       <div
-        v-if="nonEventSessions.length > 0"
+        v-if="mixedSessions.length > 0"
         class="w-full mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"
       >
         <LandingSessionCard
-          v-for="session in nonEventSessions"
+          v-for="session in mixedSessions"
           :key="session.id"
           :session="session"
         />

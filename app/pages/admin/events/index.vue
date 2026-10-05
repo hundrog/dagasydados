@@ -8,6 +8,7 @@ import { useEventImage } from '~/composables/useEventImage'
 import { parseLocalDate } from '~/utils/date'
 
 const supabase = useSupabaseClient()
+const UBadge = resolveComponent('UBadge')
 const UButton = resolveComponent('UButton')
 const UDropdownMenu = resolveComponent('UDropdownMenu')
 const toast = useToast()
@@ -126,6 +127,22 @@ const columns: TableColumn<Event>[] = [
     cell: ({ row }) =>
       formatDate(row.original.fecha_fin)
       + (row.original.hora_fin ? ` · ${row.original.hora_fin.slice(0, 5)}` : '')
+  },
+  {
+    id: 'highlight_sessions',
+    header: 'Sesiones en portada',
+    cell: ({ row }) => {
+      const highlighted = row.original.highlight_sessions
+
+      return h(
+        UBadge,
+        {
+          color: highlighted ? 'primary' : 'neutral',
+          variant: highlighted ? 'solid' : 'outline'
+        },
+        () => highlighted ? 'Separadas' : 'Mezcladas'
+      )
+    }
   },
   {
     id: 'actions',

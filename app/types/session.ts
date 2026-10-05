@@ -27,6 +27,7 @@ export type SessionEventRef = {
   hora_fin: string | null
   zona_horaria: string | null
   image_url: string | null
+  highlight_sessions: boolean
 }
 
 export type GameSessionWithMaster = GameSession & {

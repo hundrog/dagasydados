@@ -30,6 +30,7 @@ const schema = z.object({
   zona_horaria: z.string().optional(),
   featured: z.boolean(),
   show_text: z.boolean(),
+  highlight_sessions: z.boolean(),
   short_code: z.string().optional()
 })
 
@@ -47,6 +48,7 @@ const initialState = (): Schema => ({
   zona_horaria: props.event?.zona_horaria ?? '',
   featured: props.event?.featured ?? false,
   show_text: props.event?.show_text ?? false,
+  highlight_sessions: props.event?.highlight_sessions ?? true,
   short_code: props.event?.short_code ?? ''
 })
 
@@ -172,7 +174,8 @@ async function submitEvent() {
     hora_fin: state.hora_fin?.trim() || null,
     zona_horaria: state.zona_horaria?.trim() || null,
     featured: state.featured,
-    show_text: state.show_text
+    show_text: state.show_text,
+    highlight_sessions: state.highlight_sessions
   }
 
   if (props.event?.id) {
@@ -432,6 +435,12 @@ async function submitEvent() {
                 label="Mostrar texto"
                 description="Muestra los detalles del evento sobre la imagen en la portada. Requiere activar Destacado."
                 :disabled="!state.featured"
+              />
+              <USwitch
+                v-model="state.highlight_sessions"
+                class="mt-4"
+                label="Destacar sesiones"
+                description="Muestra las sesiones de este evento en una sección propia en la portada. Si se desactiva, se muestran junto a las demás sesiones."
               />
             </div>
           </UFormField>

@@ -64,7 +64,7 @@ const loadEvent = async () => {
 
   const { data: sessionData, error: sessionError } = await supabase
     .from('game_sessions')
-    .select('id,title,system,session_type,audience,mode,image_url,max_players,location,description,costo,fecha_inicio,hora_inicio,hora_fin,rrule,event_id,event:events(id,name,slug,description,fecha_inicio,hora_inicio,fecha_fin,hora_fin,zona_horaria,image_url),master:dagger_masters(id,full_name,user_name,avatar_url,phone)')
+    .select('id,title,system,session_type,audience,mode,image_url,max_players,location,description,costo,fecha_inicio,hora_inicio,hora_fin,rrule,event_id,event:events(id,name,slug,description,fecha_inicio,hora_inicio,fecha_fin,hora_fin,zona_horaria,image_url,highlight_sessions),master:dagger_masters(id,full_name,user_name,avatar_url,phone)')
     .eq('event_id', eventData.id)
     .eq('status', 'published')
 
