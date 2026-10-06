@@ -24,9 +24,12 @@ const items: NavigationMenuItem[] = [
 </script>
 
 <template>
-  <UFooter>
-    <template #left>
-      <p class="text-muted text-sm">
+  <UFooter
+    :ui="{ bottom: 'lg:flex lg:justify-center' }"
+    class="mt-12 lg:mt-24"
+  >
+    <template #bottom>
+      <p class="text-muted text-sm mx-auto">
         Copyright © {{ new Date().getFullYear() }}
       </p>
     </template>
@@ -38,7 +41,7 @@ const items: NavigationMenuItem[] = [
     />
 
     <template #right>
-      <div class="flex flex-col items-start gap-2">
+      <div class="flex flex-col items-end gap-2">
         <UButton
           v-if="user"
           block

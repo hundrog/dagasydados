@@ -25,9 +25,11 @@ useSeoMeta({
   <NuxtLoadingIndicator />
   <UApp>
     <SiteNav />
-    <NuxtLayout>
-      <NuxtPage />
-    </NuxtLayout>
+    <UMain>
+      <NuxtLayout>
+        <NuxtPage />
+      </NuxtLayout>
+    </UMain>
     <SiteFooter />
   </UApp>
 </template>
