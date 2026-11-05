@@ -309,6 +309,90 @@ export type Database = {
           }
         ]
       }
+      blog_posts: {
+        Row: {
+          id: string
+          slug: string
+          title: string
+          content: string
+          excerpt: string | null
+          thumbnail: string | null
+          author_id: string
+          status: 'draft' | 'published'
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          slug: string
+          title: string
+          content: string
+          excerpt?: string | null
+          thumbnail?: string | null
+          author_id: string
+          status?: 'draft' | 'published'
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          slug?: string
+          title?: string
+          content?: string
+          excerpt?: string | null
+          thumbnail?: string | null
+          author_id?: string
+          status?: 'draft' | 'published'
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      blog_tags: {
+        Row: {
+          id: number
+          name: string
+        }
+        Insert: {
+          id?: number
+          name: string
+        }
+        Update: {
+          id?: number
+          name?: string
+        }
+        Relationships: []
+      }
+      blog_posts_tags: {
+        Row: {
+          post_id: string
+          tag_id: number
+        }
+        Insert: {
+          post_id: string
+          tag_id: number
+        }
+        Update: {
+          post_id?: string
+          tag_id?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'blog_posts_tags_post_id_fkey'
+            columns: ['post_id']
+            isOneToOne: false
+            referencedRelation: 'blog_posts'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'blog_posts_tags_tag_id_fkey'
+            columns: ['tag_id']
+            isOneToOne: false
+            referencedRelation: 'blog_tags'
+            referencedColumns: ['id']
+          }
+        ]
+      }
     }
     Views: {
       [_ in never]: never
