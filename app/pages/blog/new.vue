@@ -21,12 +21,15 @@ const form = ref({
 
 const loading = ref(false)
 const error = ref('')
+const showCheatsheet = ref(false)
 
-async function handleImageUpload(event: Event) {
-  const target = event.target as HTMLInputElement
-  const file = target.files?.[0]
-  if (!file) return
+const selectedFile = ref<File | null>(null)
 
+watch(selectedFile, (file) => {
+  if (file) uploadImage(file)
+})
+
+async function uploadImage(file: File) {
   try {
     const fileName = `${Date.now()}-${file.name}`
     const { error: uploadError } = await client.storage
@@ -93,87 +96,143 @@ async function savePost() {
 </script>
 
 <template>
-  <div class="max-w-4xl mx-auto px-4 py-12">
-    <h1 class="text-3xl font-bold mb-8">
-      Nuevo Post
-    </h1>
+  <div class="w-full px-4 py-8">
+    <div class="flex items-center justify-between mb-8">
+      <div>
+        <h1 class="text-2xl font-bold text-primary-900">
+          Nuevo Post
+        </h1>
+        <p class="text-sm text-slate-500 mt-1">
+          Crea una nueva entrada para el blog de la comunidad.
+        </p>
+      </div>
+      <UButton
+        label="Volver"
+        icon="i-lucide-arrow-left"
+        color="neutral"
+        variant="ghost"
+        class="cursor-pointer"
+        @click="navigateTo('/blog')"
+      />
+    </div>
 
     <UForm
       :state="form"
-      class="space-y-6"
+      class="w-full space-y-8"
       @submit="savePost"
     >
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <UFormGroup
-          label="Título"
-          name="title"
+      <section class="space-y-4">
+        <h2 class="text-lg font-semibold text-primary-900">
+          Información básica
+        </h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <UFormField
+            label="Título"
+            name="title"
+            required
+          >
+            <UInput
+              v-model="form.title"
+              class="w-full"
+              placeholder="Título del post"
+            />
+          </UFormField>
+          <UFormField
+            label="Estado"
+            name="status"
+          >
+            <USelect
+              v-model="form.status"
+              :options="['draft', 'published']"
+              class="w-full"
+            />
+          </UFormField>
+          <UFormField
+            label="Resumen (Excerpt)"
+            name="excerpt"
+            class="md:col-span-2"
+          >
+            <UInput
+              v-model="form.excerpt"
+              class="w-full"
+              placeholder="Breve resumen para la tarjeta del feed"
+            />
+          </UFormField>
+          <UFormField
+            label="Tags (separados por coma)"
+            name="tags"
+            class="md:col-span-2"
+          >
+            <UInput
+              v-model="form.tags"
+              class="w-full"
+              placeholder="rpg, dnd, guia, lore"
+            />
+          </UFormField>
+        </div>
+      </section>
+
+      <section class="space-y-4">
+        <h2 class="text-lg font-semibold text-primary-900">
+          Imagen de portada
+        </h2>
+        <UFormField
+          label="Imagen de Portada"
+          name="thumbnail"
+        >
+          <div class="space-y-4">
+            <div
+              v-if="form.thumbnail"
+              class="relative w-full max-w-sm"
+            >
+              <img
+                :src="form.thumbnail"
+                alt="Vista previa de la portada"
+                class="w-full h-48 object-cover rounded-lg border border-slate-200"
+              >
+            </div>
+            <UFileUpload
+              v-model="selectedFile"
+              accept="image/*"
+              label="Subir imagen"
+              description="JPG, PNG o WebP · Máximo 5 MB"
+            />
+            <UInput
+              v-model="form.thumbnail"
+              readonly
+              class="w-full"
+              placeholder="URL de la imagen"
+            />
+          </div>
+        </UFormField>
+      </section>
+
+      <section class="space-y-4">
+        <h2 class="text-lg font-semibold text-primary-900">
+          Contenido
+        </h2>
+        <UFormField
+          name="content"
           required
         >
-          <UInput
-            v-model="form.title"
-            placeholder="Título del post"
+          <template #label>
+            Contenido
+            <button
+              type="button"
+              class="ml-1 text-primary-600 underline underline-offset-2 hover:text-primary-700"
+              @click="showCheatsheet = true"
+            >
+              (Markdown)
+            </button>
+          </template>
+          <UTextarea
+            v-model="form.content"
+            class="w-full"
+            :rows="20"
+            placeholder="Escribe tu historia aquí usando Markdown..."
           />
-        </UFormGroup>
-
-        <UFormGroup
-          label="Estado"
-          name="status"
-        >
-          <USelect
-            v-model="form.status"
-            :options="['draft', 'published']"
-          />
-        </UFormGroup>
-      </div>
-
-      <UFormGroup
-        label="Resumen (Excerpt)"
-        name="excerpt"
-      >
-        <UInput
-          v-model="form.excerpt"
-          placeholder="Breve resumen para la tarjeta del feed"
-        />
-      </UFormGroup>
-
-      <UFormGroup
-        label="Tags (separados por coma)"
-        name="tags"
-      >
-        <UInput
-          v-model="form.tags"
-          placeholder="rpg, dnd, guia, lore"
-        />
-      </UFormGroup>
-
-      <UFormGroup
-        label="Imagen de Portada"
-        name="thumbnail"
-      >
-        <div class="flex items-center gap-4">
-          <UInput
-            v-model="form.thumbnail"
-            readonly
-            placeholder="URL de la imagen"
-          />
-          <UFileInput
-            accept="image/*"
-            @change="handleImageUpload"
-          />
-        </div>
-      </UFormGroup>
-
-      <UFormGroup
-        label="Contenido (Markdown)"
-        name="content"
-        required
-      >
-        <UTextarea
-          v-model="form.content"
-          :rows="15"
-          placeholder="Escribe tu historia aquí usando Markdown..."
-        />
-      </UFormGroup>
+        </UFormField>
+      </section>
 
       <div
         v-if="error"
@@ -198,5 +257,7 @@ async function savePost() {
         </UButton>
       </div>
     </UForm>
+
+    <MarkdownCheatsheet v-model:open="showCheatsheet" />
   </div>
 </template>

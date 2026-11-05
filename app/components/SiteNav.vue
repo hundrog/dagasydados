@@ -7,6 +7,10 @@ const items = computed<NavigationMenuItem[]>(() => [
     to: '/events'
   },
   {
+    label: 'Blog',
+    to: '/blog'
+  },
+  {
     label: 'Administrar',
     to: '/admin/sessions'
   }

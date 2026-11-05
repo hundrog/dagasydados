@@ -59,6 +59,14 @@ const allTags = computed(() => {
       <p class="text-gray-600 dark:text-gray-400">
         Historias, guías y crónicas de nuestros mundos
       </p>
+      <UButton
+        to="/blog/new"
+        icon="i-lucide-plus"
+        color="primary"
+        class="mt-6"
+      >
+        Nuevo Post
+      </UButton>
     </header>
 
     <div class="flex flex-col md:flex-row gap-4 mb-8 justify-between items-center">
