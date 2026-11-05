@@ -2,6 +2,8 @@
 import type { BlogPost, BlogTag } from '~/types/blog'
 
 const client = useSupabaseClient()
+const currentMasterStore = useCurrentMasterStore()
+const { isAuthorized } = storeToRefs(currentMasterStore)
 
 const search = ref('')
 const selectedTag = ref<string | null>(null)
@@ -60,7 +62,8 @@ const allTags = computed(() => {
         Historias, guías y crónicas de nuestros mundos
       </p>
       <UButton
-        to="/blog/new"
+        v-if="isAuthorized"
+        to="/admin/blog/new"
         icon="i-lucide-plus"
         color="primary"
         class="mt-6"
@@ -69,7 +72,7 @@ const allTags = computed(() => {
       </UButton>
     </header>
 
-    <div class="flex flex-col md:flex-row gap-4 mb-8 justify-between items-center">
+    <div class="flex flex-col md:flex-row gap-4 mb-8 justify-center items-center">
       <div class="relative w-full md:w-96">
         <UInput
           v-model="search"
