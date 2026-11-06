@@ -3,6 +3,7 @@
 /* ── Imports ─────────────────────────────────────────────────────────────────── */
 @import "tailwindcss";
 @import "@nuxt/ui";
+@plugin "@tailwindcss/typography";
 /* @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Manrope:wght@400;500;600;700&family=Cookie&display=swap'); */
 
 /* ── Design Tokens ───────────────────────────────────────────────────────────── */
@@ -208,3 +209,55 @@ h6 {
 .logo-image:hover img {
   animation: hue-spin 2s linear infinite;
 }
+
+/* ── Markdown (prose) ────────────────────────────────────────────────────────── */
+
+/* El sitio usa una superficie oscura fija, así que mapeamos las variables del
+   plugin de typography a nuestros tokens en lugar de depender de `.dark`. */
+.prose {
+  --tw-prose-body: var(--color-on-surface);
+  --tw-prose-headings: var(--color-on-surface);
+  --tw-prose-lead: var(--color-on-surface-dim);
+  --tw-prose-links: var(--color-primary);
+  --tw-prose-bold: var(--color-on-surface);
+  --tw-prose-counters: var(--color-on-surface-dim);
+  --tw-prose-bullets: var(--color-primary);
+  --tw-prose-hr: var(--color-outline);
+  --tw-prose-quotes: var(--color-on-surface-dim);
+  --tw-prose-quote-borders: var(--color-primary);
+  --tw-prose-captions: var(--color-on-surface-dim);
+  --tw-prose-code: var(--color-tertiary);
+  --tw-prose-pre-code: var(--color-on-surface);
+  --tw-prose-pre-bg: var(--color-surface-lowest);
+  --tw-prose-th-borders: var(--color-outline);
+  --tw-prose-td-borders: var(--color-outline);
+}
+
+/* Tablas anchas con scroll horizontal en móvil. */
+.prose table {
+  display: block;
+  width: 100%;
+  overflow-x: auto;
+}
+
+.prose pre {
+  overflow-x: auto;
+}
+
+.prose :where(code):not(:where(pre code)) {
+  background-color: var(--color-surface-high);
+  border-radius: 0.25rem;
+  padding: 0.15em 0.35em;
+  font-size: 0.9em;
+}
+
+/* Quita las comillas invertidas que typography añade alrededor del código inline. */
+.prose :where(code):not(:where(pre code))::before,
+.prose :where(code):not(:where(pre code))::after {
+  content: none;
+}
+
+.prose img {
+  border-radius: var(--radius-lg);
+}
+

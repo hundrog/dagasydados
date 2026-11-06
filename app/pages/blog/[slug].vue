@@ -38,20 +38,6 @@ const post = computed(() => postData.value as BlogPost & { tags: BlogTag[] })
 const user = useSupabaseUser()
 const { isAdmin } = storeToRefs(useAdminStore())
 const canEdit = computed(() => isAdmin.value || post.value?.author_id === user.value?.sub)
-
-function renderMarkdown(content: string) {
-  return content
-    .replace(/^# (.*$)/gim, '<h1 class="text-3xl font-bold my-4">$1</h1>')
-    .replace(/^## (.*$)/gim, '<h2 class="text-2xl font-bold my-4">$1</h2>')
-    .replace(/^### (.*$)/gim, '<h3 class="text-xl font-bold my-4">$1</h3>')
-    .replace(/^\* (.*$)/gim, '<ul><li>$1</li></ul>')
-    .replace(/^\d\. (.*$)/gim, '<ol><li>$1</li></ol>')
-    .replace(/\*\*(.*)\*\*/gim, '<strong>$1</strong>')
-    .replace(/\*(.*)\*/gim, '<em>$1</em>')
-    .replace(/!\[(.*?)\]\((.*?)\)/gim, '<img src="$2" alt="$1" class="rounded-lg my-4 max-w-full h-auto" />')
-    .replace(/\[(.*?)\]\((.*?)\)/gim, '<a href="$2" class="text-primary-500">$1</a>')
-    .replace(/\n/g, '<br/>')
-}
 </script>
 
 <template>
@@ -120,9 +106,7 @@ function renderMarkdown(content: string) {
         >
       </div>
 
-      <article class="prose prose-lg dark:prose-invert max-w-none text-gray-300">
-        <div v-html="renderMarkdown(post.content)" />
-      </article>
+      <MarkdownContent :content="post.content" />
     </div>
 
     <div
