@@ -45,68 +45,40 @@ ON public.blog_posts FOR SELECT
 USING (status = 'published');
 
 DROP POLICY IF EXISTS "Authorized Read blog_posts" ON public.blog_posts;
--- Author/Admin Read: All posts (drafts included)
-CREATE POLICY "Authorized Read blog_posts"
+DROP POLICY IF EXISTS "Admin Read blog_posts" ON public.blog_posts;
+-- Admin Read: All posts (drafts included). Public Read only exposes published posts.
+CREATE POLICY "Admin Read blog_posts"
 ON public.blog_posts FOR SELECT
 USING (
-    auth.uid() = author_id
-    OR auth.uid() IN (SELECT id FROM public.admins)
-    OR
-    EXISTS (
-        SELECT 1 FROM public.dagger_masters
-        WHERE id = auth.uid() AND status = 'authorized'
-    )
+    auth.uid() IN (SELECT id FROM public.admins)
 );
 
 DROP POLICY IF EXISTS "Create blog_posts" ON public.blog_posts;
--- Create: Only authorized dagger_masters, as themselves
+-- Create: only admins, as themselves
 CREATE POLICY "Create blog_posts"
 ON public.blog_posts FOR INSERT
 WITH CHECK (
-    EXISTS (
-        SELECT 1 FROM public.dagger_masters
-        WHERE id = auth.uid() AND status = 'authorized'
-    )
-    AND (
-        auth.uid() = author_id
-        OR auth.uid() IN (SELECT id FROM public.admins)
-    )
+    auth.uid() IN (SELECT id FROM public.admins)
+    AND auth.uid() = author_id
 );
 
 DROP POLICY IF EXISTS "Update blog_posts" ON public.blog_posts;
--- Update: Author or Admin
+-- Update: only admins
 CREATE POLICY "Update blog_posts"
 ON public.blog_posts FOR UPDATE
 USING (
-    auth.uid() = author_id
-    OR auth.uid() IN (SELECT id FROM public.admins)
-    OR
-    EXISTS (
-        SELECT 1 FROM public.dagger_masters
-        WHERE id = auth.uid() AND status = 'authorized'
-    )
+    auth.uid() IN (SELECT id FROM public.admins)
 )
 WITH CHECK (
-    auth.uid() = author_id
-    OR auth.uid() IN (SELECT id FROM public.admins)
-    OR
-    EXISTS (
-        SELECT 1 FROM public.dagger_masters
-        WHERE id = auth.uid() AND status = 'authorized'
-    )
+    auth.uid() IN (SELECT id FROM public.admins)
 );
 
 DROP POLICY IF EXISTS "Delete blog_posts" ON public.blog_posts;
+-- Delete: only admins
 CREATE POLICY "Delete blog_posts"
 ON public.blog_posts FOR DELETE
 USING (
-    auth.uid() = author_id
-    OR auth.uid() IN (SELECT id FROM public.admins)
-    OR
-    EXISTS (
-        SELECT 1 FROM public.dagger_masters
-        WHERE id = auth.uid() AND status = 'authorized'
-    )
+    auth.uid() IN (SELECT id FROM public.admins)
 );
 
 -- RLS Policies for blog_tags
@@ -118,21 +90,14 @@ ON public.blog_tags FOR SELECT
 USING (true);
 
 DROP POLICY IF EXISTS "Authorized Write blog_tags" ON public.blog_tags;
-CREATE POLICY "Authorized Write blog_tags"
+DROP POLICY IF EXISTS "Admin Write blog_tags" ON public.blog_tags;
+CREATE POLICY "Admin Write blog_tags"
 ON public.blog_tags FOR ALL
 USING (
-    EXISTS (
-        SELECT 1 FROM public.dagger_masters
-        WHERE id = auth.uid() AND status = 'authorized'
-    )
-    OR auth.uid() IN (SELECT id FROM public.admins)
+    auth.uid() IN (SELECT id FROM public.admins)
 )
 WITH CHECK (
-    EXISTS (
-        SELECT 1 FROM public.dagger_masters
-        WHERE id = auth.uid() AND status = 'authorized'
-    )
-    OR auth.uid() IN (SELECT id FROM public.admins)
+    auth.uid() IN (SELECT id FROM public.admins)
 );
 
 -- RLS Policies for blog_posts_tags
@@ -144,21 +109,14 @@ ON public.blog_posts_tags FOR SELECT
 USING (true);
 
 DROP POLICY IF EXISTS "Authorized Write blog_posts_tags" ON public.blog_posts_tags;
-CREATE POLICY "Authorized Write blog_posts_tags"
+DROP POLICY IF EXISTS "Admin Write blog_posts_tags" ON public.blog_posts_tags;
+CREATE POLICY "Admin Write blog_posts_tags"
 ON public.blog_posts_tags FOR ALL
 USING (
-    EXISTS (
-        SELECT 1 FROM public.dagger_masters
-        WHERE id = auth.uid() AND status = 'authorized'
-    )
-    OR auth.uid() IN (SELECT id FROM public.admins)
+    auth.uid() IN (SELECT id FROM public.admins)
 )
 WITH CHECK (
-    EXISTS (
-        SELECT 1 FROM public.dagger_masters
-        WHERE id = auth.uid() AND status = 'authorized'
-    )
-    OR auth.uid() IN (SELECT id FROM public.admins)
+    auth.uid() IN (SELECT id FROM public.admins)
 );
 
 -- Storage Policies for blog-posts bucket
@@ -168,45 +126,30 @@ ON storage.objects FOR SELECT
 USING (bucket_id = 'blog-posts');
 
 DROP POLICY IF EXISTS "Authorized Upload blog-posts" ON storage.objects;
-CREATE POLICY "Authorized Upload blog-posts"
+DROP POLICY IF EXISTS "Admin Upload blog-posts" ON storage.objects;
+CREATE POLICY "Admin Upload blog-posts"
 ON storage.objects FOR INSERT
 WITH CHECK (
     bucket_id = 'blog-posts'
-    AND (
-        EXISTS (
-            SELECT 1 FROM public.dagger_masters
-            WHERE id = auth.uid() AND status = 'authorized'
-        )
-        OR auth.uid() IN (SELECT id FROM public.admins)
-    )
+    AND auth.uid() IN (SELECT id FROM public.admins)
 );
 
 DROP POLICY IF EXISTS "Authorized Delete blog-posts" ON storage.objects;
-CREATE POLICY "Authorized Delete blog-posts"
+DROP POLICY IF EXISTS "Admin Delete blog-posts" ON storage.objects;
+CREATE POLICY "Admin Delete blog-posts"
 ON storage.objects FOR DELETE
 USING (
     bucket_id = 'blog-posts'
-    AND (
-        EXISTS (
-            SELECT 1 FROM public.dagger_masters
-            WHERE id = auth.uid() AND status = 'authorized'
-        )
-        OR auth.uid() IN (SELECT id FROM public.admins)
-    )
+    AND auth.uid() IN (SELECT id FROM public.admins)
 );
 
 DROP POLICY IF EXISTS "Authorized Update blog-posts" ON storage.objects;
-CREATE POLICY "Authorized Update blog-posts"
+DROP POLICY IF EXISTS "Admin Update blog-posts" ON storage.objects;
+CREATE POLICY "Admin Update blog-posts"
 ON storage.objects FOR UPDATE
 USING (
     bucket_id = 'blog-posts'
-    AND (
-        EXISTS (
-            SELECT 1 FROM public.dagger_masters
-            WHERE id = auth.uid() AND status = 'authorized'
-        )
-        OR auth.uid() IN (SELECT id FROM public.admins)
-    )
+    AND auth.uid() IN (SELECT id FROM public.admins)
 );
 
 -- Function to update updated_at timestamp

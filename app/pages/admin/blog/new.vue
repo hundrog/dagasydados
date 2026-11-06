@@ -4,11 +4,18 @@ import BlogPostForm from '~/components/admin/BlogPostForm.vue'
 
 const client = useSupabaseClient()
 const route = useRoute()
+const adminStore = useAdminStore()
+const { isAdmin } = storeToRefs(adminStore)
 
-// Protección de ruta: solo usuarios autenticados pueden crear posts
+// Protección de ruta: solo los admins pueden crear/publicar posts
 const { data: { user } } = await client.auth.getUser()
 if (!user) {
   await navigateTo({ path: '/login', query: { redirect: route.fullPath } })
+} else {
+  await adminStore.refresh()
+  if (!isAdmin.value) {
+    throw createError({ statusCode: 403, message: 'Acceso denegado' })
+  }
 }
 
 const goBack = () => navigateTo('/blog')

@@ -35,9 +35,10 @@ if (postError.value || !postData.value) {
 
 const post = computed(() => postData.value as BlogPost & { tags: BlogTag[] })
 
-const user = useSupabaseUser()
-const { isAdmin } = storeToRefs(useAdminStore())
-const canEdit = computed(() => isAdmin.value || post.value?.author_id === user.value?.sub)
+const adminStore = useAdminStore()
+const { isAdmin } = storeToRefs(adminStore)
+await adminStore.refresh()
+const canEdit = computed(() => isAdmin.value)
 </script>
 
 <template>

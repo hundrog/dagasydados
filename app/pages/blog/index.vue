@@ -4,10 +4,8 @@ import type { BlogPost, BlogTag } from '~/types/blog'
 const client = useSupabaseClient()
 const adminStore = useAdminStore()
 const { isAdmin } = storeToRefs(adminStore)
-const currentMasterStore = useCurrentMasterStore()
-const { isAuthorized } = storeToRefs(currentMasterStore)
 
-const canCreate = computed(() => isAdmin.value || isAuthorized.value)
+await adminStore.refresh()
 
 const search = ref('')
 const selectedTag = ref<string | null>(null)
@@ -68,7 +66,7 @@ const allTags = computed(() => {
         Historias, guías y crónicas de nuestros mundos
       </p>
       <UButton
-        v-if="canCreate"
+        v-if="isAdmin"
         to="/admin/blog/new"
         icon="i-lucide-plus"
         color="primary"

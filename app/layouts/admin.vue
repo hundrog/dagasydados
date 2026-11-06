@@ -8,7 +8,7 @@ const route = useRoute()
 const { isAdmin } = storeToRefs(useAdminStore())
 const user = useSupabaseUser()
 const currentMasterStore = useCurrentMasterStore()
-const { master, isAuthorized } = storeToRefs(currentMasterStore)
+const { master } = storeToRefs(currentMasterStore)
 const colorMode = useColorMode()
 
 const isMobile = useMediaQuery('(max-width: 1023px)')
@@ -132,11 +132,7 @@ const items = computed<NavigationMenuItem[]>(() => {
     return [mastersItem(), gameSessionsItem(), eventsItem(), blogItem()]
   }
 
-  return [
-    profileItem(),
-    gameSessionsItem(),
-    ...(isAuthorized.value ? [blogItem()] : [])
-  ]
+  return [profileItem(), gameSessionsItem()]
 })
 
 const userItems = computed<DropdownMenuItem[][]>(() => [

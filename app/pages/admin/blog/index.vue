@@ -16,14 +16,14 @@ const toast = useToast()
 const { copy } = useClipboard()
 const adminStore = useAdminStore()
 const { isAdmin } = storeToRefs(adminStore)
-const currentMasterStore = useCurrentMasterStore()
-const { isAuthorized } = storeToRefs(currentMasterStore)
-const user = useSupabaseUser()
 const { deleteBlogImageByUrl } = useBlogImage()
 const table = useTemplateRef('table')
 
-const canCreate = computed(() => isAdmin.value || isAuthorized.value)
-const canModify = (post: BlogPostSummary) => isAdmin.value || post.author_id === user.value?.sub
+await adminStore.refresh()
+
+if (!isAdmin.value) {
+  throw createError({ statusCode: 403, message: 'Acceso denegado' })
+}
 
 const posts = ref<BlogPostSummary[]>([])
 const isLoading = ref(true)
@@ -41,24 +41,10 @@ const loadPosts = async () => {
   isLoading.value = true
   errorMessage.value = null
 
-  const userId = user.value?.sub
-
-  if (!isAdmin.value && !userId) {
-    posts.value = []
-    isLoading.value = false
-    return
-  }
-
-  let query = supabase
+  const { data, error } = await supabase
     .from('blog_posts')
     .select('id,slug,title,status,created_at,author_id,thumbnail')
     .order('created_at', { ascending: false })
-
-  if (!isAdmin.value && userId) {
-    query = query.eq('author_id', userId)
-  }
-
-  const { data, error } = await query
 
   if (error) {
     errorMessage.value = error.message
@@ -95,11 +81,7 @@ const loadPosts = async () => {
   isLoading.value = false
 }
 
-onMounted(async () => {
-  await adminStore.refresh()
-  await currentMasterStore.refresh()
-  await loadPosts()
-})
+onMounted(loadPosts)
 
 const confirmDelete = async () => {
   if (!pendingDelete.value || isDeleting.value) return
@@ -271,7 +253,6 @@ function getRowItems(row: Row<BlogPostSummary>) {
     {
       label: post.status === 'published' ? 'Volver a borrador' : 'Publicar post',
       icon: post.status === 'published' ? 'i-lucide-eye-off' : 'i-lucide-send',
-      disabled: !canModify(post),
       onSelect() {
         toggleStatus(post)
       }
@@ -279,7 +260,6 @@ function getRowItems(row: Row<BlogPostSummary>) {
     {
       label: 'Editar post',
       icon: 'i-lucide-pencil',
-      disabled: !canModify(post),
       onSelect() {
         goToEdit(post.slug)
       }
@@ -288,7 +268,6 @@ function getRowItems(row: Row<BlogPostSummary>) {
       label: 'Borrar post',
       icon: 'i-lucide-trash-2',
       color: 'danger',
-      disabled: !canModify(post),
       onSelect() {
         pendingDelete.value = post
       }
@@ -314,34 +293,12 @@ const pagination = ref({
         </p>
       </div>
       <UButton
-        v-if="canCreate"
         label="Nuevo Post"
         icon="i-lucide-plus"
         class="cursor-pointer"
         @click="goToCreate"
       />
     </div>
-
-    <UAlert
-      v-if="!canCreate"
-      color="warning"
-      variant="subtle"
-      title="Cuenta sin autorizar"
-      description="Solo los masters autorizados pueden publicar en el blog. Solicita autorización desde tu perfil."
-      icon="i-lucide-shield-alert"
-      class="mb-6"
-    >
-      <template #actions>
-        <div class="w-full flex justify-end">
-          <UButton
-            label="Ir a mi perfil"
-            icon="i-lucide-user"
-            class="cursor-pointer"
-            :to="`/admin/profile/${user?.sub}/edit`"
-          />
-        </div>
-      </template>
-    </UAlert>
 
     <div
       v-if="isLoading"
