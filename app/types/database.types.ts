@@ -43,6 +43,7 @@ export type Database = {
           plataforma_pago: string | null
           plataforma_pago_cuenta: string | null
           profile: Json | null
+          role?: Database['public']['Enums']['profile_role'] | null
           status: Database['public']['Enums']['master_status']
           user_name: string | null
         }
@@ -56,6 +57,7 @@ export type Database = {
           plataforma_pago?: string | null
           plataforma_pago_cuenta?: string | null
           profile?: Json | null
+          role?: Database['public']['Enums']['profile_role'] | null
           status?: Database['public']['Enums']['master_status']
           user_name?: string | null
         }
@@ -69,6 +71,7 @@ export type Database = {
           plataforma_pago?: string | null
           plataforma_pago_cuenta?: string | null
           profile?: Json | null
+          role?: Database['public']['Enums']['profile_role'] | null
           status?: Database['public']['Enums']['master_status']
           user_name?: string | null
         }
@@ -280,6 +283,7 @@ export type Database = {
           telefono: string | null
           telefono_hash: string
           updated_at: string | null
+          user_id: string | null
         }
         Insert: {
           created_at?: string | null
@@ -289,6 +293,7 @@ export type Database = {
           telefono?: string | null
           telefono_hash: string
           updated_at?: string | null
+          user_id?: string | null
         }
         Update: {
           created_at?: string | null
@@ -298,6 +303,7 @@ export type Database = {
           telefono?: string | null
           telefono_hash?: string
           updated_at?: string | null
+          user_id?: string | null
         }
         Relationships: [
           {
@@ -422,6 +428,7 @@ export type Database = {
     }
     Enums: {
       master_status: 'created' | 'pending' | 'authorized' | 'rejected'
+      profile_role: 'player' | 'master'
       session_status: 'draft' | 'published'
     }
     CompositeTypes: {

@@ -1,6 +1,23 @@
 <script setup lang="ts">
 import type { NavigationMenuItem } from '@nuxt/ui'
 
+const user = useSupabaseUser()
+const currentProfileStore = useCurrentProfileStore()
+
+const accountLabel = computed(() => {
+  if (!user.value) return 'Iniciar sesión'
+  return currentProfileStore.master?.full_name
+    || currentProfileStore.master?.user_name
+    || 'Mi cuenta'
+})
+
+const accountTo = computed(() => {
+  if (!user.value) return '/login'
+  const role = currentProfileStore.master?.role
+  if (role === 'master') return `/admin/profile/${user.value.sub}/edit`
+  return '/cuenta'
+})
+
 const items = computed<NavigationMenuItem[]>(() => [
   {
     label: 'Eventos',
@@ -9,10 +26,6 @@ const items = computed<NavigationMenuItem[]>(() => [
   {
     label: 'Blog',
     to: '/blog'
-  },
-  {
-    label: 'Administrar',
-    to: '/admin/sessions'
   }
 ])
 </script>
@@ -34,6 +47,13 @@ const items = computed<NavigationMenuItem[]>(() => [
         :items="items"
         class="hidden sm:block"
       />
+      <UButton
+        :label="accountLabel"
+        :to="accountTo"
+        color="neutral"
+        variant="ghost"
+        class="hidden sm:inline-flex"
+      />
     </template>
 
     <template #body>
@@ -41,6 +61,13 @@ const items = computed<NavigationMenuItem[]>(() => [
         :items="items"
         orientation="vertical"
         class="-mx-2.5"
+      />
+      <UButton
+        :label="accountLabel"
+        :to="accountTo"
+        color="neutral"
+        variant="ghost"
+        class="mt-2"
       />
     </template>
   </UHeader>

@@ -2,6 +2,8 @@ import type { Database } from './database.types'
 
 export type MasterStatus = Database['public']['Enums']['master_status']
 
+export type ProfileRole = 'player' | 'master'
+
 export type MasterProfile = {
   estilo_juego: {
     narrativo: number
@@ -32,4 +34,5 @@ export type Master = {
   descripcion: string | null
   profile: MasterProfile | null
   status: MasterStatus
+  role: ProfileRole
 }

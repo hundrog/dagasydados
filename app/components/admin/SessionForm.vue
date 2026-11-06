@@ -10,7 +10,7 @@ const toast = useToast()
 const { uploadSessionImage, deleteSessionImageByUrl } = useSessionImage()
 const adminStore = useAdminStore()
 const { isAdmin } = storeToRefs(adminStore)
-const currentMasterStore = useCurrentMasterStore()
+const currentMasterStore = useCurrentProfileStore()
 const { isAuthorized } = storeToRefs(currentMasterStore)
 const user = useSupabaseUser()
 

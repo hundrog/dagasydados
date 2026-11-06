@@ -6,7 +6,7 @@ export interface BlogPost {
   excerpt?: string | null
   thumbnail?: string | null
   author_id: string
-  status: 'draft' | 'published'
+  status: string
   created_at: string
   updated_at: string
 }
@@ -30,7 +30,7 @@ export interface BlogPostSummary {
   id: string
   slug: string
   title: string
-  status: 'draft' | 'published'
+  status: string
   created_at: string
   author_id: string
   thumbnail: string | null

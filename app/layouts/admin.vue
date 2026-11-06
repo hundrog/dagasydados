@@ -7,7 +7,7 @@ const toast = useToast()
 const route = useRoute()
 const { isAdmin } = storeToRefs(useAdminStore())
 const user = useSupabaseUser()
-const currentMasterStore = useCurrentMasterStore()
+const currentMasterStore = useCurrentProfileStore()
 const { master } = storeToRefs(currentMasterStore)
 const colorMode = useColorMode()
 
