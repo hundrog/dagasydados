@@ -4,7 +4,6 @@ import type { Master } from '~/types/master'
 import type { PhoneInputExpose } from '~/types/phone'
 
 const supabase = useSupabaseClient()
-const toast = useToast()
 const { uploadMasterAvatar, deleteMasterAvatarByUrl } = useMasterAvatar()
 
 const props = defineProps<{
@@ -63,33 +62,6 @@ const hydrateState = (master: Master) => {
   successMessage.value = null
 
   phoneInput.value?.hydrateFromFull(master.phone ?? '')
-}
-
-const avatarPreview = computed(() => {
-  if (avatarFile.value) return URL.createObjectURL(avatarFile.value)
-  if (state.avatar_url) return state.avatar_url
-  return null
-})
-
-const onAvatarChange = () => {
-  if (avatarFile.value && avatarFile.value.size > 1 * 1024 * 1024) {
-    toast.add({
-      title: 'La imagen supera el tamaño máximo de 1 MB',
-      color: 'error',
-      icon: 'i-lucide-octagon-x'
-    })
-    avatarFile.value = null
-    return
-  }
-  if (avatarFile.value) {
-    avatarRemoved.value = false
-  }
-}
-
-const clearAvatar = () => {
-  avatarFile.value = null
-  state.avatar_url = ''
-  avatarRemoved.value = true
 }
 
 function open(master?: Master | null) {
@@ -252,36 +224,15 @@ defineExpose({ open })
           label="Avatar"
           name="avatar_url"
         >
-          <div class="space-y-4">
-            <div
-              v-if="avatarPreview"
-              class="relative w-fit"
-            >
-              <img
-                :src="avatarPreview"
-                alt="Vista previa del avatar"
-                class="size-24 rounded-full object-cover border border-slate-200"
-              >
-              <UButton
-                icon="i-lucide-x"
-                color="neutral"
-                variant="ghost"
-                size="sm"
-                class="absolute -top-2 -right-2 cursor-pointer rounded-full"
-                aria-label="Quitar avatar"
-                :disabled="isSubmitting"
-                @click="clearAvatar"
-              />
-            </div>
-            <UFileUpload
-              v-model="avatarFile"
-              accept="image/*"
-              :disabled="isSubmitting"
-              label="Subir avatar"
-              description="JPG, PNG o WebP · Máximo 5 MB"
-              @change="onAvatarChange"
-            />
-          </div>
+          <ProfileAvatarUpload
+            v-model="avatarFile"
+            :avatar-url="state.avatar_url"
+            :removed="avatarRemoved"
+            :disabled="isSubmitting"
+            :max-size-m-b="1"
+            @update:removed="avatarRemoved = $event"
+            @invalid="errorMessage = $event"
+          />
         </UFormField>
 
         <p
