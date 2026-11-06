@@ -301,12 +301,29 @@ function getRowItems(row: Row<Master>) {
 
 <template>
   <div class="flex-1 mt-12 space-y-6">
-    <h1 class="text-2xl font-bold text-primary-900">Usuarios</h1>
+    <h1 class="text-2xl font-bold text-primary-900">
+      Usuarios
+    </h1>
 
     <div class="flex gap-2">
-      <UButton label="Masters" :variant="activeTab === 'masters' ? 'solid' : 'ghost'" class="cursor-pointer" @click="activeTab = 'masters'" />
-      <UButton label="Solicitudes" :variant="activeTab === 'requests' ? 'solid' : 'ghost'" class="cursor-pointer" @click="activeTab = 'requests'" />
-      <UButton label="Jugadores" :variant="activeTab === 'players' ? 'solid' : 'ghost'" class="cursor-pointer" @click="activeTab = 'players'" />
+      <UButton
+        label="Masters"
+        :variant="activeTab === 'masters' ? 'solid' : 'ghost'"
+        class="cursor-pointer"
+        @click="activeTab = 'masters'"
+      />
+      <UButton
+        label="Solicitudes"
+        :variant="activeTab === 'requests' ? 'solid' : 'ghost'"
+        class="cursor-pointer"
+        @click="activeTab = 'requests'"
+      />
+      <UButton
+        label="Jugadores"
+        :variant="activeTab === 'players' ? 'solid' : 'ghost'"
+        class="cursor-pointer"
+        @click="activeTab = 'players'"
+      />
     </div>
 
     <div class="flex justify-end my-8">

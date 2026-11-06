@@ -12,8 +12,20 @@ const props = defineProps<{
 }>()
 
 const toast = useToast()
+const user = useSupabaseUser()
+const profileStore = useCurrentProfileStore()
 const isOpen = ref(false)
 const isLoading = ref(false)
+
+watch(() => isOpen.value, (open) => {
+  if (!open || !user.value) return
+  if (!state.name?.trim()) {
+    state.name = profileStore.master?.full_name || profileStore.master?.user_name || ''
+  }
+  if (!state.telefono?.trim()) {
+    state.telefono = profileStore.master?.phone || ''
+  }
+})
 
 const isFull = computed(() =>
   props.maxPlayers != null && (props.currentPlayers ?? 0) >= props.maxPlayers
