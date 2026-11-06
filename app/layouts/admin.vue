@@ -92,6 +92,13 @@ const eventsItem = (): NavigationMenuItem => ({
   active: route.path.startsWith('/admin/events')
 })
 
+const blogItem = (): NavigationMenuItem => ({
+  label: 'Blog',
+  icon: 'i-lucide-newspaper',
+  to: '/admin/blog',
+  active: route.path.startsWith('/admin/blog')
+})
+
 const mastersItem = (): NavigationMenuItem => ({
   label: 'Dagger Masters',
   icon: 'i-lucide-user',
@@ -122,7 +129,7 @@ const profileItem = (): NavigationMenuItem => ({
 
 const items = computed<NavigationMenuItem[]>(() => {
   if (isAdmin.value) {
-    return [mastersItem(), gameSessionsItem(), eventsItem()]
+    return [mastersItem(), gameSessionsItem(), eventsItem(), blogItem()]
   }
 
   return [profileItem(), gameSessionsItem()]
