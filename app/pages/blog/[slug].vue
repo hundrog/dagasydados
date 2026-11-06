@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { BlogPost, BlogTag } from '~/types/blog'
+import type { BlogPostDetail, BlogTag } from '~/types/blog'
 
 const route = useRoute()
 const client = useSupabaseClient()
@@ -15,12 +15,19 @@ async function fetchPost() {
 
   if (error) throw error
 
+  const { data: authors, error: authorsError } = await client.rpc('blog_post_authors', {
+    p_author_ids: [data.author_id]
+  })
+
+  if (authorsError) throw authorsError
+
   return {
     ...data,
     tags: (data.blog_posts_tags || [])
       .map(t => t.blog_tags)
-      .filter((tag): tag is BlogTag => tag !== null)
-  } as BlogPost & { tags: BlogTag[] }
+      .filter((tag): tag is BlogTag => tag !== null),
+    author: authors?.[0] ?? null
+  } as BlogPostDetail
 }
 
 // SSR + lectura individual del post
@@ -33,7 +40,13 @@ if (postError.value || !postData.value) {
   throw createError({ statusCode: 404, statusMessage: 'Post no encontrado' })
 }
 
-const post = computed(() => postData.value as BlogPost & { tags: BlogTag[] })
+const post = computed(() => postData.value as BlogPostDetail)
+
+const authorName = computed(() =>
+  post.value?.author?.user_name
+  || post.value?.author?.full_name
+  || 'Anónimo'
+)
 
 const adminStore = useAdminStore()
 const { isAdmin } = storeToRefs(adminStore)
@@ -85,7 +98,10 @@ const canEdit = computed(() => isAdmin.value)
         <h1 class="text-4xl font-extrabold mb-4 leading-tight text-primary-600">
           {{ post.title }}
         </h1>
-        <div class="flex items-center gap-4 text-sm text-gray-500 mb-6">
+        <div class="flex items-center justify-between gap-4 text-sm text-gray-500 mb-6">
+          <span>
+            Por {{ authorName }}
+          </span>
           <span class="flex items-center gap-1">
             <UIcon
               name="i-lucide-calendar"

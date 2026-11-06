@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { BlogPost, BlogTag } from '~/types/blog'
+import type { BlogAuthorRef, BlogPostWithAuthor, BlogTag } from '~/types/blog'
 
 const client = useSupabaseClient()
 const adminStore = useAdminStore()
@@ -10,7 +10,7 @@ await adminStore.refresh()
 const search = ref('')
 const selectedTag = ref<string | null>(null)
 
-const { data: postsData, pending } = await useAsyncData<{ post: BlogPost, tags: BlogTag[] }[]>(
+const { data: postsData, pending } = await useAsyncData<{ post: BlogPostWithAuthor, tags: BlogTag[] }[]>(
   'blog-posts',
   async () => {
     const { data, error } = await client
@@ -21,12 +21,31 @@ const { data: postsData, pending } = await useAsyncData<{ post: BlogPost, tags: 
 
     if (error) throw error
 
-    return (data || []).map((p) => {
+    const rows = data || []
+    const authorIds = [...new Set(rows.map(row => row.author_id))]
+    const authors = new Map<string, BlogAuthorRef>()
+
+    if (authorIds.length > 0) {
+      const { data: authorsData, error: authorsError } = await client.rpc('blog_post_authors', {
+        p_author_ids: authorIds
+      })
+
+      if (authorsError) throw authorsError
+
+      authorsData?.forEach((author) => {
+        authors.set(author.id, author)
+      })
+    }
+
+    return rows.map((p) => {
       const postTags = (p.blog_posts_tags || [])
         .map(t => t.blog_tags)
         .filter((tag): tag is BlogTag => tag !== null)
       const { blog_posts_tags: _blogPostsTags, ...post } = p
-      return { post: post as BlogPost, tags: postTags }
+      return {
+        post: { ...post, author: authors.get(p.author_id) ?? null } as BlogPostWithAuthor,
+        tags: postTags
+      }
     })
   }
 )
@@ -168,7 +187,13 @@ const allTags = computed(() => {
 
         <template #footer>
           <div class="flex justify-between items-center text-xs text-gray-500">
-            <span>{{ new Date(item.post.created_at).toLocaleDateString() }}</span>
+            <span class="flex items-center gap-1 min-w-0">
+              <UIcon
+                name="i-lucide-user"
+                class="w-3 h-3 shrink-0"
+              />
+              <span class="truncate">Por {{ item.post.author?.user_name || item.post.author?.full_name || 'Anónimo' }}</span>
+            </span>
             <span class="flex items-center gap-1">
               <UIcon name="i-lucide-arrow-right" />
             </span>
