@@ -2,8 +2,12 @@
 import type { BlogPost, BlogTag } from '~/types/blog'
 
 const client = useSupabaseClient()
+const adminStore = useAdminStore()
+const { isAdmin } = storeToRefs(adminStore)
 const currentMasterStore = useCurrentMasterStore()
 const { isAuthorized } = storeToRefs(currentMasterStore)
+
+const canCreate = computed(() => isAdmin.value || isAuthorized.value)
 
 const search = ref('')
 const selectedTag = ref<string | null>(null)
@@ -19,10 +23,12 @@ const { data: postsData, pending } = await useAsyncData<{ post: BlogPost, tags: 
 
     if (error) throw error
 
-    return (data || []).map((p: any) => {
-      const postTags = (p.blog_posts_tags || []).map((t: any) => t.blog_tags)
-      const { blog_posts_tags, ...post } = p
-      return { post: post as BlogPost, tags: postTags as BlogTag[] }
+    return (data || []).map((p) => {
+      const postTags = (p.blog_posts_tags || [])
+        .map(t => t.blog_tags)
+        .filter((tag): tag is BlogTag => tag !== null)
+      const { blog_posts_tags: _blogPostsTags, ...post } = p
+      return { post: post as BlogPost, tags: postTags }
     })
   }
 )
@@ -62,7 +68,7 @@ const allTags = computed(() => {
         Historias, guías y crónicas de nuestros mundos
       </p>
       <UButton
-        v-if="isAuthorized"
+        v-if="canCreate"
         to="/admin/blog/new"
         icon="i-lucide-plus"
         color="primary"
@@ -72,7 +78,7 @@ const allTags = computed(() => {
       </UButton>
     </header>
 
-    <div class="flex flex-col md:flex-row gap-4 mb-8 justify-center items-center">
+    <div class="flex flex-col gap-4 mb-8 justify-center items-center">
       <div class="relative w-full md:w-96">
         <UInput
           v-model="search"

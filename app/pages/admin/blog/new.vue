@@ -3,6 +3,7 @@ import { slugify } from '~/utils/url'
 
 const client = useSupabaseClient()
 const route = useRoute()
+const { uploadBlogImage } = useBlogImage()
 
 // Protección de ruta: solo usuarios autenticados pueden crear posts
 const { data: { user } } = await client.auth.getUser()
@@ -31,20 +32,9 @@ watch(selectedFile, (file) => {
 
 async function uploadImage(file: File) {
   try {
-    const fileName = `${Date.now()}-${file.name}`
-    const { error: uploadError } = await client.storage
-      .from('blog-posts')
-      .upload(fileName, file)
-
-    if (uploadError) throw uploadError
-
-    const { data: { publicUrl } } = client.storage
-      .from('blog-posts')
-      .getPublicUrl(fileName)
-
-    form.value.thumbnail = publicUrl
-  } catch (e: any) {
-    error.value = 'Error uploading image: ' + e.message
+    form.value.thumbnail = await uploadBlogImage(file)
+  } catch (e: unknown) {
+    error.value = 'Error subiendo la imagen: ' + (e instanceof Error ? e.message : String(e))
   }
 }
 
@@ -87,8 +77,8 @@ async function savePost() {
     }
 
     navigateTo(`/blog/${post.slug}`)
-  } catch (e: any) {
-    error.value = e.message
+  } catch (e: unknown) {
+    error.value = e instanceof Error ? e.message : String(e)
   } finally {
     loading.value = false
   }

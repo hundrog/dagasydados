@@ -50,6 +50,7 @@ CREATE POLICY "Authorized Read blog_posts"
 ON public.blog_posts FOR SELECT
 USING (
     auth.uid() = author_id
+    OR auth.uid() IN (SELECT id FROM public.admins)
     OR
     EXISTS (
         SELECT 1 FROM public.dagger_masters
@@ -62,10 +63,13 @@ DROP POLICY IF EXISTS "Create blog_posts" ON public.blog_posts;
 CREATE POLICY "Create blog_posts"
 ON public.blog_posts FOR INSERT
 WITH CHECK (
-    auth.uid() = author_id
-    AND EXISTS (
+    EXISTS (
         SELECT 1 FROM public.dagger_masters
         WHERE id = auth.uid() AND status = 'authorized'
+    )
+    AND (
+        auth.uid() = author_id
+        OR auth.uid() IN (SELECT id FROM public.admins)
     )
 );
 
@@ -75,6 +79,7 @@ CREATE POLICY "Update blog_posts"
 ON public.blog_posts FOR UPDATE
 USING (
     auth.uid() = author_id
+    OR auth.uid() IN (SELECT id FROM public.admins)
     OR
     EXISTS (
         SELECT 1 FROM public.dagger_masters
@@ -83,6 +88,7 @@ USING (
 )
 WITH CHECK (
     auth.uid() = author_id
+    OR auth.uid() IN (SELECT id FROM public.admins)
     OR
     EXISTS (
         SELECT 1 FROM public.dagger_masters
@@ -95,6 +101,7 @@ CREATE POLICY "Delete blog_posts"
 ON public.blog_posts FOR DELETE
 USING (
     auth.uid() = author_id
+    OR auth.uid() IN (SELECT id FROM public.admins)
     OR
     EXISTS (
         SELECT 1 FROM public.dagger_masters
@@ -118,12 +125,14 @@ USING (
         SELECT 1 FROM public.dagger_masters
         WHERE id = auth.uid() AND status = 'authorized'
     )
+    OR auth.uid() IN (SELECT id FROM public.admins)
 )
 WITH CHECK (
     EXISTS (
         SELECT 1 FROM public.dagger_masters
         WHERE id = auth.uid() AND status = 'authorized'
     )
+    OR auth.uid() IN (SELECT id FROM public.admins)
 );
 
 -- RLS Policies for blog_posts_tags
@@ -142,12 +151,14 @@ USING (
         SELECT 1 FROM public.dagger_masters
         WHERE id = auth.uid() AND status = 'authorized'
     )
+    OR auth.uid() IN (SELECT id FROM public.admins)
 )
 WITH CHECK (
     EXISTS (
         SELECT 1 FROM public.dagger_masters
         WHERE id = auth.uid() AND status = 'authorized'
     )
+    OR auth.uid() IN (SELECT id FROM public.admins)
 );
 
 -- Storage Policies for blog-posts bucket
@@ -161,9 +172,12 @@ CREATE POLICY "Authorized Upload blog-posts"
 ON storage.objects FOR INSERT
 WITH CHECK (
     bucket_id = 'blog-posts'
-    AND EXISTS (
-        SELECT 1 FROM public.dagger_masters
-        WHERE id = auth.uid() AND status = 'authorized'
+    AND (
+        EXISTS (
+            SELECT 1 FROM public.dagger_masters
+            WHERE id = auth.uid() AND status = 'authorized'
+        )
+        OR auth.uid() IN (SELECT id FROM public.admins)
     )
 );
 
@@ -172,9 +186,12 @@ CREATE POLICY "Authorized Delete blog-posts"
 ON storage.objects FOR DELETE
 USING (
     bucket_id = 'blog-posts'
-    AND EXISTS (
-        SELECT 1 FROM public.dagger_masters
-        WHERE id = auth.uid() AND status = 'authorized'
+    AND (
+        EXISTS (
+            SELECT 1 FROM public.dagger_masters
+            WHERE id = auth.uid() AND status = 'authorized'
+        )
+        OR auth.uid() IN (SELECT id FROM public.admins)
     )
 );
 
@@ -183,9 +200,12 @@ CREATE POLICY "Authorized Update blog-posts"
 ON storage.objects FOR UPDATE
 USING (
     bucket_id = 'blog-posts'
-    AND EXISTS (
-        SELECT 1 FROM public.dagger_masters
-        WHERE id = auth.uid() AND status = 'authorized'
+    AND (
+        EXISTS (
+            SELECT 1 FROM public.dagger_masters
+            WHERE id = auth.uid() AND status = 'authorized'
+        )
+        OR auth.uid() IN (SELECT id FROM public.admins)
     )
 );
 

@@ -17,7 +17,9 @@ async function fetchPost() {
 
   return {
     ...data,
-    tags: (data.blog_posts_tags as any[] || []).map((t: any) => t.blog_tags)
+    tags: (data.blog_posts_tags || [])
+      .map(t => t.blog_tags)
+      .filter((tag): tag is BlogTag => tag !== null)
   } as BlogPost & { tags: BlogTag[] }
 }
 
@@ -32,6 +34,10 @@ if (postError.value || !postData.value) {
 }
 
 const post = computed(() => postData.value as BlogPost & { tags: BlogTag[] })
+
+const user = useSupabaseUser()
+const { isAdmin } = storeToRefs(useAdminStore())
+const canEdit = computed(() => isAdmin.value || post.value?.author_id === user.value?.sub)
 
 function renderMarkdown(content: string) {
   return content
@@ -54,16 +60,27 @@ function renderMarkdown(content: string) {
       v-if="post"
       class="animate-fade-in"
     >
-      <nav class="flex items-center gap-2 text-sm text-gray-500 mb-8">
-        <NuxtLink
-          to="/blog"
-          class="hover:text-primary-500 transition-colors"
-        >Blog</NuxtLink>
-        <UIcon
-          name="i-lucide-chevron-right"
-          class="w-4 h-4"
+      <nav class="flex items-center justify-between gap-2 text-sm text-gray-500 mb-8">
+        <div class="flex items-center gap-2 min-w-0">
+          <NuxtLink
+            to="/blog"
+            class="hover:text-primary-500 transition-colors"
+          >Blog</NuxtLink>
+          <UIcon
+            name="i-lucide-chevron-right"
+            class="w-4 h-4 shrink-0"
+          />
+          <span class="truncate">{{ post.title }}</span>
+        </div>
+        <UButton
+          v-if="canEdit"
+          label="Editar"
+          icon="i-lucide-pencil"
+          color="neutral"
+          variant="ghost"
+          class="cursor-pointer shrink-0"
+          :to="`/admin/blog/${post.slug}/edit`"
         />
-        <span>{{ post.title }}</span>
       </nav>
 
       <header class="mb-8">

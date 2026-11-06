@@ -36,7 +36,7 @@ export default defineNuxtConfig({
         // Manifiesto de aplicación web
         { rel: 'manifest', href: '/site.webmanifest' }
       ]
-    },
+    }
   },
 
   css: ['~/assets/css/main.css'],
@@ -54,7 +54,7 @@ export default defineNuxtConfig({
   routeRules: {
     '/': { prerender: true },
     // Set layout for specific route
-    '/admin/**': { appLayout: 'admin' },
+    '/admin/**': { appLayout: 'admin' }
   },
 
   compatibilityDate: '2026-06-30',
