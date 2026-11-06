@@ -68,16 +68,18 @@ Plataforma de gestión de sesiones de juego de rol (D&D y otros sistemas) con pa
 app/
 ├── components/
 │   ├── admin/          # Formularios y UI del panel
+│   ├── profile/        # Componentes reutilizables de perfil/avatar
 │   └── landing/        # Componentes de la página pública
 ├── composables/        # useMasterAvatar, useSessionImage
 ├── layouts/            # admin, default
 ├── pages/
-│   ├── admin/          # masters, sessions (nuevo/editar), index
+│   ├── admin/          # profile, masters, sessions (nuevo/editar), index
 │   ├── blog/           # Blog (índice, detalle, crear)
+│   ├── account.vue     # Perfil básico de jugador/usuario
 │   ├── index.vue       # Landing
 │   ├── login.vue
 │   └── confirm.vue     # Callback post-login
-├── stores/             # Pinia (admin, currentMaster, lookups)
+├── stores/             # Pinia (admin, currentProfile, lookups)
 └── types/              # Tipos de la base de datos y del dominio
 ```
 
