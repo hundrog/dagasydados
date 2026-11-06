@@ -26,8 +26,10 @@ jobs:
       # `migration up --linked`: así el workflow no necesita un personal access token de
       # la Management API, que era el paso que fallaba. Actualizar el host si el proyecto
       # cambia de región o de plan.
+      # `--remote=<url>` sustituye a `--db-url` (deprecado, se elimina en la CLI v4) y
+      # `--yes` evita el prompt de confirmación, imposible de responder en CI.
       - name: Apply migrations
         run: |
           DB_URL="postgresql://postgres.${PROJECT_ID}:$(jq -rn --arg p "$SUPABASE_DB_PASSWORD" '$p|@uri')@aws-1-us-west-2.pooler.supabase.com:5432/postgres"
           echo "Applying migrations to project ${PROJECT_ID}"
-          supabase db push --db-url "$DB_URL" --include-all
+          supabase db push --remote="$DB_URL" --include-all --yes
