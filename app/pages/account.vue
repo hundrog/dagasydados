@@ -48,7 +48,6 @@ watch(
     state.avatar_url = m.avatar_url ?? ''
     avatarFile.value = null
     avatarRemoved.value = false
-    phoneInput.value?.hydrateFromFull(m.phone ?? '')
   },
   { immediate: true }
 )
@@ -207,6 +206,7 @@ async function requestMaster() {
         <PhoneInput
           ref="phoneInput"
           v-model="state.phone"
+          :full-phone="profileStore.master?.phone ?? ''"
           name="phone"
           label="Teléfono"
         />
