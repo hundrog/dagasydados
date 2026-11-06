@@ -89,13 +89,13 @@ function renderMarkdown(content: string) {
             v-for="tag in post.tags"
             :key="tag.id"
             variant="soft"
-            color="primary"
-            size="xs"
+            color="secondary"
+            size="sm"
           >
             {{ tag.name }}
           </UBadge>
         </div>
-        <h1 class="text-4xl font-extrabold mb-4 leading-tight">
+        <h1 class="text-4xl font-extrabold mb-4 leading-tight text-primary-600">
           {{ post.title }}
         </h1>
         <div class="flex items-center gap-4 text-sm text-gray-500 mb-6">
@@ -120,7 +120,7 @@ function renderMarkdown(content: string) {
         >
       </div>
 
-      <article class="prose prose-lg dark:prose-invert max-w-none">
+      <article class="prose prose-lg dark:prose-invert max-w-none text-gray-300">
         <div v-html="renderMarkdown(post.content)" />
       </article>
     </div>

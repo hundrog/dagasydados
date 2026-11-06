@@ -3,13 +3,15 @@ export interface BlogPost {
   slug: string
   title: string
   content: string
-  excerpt?: string
-  thumbnail?: string
+  excerpt?: string | null
+  thumbnail?: string | null
   author_id: string
   status: 'draft' | 'published'
   created_at: string
   updated_at: string
 }
+
+export type BlogPostWithTags = BlogPost & { tags: BlogTag[] }
 
 export interface BlogAuthorRef {
   id: string

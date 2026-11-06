@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import { slugify } from '~/utils/url'
+import type { BlogPost, BlogPostWithTags, BlogTag } from '~/types/blog'
+import BlogPostForm from '~/components/admin/BlogPostForm.vue'
 
 const route = useRoute()
 const client = useSupabaseClient()
-const { uploadBlogImage } = useBlogImage()
 
 // Protección de ruta: solo usuarios autenticados pueden editar posts
 const { data: { user } } = await client.auth.getUser()
@@ -11,109 +11,33 @@ if (!user) {
   await navigateTo({ path: '/login', query: { redirect: route.fullPath } })
 }
 
-const form = ref({
-  title: '',
-  content: '',
-  excerpt: '',
-  thumbnail: '',
-  status: 'draft' as 'draft' | 'published',
-  tags: ''
-})
+const slug = String(route.params.slug)
+const post = ref<BlogPostWithTags | null>(null)
 
-const postId = ref<string | null>(null)
-const loading = ref(false)
-const error = ref('')
-const showCheatsheet = ref(false)
+const { data, error } = await client
+  .from('blog_posts')
+  .select('*, blog_posts_tags(blog_tags(name, id))')
+  .eq('slug', slug)
+  .single()
 
-const selectedFile = ref<File | null>(null)
-
-watch(selectedFile, (file) => {
-  if (file) uploadImage(file)
-})
-
-async function uploadImage(file: File) {
-  try {
-    form.value.thumbnail = await uploadBlogImage(file)
-  } catch (e: unknown) {
-    error.value = 'Error subiendo la imagen: ' + (e instanceof Error ? e.message : String(e))
-  }
+if (error || !data) {
+  throw createError({ statusCode: 404, statusMessage: 'Post no encontrado' })
 }
 
-async function loadPost() {
-  const slug = route.params.slug as string
-  const { data, error: loadError } = await client
-    .from('blog_posts')
-    .select('*, blog_posts_tags(blog_tags(name))')
-    .eq('slug', slug)
-    .single()
+const { blog_posts_tags: _blogPostsTags, ...postData } = data
 
-  if (loadError) throw loadError
-
-  postId.value = data.id
-  form.value = {
-    title: data.title,
-    content: data.content,
-    excerpt: data.excerpt || '',
-    thumbnail: data.thumbnail || '',
-    status: data.status,
-    tags: (data.blog_posts_tags ?? []).map(t => t.blog_tags?.name).filter(Boolean).join(', ')
-  }
+post.value = {
+  ...postData,
+  tags: (data.blog_posts_tags ?? [])
+    .map(t => t.blog_tags)
+    .filter((tag): tag is BlogTag => tag !== null)
 }
 
-async function savePost() {
-  loading.value = true
-  error.value = ''
+const goBack = () => navigateTo(`/blog/${slug}`)
 
-  try {
-    const slug = slugify(form.value.title)
-    if (!slug) throw new Error('Title is required')
-
-    const id = postId.value
-    if (!id) throw new Error('No se pudo identificar el post a editar')
-
-    const postData = {
-      slug,
-      title: form.value.title,
-      content: form.value.content,
-      excerpt: form.value.excerpt,
-      thumbnail: form.value.thumbnail,
-      status: form.value.status,
-      author_id: user!.id
-    }
-
-    const { data: post, error: updateError } = await client
-      .from('blog_posts')
-      .update(postData)
-      .eq('id', id)
-      .select()
-      .single()
-
-    if (updateError) throw updateError
-
-    // Replace tags: remove existing, then insert current ones
-    await client.from('blog_posts_tags').delete().eq('post_id', post.id)
-
-    const tagsArray = form.value.tags.split(',').map(t => t.trim().toLowerCase()).filter(Boolean)
-    for (const tagName of tagsArray) {
-      const { data: tagData } = await client
-        .from('blog_tags')
-        .upsert({ name: tagName }, { onConflict: 'name' })
-        .select()
-        .single()
-      if (tagData) {
-        await client.from('blog_posts_tags').insert({ post_id: post.id, tag_id: tagData.id })
-      }
-    }
-
-    navigateTo(`/blog/${post.slug}`)
-  } catch (e: unknown) {
-    error.value = e instanceof Error ? e.message : String(e)
-  } finally {
-    loading.value = false
-  }
+const onSaved = (saved: BlogPost) => {
+  navigateTo(`/blog/${saved.slug}`)
 }
-
-await loadPost()
 </script>
 
 <template>
@@ -133,152 +57,14 @@ await loadPost()
         color="neutral"
         variant="ghost"
         class="cursor-pointer"
-        @click="navigateTo(`/blog/${route.params.slug}`)"
+        @click="goBack"
       />
     </div>
 
-    <UForm
-      :state="form"
-      class="w-full space-y-8"
-      @submit="savePost"
-    >
-      <section class="space-y-4">
-        <h2 class="text-lg font-semibold text-primary-900">
-          Información básica
-        </h2>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <UFormField
-            label="Título"
-            name="title"
-            required
-          >
-            <UInput
-              v-model="form.title"
-              class="w-full"
-              placeholder="Título del post"
-            />
-          </UFormField>
-          <UFormField
-            label="Estado"
-            name="status"
-          >
-            <USelect
-              v-model="form.status"
-              :options="['draft', 'published']"
-              class="w-full"
-            />
-          </UFormField>
-          <UFormField
-            label="Resumen (Excerpt)"
-            name="excerpt"
-            class="md:col-span-2"
-          >
-            <UInput
-              v-model="form.excerpt"
-              class="w-full"
-              placeholder="Breve resumen para la tarjeta del feed"
-            />
-          </UFormField>
-          <UFormField
-            label="Tags (separados por coma)"
-            name="tags"
-            class="md:col-span-2"
-          >
-            <UInput
-              v-model="form.tags"
-              class="w-full"
-              placeholder="rpg, dnd, guia, lore"
-            />
-          </UFormField>
-        </div>
-      </section>
-
-      <section class="space-y-4">
-        <h2 class="text-lg font-semibold text-primary-900">
-          Imagen de portada
-        </h2>
-        <UFormField
-          label="Imagen de Portada"
-          name="thumbnail"
-        >
-          <div class="space-y-4">
-            <div
-              v-if="form.thumbnail"
-              class="relative w-full max-w-sm"
-            >
-              <img
-                :src="form.thumbnail"
-                alt="Vista previa de la portada"
-                class="w-full h-48 object-cover rounded-lg border border-slate-200"
-              >
-            </div>
-            <UFileUpload
-              v-model="selectedFile"
-              accept="image/*"
-              label="Subir imagen"
-              description="JPG, PNG o WebP · Máximo 5 MB"
-            />
-            <UInput
-              v-model="form.thumbnail"
-              readonly
-              class="w-full"
-              placeholder="URL de la imagen"
-            />
-          </div>
-        </UFormField>
-      </section>
-
-      <section class="space-y-4">
-        <h2 class="text-lg font-semibold text-primary-900">
-          Contenido
-        </h2>
-        <UFormField
-          name="content"
-          required
-        >
-          <template #label>
-            Contenido
-            <button
-              type="button"
-              class="ml-1 text-primary-600 underline underline-offset-2 hover:text-primary-700"
-              @click="showCheatsheet = true"
-            >
-              (Markdown)
-            </button>
-          </template>
-          <UTextarea
-            v-model="form.content"
-            class="w-full"
-            :rows="20"
-            placeholder="Escribe tu historia aquí usando Markdown..."
-          />
-        </UFormField>
-      </section>
-
-      <div
-        v-if="error"
-        class="p-4 bg-red-100 text-red-700 rounded-lg"
-      >
-        {{ error }}
-      </div>
-
-      <div class="flex justify-end gap-4">
-        <UButton
-          variant="ghost"
-          @click="navigateTo(`/blog/${route.params.slug}`)"
-        >
-          Cancelar
-        </UButton>
-        <UButton
-          type="submit"
-          :loading="loading"
-          color="primary"
-        >
-          Guardar Cambios
-        </UButton>
-      </div>
-    </UForm>
-
-    <MarkdownCheatsheet v-model:open="showCheatsheet" />
+    <BlogPostForm
+      :post="post"
+      @saved="onSaved"
+      @cancel="goBack"
+    />
   </div>
 </template>
