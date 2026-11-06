@@ -398,6 +398,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      blog_post_authors: {
+        Args: { p_author_ids: string[] }
+        Returns: {
+          id: string
+          user_name: string | null
+          full_name: string | null
+        }[]
+      }
       create_session_player: {
         Args: {
           p_game_session_id: string
