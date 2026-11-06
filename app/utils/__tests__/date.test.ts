@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { parseLocalDate } from '../date'
+import { formatDateEsUtc, parseLocalDate } from '../date'
 
 describe('parseLocalDate', () => {
   it('devuelve null para valores vacíos', () => {
@@ -36,5 +36,28 @@ describe('parseLocalDate', () => {
 
   it('devuelve null si recibe un objeto Date inválido', () => {
     expect(parseLocalDate(new Date('invalid'))).toBeNull()
+  })
+})
+
+describe('formatDateEsUtc', () => {
+  it('formatea en español usando UTC', () => {
+    expect(formatDateEsUtc('2026-11-06T05:30:00.000Z')).toBe('6 de noviembre de 2026')
+    expect(formatDateEsUtc('2026-01-01T00:00:00.000Z')).toBe('1 de enero de 2026')
+  })
+
+  it('usa el día UTC aunque en otra zona ya sea otro día', () => {
+    expect(formatDateEsUtc('2026-11-06T23:30:00.000Z')).toBe('6 de noviembre de 2026')
+  })
+
+  it('acepta objetos Date', () => {
+    expect(formatDateEsUtc(new Date('2026-08-31T12:00:00.000Z'))).toBe('31 de agosto de 2026')
+  })
+
+  it('devuelve cadena vacía para valores vacíos o inválidos', () => {
+    expect(formatDateEsUtc(null)).toBe('')
+    expect(formatDateEsUtc(undefined)).toBe('')
+    expect(formatDateEsUtc('')).toBe('')
+    expect(formatDateEsUtc('not-a-date')).toBe('')
+    expect(formatDateEsUtc(new Date('invalid'))).toBe('')
   })
 })

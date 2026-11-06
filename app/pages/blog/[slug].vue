@@ -30,7 +30,9 @@ async function fetchPost() {
     tags: (data.blog_posts_tags || [])
       .map(t => t.blog_tags)
       .filter((tag): tag is BlogTag => tag !== null),
-    author: authors?.[0] ?? null
+    author: authors?.[0] ?? null,
+    // Se calcula en el servidor y viaja en el payload: mismo texto al hidratar.
+    publishedAt: formatDateEsUtc(data.created_at)
   } as BlogPostDetail
 }
 
@@ -111,7 +113,7 @@ const canEdit = computed(() => isAdmin.value)
               name="i-lucide-calendar"
               class="w-4 h-4"
             />
-            {{ new Date(post.created_at).toLocaleDateString() }}
+            <time :datetime="post.created_at">{{ post.publishedAt }}</time>
           </span>
         </div>
       </header>

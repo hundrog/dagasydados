@@ -2,7 +2,24 @@
 import type { NavigationMenuItem } from '@nuxt/ui'
 
 const user = useSupabaseUser()
+const showIssueForm = ref(false)
 const issueForm = ref<{ open: () => void } | null>(null)
+
+// El formulario importa zod y el footer es global: si se renderiza siempre,
+// zod entra en el bundle inicial de todas las páginas (y su sonda de eval
+// dispara un aviso de CSP). Se monta recién al abrir el modal.
+function openIssueForm() {
+  if (issueForm.value) {
+    issueForm.value.open()
+    return
+  }
+
+  showIssueForm.value = true
+}
+
+watch(issueForm, (form) => {
+  if (form && showIssueForm.value) form.open()
+})
 
 const items: NavigationMenuItem[] = [
 //   {
@@ -50,7 +67,7 @@ const items: NavigationMenuItem[] = [
           color="neutral"
           variant="ghost"
           class="cursor-pointer"
-          @click="issueForm?.open()"
+          @click="openIssueForm"
         />
         <UButton
           block
@@ -65,5 +82,8 @@ const items: NavigationMenuItem[] = [
     </template>
   </UFooter>
 
-  <LandingIssueForm ref="issueForm" />
+  <LandingIssueForm
+    v-if="showIssueForm"
+    ref="issueForm"
+  />
 </template>
