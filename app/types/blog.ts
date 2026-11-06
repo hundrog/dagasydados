@@ -13,10 +13,6 @@ export interface BlogPost {
 
 export type BlogPostWithTags = BlogPost & { tags: BlogTag[] }
 
-export type BlogPostWithAuthor = BlogPost & { author: BlogAuthorRef | null }
-
-export type BlogPostDetail = BlogPostWithTags & { author: BlogAuthorRef | null }
-
 export interface BlogAuthorRef {
   id: string
   full_name: string | null
