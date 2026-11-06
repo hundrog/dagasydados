@@ -9,6 +9,7 @@ const { isAdmin } = storeToRefs(useAdminStore())
 const user = useSupabaseUser()
 const currentMasterStore = useCurrentProfileStore()
 const { master } = storeToRefs(currentMasterStore)
+const { isMaster } = storeToRefs(currentMasterStore)
 const colorMode = useColorMode()
 
 const isMobile = useMediaQuery('(max-width: 1023px)')
@@ -132,7 +133,11 @@ const items = computed<NavigationMenuItem[]>(() => {
     return [mastersItem(), gameSessionsItem(), eventsItem(), blogItem()]
   }
 
-  return [profileItem(), gameSessionsItem()]
+  if (isMaster.value) {
+    return [profileItem(), gameSessionsItem()]
+  }
+
+  return []
 })
 
 const userItems = computed<DropdownMenuItem[][]>(() => [

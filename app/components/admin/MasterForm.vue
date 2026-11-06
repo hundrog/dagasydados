@@ -180,7 +180,7 @@ async function submitMaster() {
 
   const { data, error } = await supabase
     .from('dagger_masters')
-    .insert(payload)
+    .insert({ ...payload, status: 'authorized' })
     .select('id,full_name,user_name,phone,avatar_url,status')
     .single()
 

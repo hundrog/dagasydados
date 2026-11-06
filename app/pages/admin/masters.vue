@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { h, onMounted, ref } from 'vue'
+import { computed, h, onMounted, ref } from 'vue'
 import type { TableColumn } from '@nuxt/ui'
 import { useClipboard } from '@vueuse/core'
 import type { Row } from '@tanstack/vue-table'
@@ -28,6 +28,19 @@ const masterStatusMeta: Record<MasterStatus, { label: string, description: strin
 const masters = ref<Master[]>([])
 const isLoading = ref(true)
 const errorMessage = ref<string | null>(null)
+
+const activeTab = ref<'masters' | 'requests' | 'players'>('masters')
+
+const filteredMasters = computed(() => {
+  switch (activeTab.value) {
+    case 'masters':
+      return masters.value.filter(m => m.status === 'authorized')
+    case 'requests':
+      return masters.value.filter(m => m.status === 'pending')
+    default:
+      return masters.value.filter(m => m.status === 'created' || m.status === 'rejected')
+  }
+})
 const masterFormRef = ref<InstanceType<typeof MasterForm> | null>(null)
 const pendingDelete = ref<Master | null>(null)
 const isDeleteOpen = computed({
@@ -287,7 +300,15 @@ function getRowItems(row: Row<Master>) {
 </script>
 
 <template>
-  <div class="flex-1 mt-12">
+  <div class="flex-1 mt-12 space-y-6">
+    <h1 class="text-2xl font-bold text-primary-900">Usuarios</h1>
+
+    <div class="flex gap-2">
+      <UButton label="Masters" :variant="activeTab === 'masters' ? 'solid' : 'ghost'" class="cursor-pointer" @click="activeTab = 'masters'" />
+      <UButton label="Solicitudes" :variant="activeTab === 'requests' ? 'solid' : 'ghost'" class="cursor-pointer" @click="activeTab = 'requests'" />
+      <UButton label="Jugadores" :variant="activeTab === 'players' ? 'solid' : 'ghost'" class="cursor-pointer" @click="activeTab = 'players'" />
+    </div>
+
     <div class="flex justify-end my-8">
       <AdminMasterForm
         ref="masterFormRef"
@@ -309,7 +330,7 @@ function getRowItems(row: Row<Master>) {
     </div>
     <UTable
       v-else
-      :data="masters"
+      :data="filteredMasters"
       :columns="columns"
       class="flex-1"
     />
