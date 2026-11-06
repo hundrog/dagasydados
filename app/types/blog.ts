@@ -15,7 +15,10 @@ export type BlogPostWithTags = BlogPost & { tags: BlogTag[] }
 
 export type BlogPostWithAuthor = BlogPost & { author: BlogAuthorRef | null }
 
-export type BlogPostDetail = BlogPostWithTags & { author: BlogAuthorRef | null }
+export type BlogPostDetail = BlogPostWithTags & {
+  author: BlogAuthorRef | null
+  publishedAt: string
+}
 
 export interface BlogAuthorRef {
   id: string
