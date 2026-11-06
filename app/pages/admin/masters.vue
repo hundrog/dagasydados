@@ -284,7 +284,7 @@ function getRowItems(row: Row<Master>) {
       label: 'Editar perfil',
       disabled: !canModify(row.original),
       onSelect() {
-        navigateTo(`/admin/profile/${row.original.id}/edit`)
+        navigateTo('/admin/profile')
       }
     },
     {

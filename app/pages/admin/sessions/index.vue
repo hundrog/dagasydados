@@ -381,7 +381,7 @@ const pagination = ref({
               label="Ir a mi perfil"
               icon="i-lucide-user"
               class="cursor-pointer"
-              :to="`/admin/profile/${user?.sub}/edit`"
+              :to="'/admin/profile'"
             />
           </div>
         </template>

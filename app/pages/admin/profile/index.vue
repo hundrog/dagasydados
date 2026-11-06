@@ -11,7 +11,6 @@ type PhoneCode = {
   mask: string
 }
 
-const route = useRoute()
 const supabase = useSupabaseClient()
 const toast = useToast()
 const adminStore = useAdminStore()
@@ -19,7 +18,7 @@ const { isAdmin } = storeToRefs(adminStore)
 const user = useSupabaseUser()
 const { uploadMasterAvatar, deleteMasterAvatarByUrl } = useMasterAvatar()
 
-const masterId = computed(() => String(route.params.id))
+const masterId = computed(() => String(user.value?.sub ?? ''))
 
 const masterName = ref<string | null>(null)
 const masterStatus = ref<MasterStatus | null>(null)

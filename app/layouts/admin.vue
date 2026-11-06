@@ -117,7 +117,7 @@ const mastersItem = (): NavigationMenuItem => ({
 const profileItem = (): NavigationMenuItem => ({
   label: 'Perfil',
   icon: 'i-lucide-user',
-  to: `/admin/profile/${user.value?.sub}/edit`,
+  to: '/admin/profile',
   active: isProfileEdit.value,
   defaultOpen: isProfileEdit.value,
   children: isProfileEdit.value
@@ -145,7 +145,7 @@ const userItems = computed<DropdownMenuItem[][]>(() => [
     {
       label: 'Profile',
       icon: 'i-lucide-user',
-      to: `/admin/profile/${user.value?.sub}/edit`
+      to: '/admin/profile'
     }
   ],
   [

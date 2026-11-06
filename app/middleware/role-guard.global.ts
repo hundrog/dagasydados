@@ -13,6 +13,6 @@ export default defineNuxtRouteMiddleware(async (to) => {
   const isMaster = profile?.role === 'master' || profile?.status === 'authorized'
 
   if (!isMaster && !profileStore.isLoading) {
-    return navigateTo('/cuenta')
+    return navigateTo('/account')
   }
 })

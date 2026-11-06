@@ -14,8 +14,8 @@ const accountLabel = computed(() => {
 const accountTo = computed(() => {
   if (!user.value) return '/login'
   const role = currentProfileStore.master?.role
-  if (role === 'master') return `/admin/profile/${user.value.sub}/edit`
-  return '/cuenta'
+  if (role === 'master') return `/admin/profile`
+  return '/account'
 })
 
 const items = computed<NavigationMenuItem[]>(() => [
