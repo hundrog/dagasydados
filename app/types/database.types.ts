@@ -399,11 +399,129 @@ export type Database = {
           }
         ]
       }
+      blog_likes: {
+        Row: {
+          created_at: string
+          id: string
+          post_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          post_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          post_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'blog_likes_post_id_fkey'
+            columns: ['post_id']
+            isOneToOne: false
+            referencedRelation: 'blog_posts'
+            referencedColumns: ['id']
+          }
+        ]
+      }
+      blog_comments: {
+        Row: {
+          content: string
+          created_at: string
+          depth: number
+          id: string
+          parent_id: string | null
+          post_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          depth?: number
+          id?: string
+          parent_id?: string | null
+          post_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          depth?: number
+          id?: string
+          parent_id?: string | null
+          post_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'blog_comments_parent_fkey'
+            columns: ['post_id', 'parent_id']
+            isOneToOne: false
+            referencedRelation: 'blog_comments'
+            referencedColumns: ['post_id', 'id']
+          },
+          {
+            foreignKeyName: 'blog_comments_post_id_fkey'
+            columns: ['post_id']
+            isOneToOne: false
+            referencedRelation: 'blog_posts'
+            referencedColumns: ['id']
+          }
+        ]
+      }
+      blog_comment_history: {
+        Row: {
+          changed_at: string
+          changed_by: string | null
+          comment_id: string
+          id: number
+          old_content: string
+        }
+        Insert: {
+          changed_at?: string
+          changed_by?: string | null
+          comment_id: string
+          id?: never
+          old_content: string
+        }
+        Update: {
+          changed_at?: string
+          changed_by?: string | null
+          comment_id?: string
+          id?: never
+          old_content?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'blog_comment_history_comment_id_fkey'
+            columns: ['comment_id']
+            isOneToOne: false
+            referencedRelation: 'blog_comments'
+            referencedColumns: ['id']
+          }
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
+      blog_comment_authors: {
+        Args: { p_user_ids: string[] }
+        Returns: {
+          id: string
+          user_name: string | null
+          full_name: string | null
+          avatar_url: string | null
+        }[]
+      }
       blog_post_authors: {
         Args: { p_author_ids: string[] }
         Returns: {
