@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { renderMarkdown } from '../markdown'
+import { markdownToPlainText, renderMarkdown } from '../markdown'
 
 describe('renderMarkdown', () => {
   it('renderiza títulos de h1 a h6', () => {
@@ -143,6 +143,32 @@ describe('renderMarkdown', () => {
       expect(html).toContain('<strong>texto</strong>')
       expect(html).not.toContain('<iframe')
       expect(html).toContain('&lt;iframe')
+    })
+  })
+
+  describe('markdownToPlainText', () => {
+    it('quita encabezados, énfasis y enlaces', () => {
+      const text = markdownToPlainText('## Título\n\n**Texto** con [un enlace](/blog).')
+
+      expect(text).toBe('Título Texto con un enlace.')
+    })
+
+    it('convierte bloques y saltos en espacios', () => {
+      const text = markdownToPlainText('Línea uno\n\nLínea dos\n\n* item uno\n* item dos')
+
+      expect(text).toBe('Línea uno Línea dos item uno item dos')
+    })
+
+    it('no deja etiquetas ni entidades HTML', () => {
+      const text = markdownToPlainText('<script>alert(1)</script> & texto')
+
+      expect(text).not.toContain('<')
+      expect(text).not.toContain('>')
+      expect(text).toContain('& texto')
+    })
+
+    it('devuelve cadena vacía sin contenido', () => {
+      expect(markdownToPlainText('')).toBe('')
     })
   })
 })

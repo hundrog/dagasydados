@@ -21,6 +21,7 @@ logs
 #temp
 *.tmp
 supabase/.temp
+temp
 
 # Local env files
 .env

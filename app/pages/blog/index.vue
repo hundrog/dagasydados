@@ -1,5 +1,11 @@
 <script setup lang="ts">
-import type { BlogAuthorRef, BlogPostWithAuthor, BlogTag } from '~/types/blog'
+import type { BlogAuthorRef, BlogPost, BlogPostWithAuthor, BlogTag } from '~/types/blog'
+
+type BlogPostFeedRow = BlogPost & {
+  blog_posts_tags: { blog_tags: BlogTag | null }[]
+  blog_likes: { count: number }[]
+  blog_comments: { count: number }[]
+}
 
 const client = useSupabaseClient()
 const adminStore = useAdminStore()
@@ -15,13 +21,13 @@ const { data: postsData, pending } = await useAsyncData<{ post: BlogPostWithAuth
   async () => {
     const { data, error } = await client
       .from('blog_posts')
-      .select('*, blog_posts_tags(blog_tags(name, id))')
+      .select('*, blog_posts_tags(blog_tags(name, id)), blog_likes(count), blog_comments(count)')
       .eq('status', 'published')
       .order('created_at', { ascending: false })
 
     if (error) throw error
 
-    const rows = data || []
+    const rows = (data || []) as unknown as BlogPostFeedRow[]
     const authorIds = [...new Set(rows.map(row => row.author_id))]
     const authors = new Map<string, BlogAuthorRef>()
 
@@ -45,9 +51,19 @@ const { data: postsData, pending } = await useAsyncData<{ post: BlogPostWithAuth
       const postTags = (p.blog_posts_tags || [])
         .map(t => t.blog_tags)
         .filter((tag): tag is BlogTag => tag !== null)
-      const { blog_posts_tags: _blogPostsTags, ...post } = p
+      const {
+        blog_posts_tags: _blogPostsTags,
+        blog_likes: likesAggregate,
+        blog_comments: commentsAggregate,
+        ...post
+      } = p
       return {
-        post: { ...post, author: authors.get(p.author_id) ?? null } as BlogPostWithAuthor,
+        post: {
+          ...post,
+          like_count: likesAggregate?.[0]?.count ?? 0,
+          comment_count: commentsAggregate?.[0]?.count ?? 0,
+          author: authors.get(p.author_id) ?? null
+        } as BlogPostWithAuthor,
         tags: postTags
       }
     })
@@ -190,7 +206,7 @@ const allTags = computed(() => {
         </div>
 
         <template #footer>
-          <div class="flex justify-between items-center text-xs text-gray-500">
+          <div class="flex justify-between items-center gap-3 text-xs text-gray-500">
             <span class="flex items-center gap-1 min-w-0">
               <UIcon
                 name="i-lucide-user"
@@ -198,7 +214,27 @@ const allTags = computed(() => {
               />
               <span class="truncate">Por {{ item.post.author?.user_name || item.post.author?.full_name || 'Anónimo' }}</span>
             </span>
-            <span class="flex items-center gap-1">
+            <span class="flex items-center gap-3 shrink-0">
+              <span
+                class="flex items-center gap-1"
+                :aria-label="`${item.post.like_count} me gusta`"
+              >
+                <UIcon
+                  name="i-lucide-heart"
+                  class="w-3.5 h-3.5"
+                />
+                {{ item.post.like_count }}
+              </span>
+              <span
+                class="flex items-center gap-1"
+                :aria-label="`${item.post.comment_count} comentarios`"
+              >
+                <UIcon
+                  name="i-lucide-message-circle"
+                  class="w-3.5 h-3.5"
+                />
+                {{ item.post.comment_count }}
+              </span>
               <UIcon name="i-lucide-arrow-right" />
             </span>
           </div>
