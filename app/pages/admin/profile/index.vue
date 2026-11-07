@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import * as z from 'zod'
-import { vMaska } from 'maska/vue'
+import { formatFullPhoneNumber } from '~/utils/phone'
 import type { Master, MasterProfile, MasterStatus } from '~/types/master'
 
 type PhoneCode = {
@@ -11,7 +11,6 @@ type PhoneCode = {
   mask: string
 }
 
-const route = useRoute()
 const supabase = useSupabaseClient()
 const toast = useToast()
 const adminStore = useAdminStore()
@@ -19,7 +18,7 @@ const { isAdmin } = storeToRefs(adminStore)
 const user = useSupabaseUser()
 const { uploadMasterAvatar, deleteMasterAvatarByUrl } = useMasterAvatar()
 
-const masterId = computed(() => String(route.params.id))
+const masterId = computed(() => String(user.value?.sub ?? ''))
 
 const masterName = ref<string | null>(null)
 const masterStatus = ref<MasterStatus | null>(null)
@@ -189,40 +188,9 @@ const buildProfile = (): MasterProfile => ({
   }
 })
 
-const avatarPreview = computed(() => {
-  if (avatarFile.value) return URL.createObjectURL(avatarFile.value)
-  if (state.avatar_url) return state.avatar_url
-  return null
-})
-
-const onAvatarChange = () => {
-  if (avatarFile.value && avatarFile.value.size > 1 * 1024 * 1024) {
-    toast.add({
-      title: 'La imagen supera el tamaño máximo de 1 MB',
-      color: 'error',
-      icon: 'i-lucide-octagon-x'
-    })
-    avatarFile.value = null
-    return
-  }
-  if (avatarFile.value) {
-    avatarRemoved.value = false
-  }
-}
-
-const clearAvatar = () => {
-  avatarFile.value = null
-  state.avatar_url = ''
-  avatarRemoved.value = true
-}
-
 const stripCountryCode = (digits: string, dialCode: string) => {
   const d = dialCode.replace(/\D/g, '')
   return d && digits.length > d.length && digits.startsWith(d) ? digits.slice(d.length) : digits
-}
-
-const withMobilePrefix = (country: PhoneCode | undefined, digits: string) => {
-  return country?.code === 'MX' ? `1${digits}` : digits
 }
 
 const applyProfile = (profile: MasterProfile) => {
@@ -316,7 +284,7 @@ async function submitProfile() {
     }
   }
 
-  const phone = (state.phone?.replace(/\D/g, '') && `${dialCode.value.replace(/\D/g, '')}${withMobilePrefix(country.value, state.phone.replace(/\D/g, ''))}`) || null
+  const phone = formatFullPhoneNumber(country.value, state.phone ?? '')
 
   const payload = {
     full_name: state.full_name.trim() || null,
@@ -557,36 +525,15 @@ watch(countryCode, () => {
               name="avatar_url"
               class="md:col-span-2"
             >
-              <div class="space-y-4">
-                <div
-                  v-if="avatarPreview"
-                  class="relative w-fit"
-                >
-                  <img
-                    :src="avatarPreview"
-                    alt="Vista previa del avatar"
-                    class="size-24 rounded-full object-cover border border-slate-200"
-                  >
-                  <UButton
-                    icon="i-lucide-x"
-                    color="neutral"
-                    variant="ghost"
-                    size="sm"
-                    class="absolute -top-2 -right-2 cursor-pointer rounded-full"
-                    aria-label="Quitar avatar"
-                    :disabled="isSubmitting"
-                    @click="clearAvatar"
-                  />
-                </div>
-                <UFileUpload
-                  v-model="avatarFile"
-                  accept="image/*"
-                  :disabled="isSubmitting"
-                  label="Subir avatar"
-                  description="JPG, PNG o WebP · Máximo 5 MB"
-                  @change="onAvatarChange"
-                />
-              </div>
+              <ProfileAvatarUpload
+                v-model="avatarFile"
+                :avatar-url="state.avatar_url"
+                :removed="avatarRemoved"
+                :disabled="isSubmitting"
+                :max-size-m-b="1"
+                @update:removed="avatarRemoved = $event"
+                @invalid="errorMessage = $event"
+              />
             </UFormField>
             <UFormField
               label="Plataforma de pago"

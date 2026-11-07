@@ -7,8 +7,9 @@ const toast = useToast()
 const route = useRoute()
 const { isAdmin } = storeToRefs(useAdminStore())
 const user = useSupabaseUser()
-const currentMasterStore = useCurrentMasterStore()
+const currentMasterStore = useCurrentProfileStore()
 const { master } = storeToRefs(currentMasterStore)
+const { isMaster } = storeToRefs(currentMasterStore)
 const colorMode = useColorMode()
 
 const isMobile = useMediaQuery('(max-width: 1023px)')
@@ -116,7 +117,7 @@ const mastersItem = (): NavigationMenuItem => ({
 const profileItem = (): NavigationMenuItem => ({
   label: 'Perfil',
   icon: 'i-lucide-user',
-  to: `/admin/profile/${user.value?.sub}/edit`,
+  to: '/admin/profile',
   active: isProfileEdit.value,
   defaultOpen: isProfileEdit.value,
   children: isProfileEdit.value
@@ -132,7 +133,11 @@ const items = computed<NavigationMenuItem[]>(() => {
     return [mastersItem(), gameSessionsItem(), eventsItem(), blogItem()]
   }
 
-  return [profileItem(), gameSessionsItem()]
+  if (isMaster.value) {
+    return [profileItem(), gameSessionsItem()]
+  }
+
+  return []
 })
 
 const userItems = computed<DropdownMenuItem[][]>(() => [
@@ -140,7 +145,7 @@ const userItems = computed<DropdownMenuItem[][]>(() => [
     {
       label: 'Profile',
       icon: 'i-lucide-user',
-      to: `/admin/profile/${user.value?.sub}/edit`
+      to: '/admin/profile'
     }
   ],
   [

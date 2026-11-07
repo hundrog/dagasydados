@@ -43,6 +43,15 @@ En ejecución manual los checks validan el working tree; sólo cuando el hook lo
 `git push` se guardan los cambios sin comitear en un stash temporal para validar únicamente el
 código comiteado (y se restauran al terminar). `SKIP_STASH=1 git push` desactiva ese stash.
 
+## Roles y perfiles (AUTH-1000)
+
+- Todo usuario autenticado queda en `dagger_masters` con `status='created'`, por lo que `role` derivado resulta `player`.
+- `role` está generado desde `status`: `authorized -> master`, resto -> `player`.
+- Admins se detectan por tabla `admins`; son masters autorizados.
+- `/account` edita identidad básica; `/admin/profile` edita el dossier de master.
+- `useCurrentMasterStore` fue renombrado a `useCurrentProfileStore`.
+- La solicitud master usa `request_master_authorization()` (`created -> pending`); solo admins pueden autorizar/rechazar.
+
 ## Dependencias
 
 ### h3 y el hoisting de pnpm

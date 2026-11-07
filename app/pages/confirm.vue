@@ -1,13 +1,18 @@
 <script setup lang="ts">
 const user = useSupabaseUser()
 const redirectInfo = useSupabaseCookieRedirect()
+const profileStore = useCurrentProfileStore()
 
-watch(user, () => {
+watch(user, async () => {
   if (user.value) {
-    // Get redirect path, and clear it from the cookie
     const path = redirectInfo.pluck()
-    // Redirect to the saved path, or fallback to home
-    return navigateTo(path || `/admin/profile/${user.value.sub}/edit`, { replace: true })
+    if (path) {
+      return navigateTo(path, { replace: true })
+    }
+
+    await profileStore.refresh()
+    const destination = profileStore.master?.role === 'master' ? '/admin/profile' : '/account'
+    return navigateTo(destination, { replace: true })
   } else {
     console.log('User is not logged in, redirecting to login page...')
     return navigateTo('/login', { replace: true })

@@ -9,8 +9,10 @@ Plataforma de gestión de sesiones de juego de rol (D&D y otros sistemas) con pa
 - **Gestión de masters** (`/admin/masters`): alta, edición y borrado.
 - **Gestión de sesiones** (`/admin/sessions`): crear y editar sesiones con recurrencia (RRULE), imagen, modalidad, ubicación y más.
 - **Roles y permisos**:
-  - **Admin**: control total sobre masters y sesiones, y ve todos los masters al asignar una sesión.
-  - **Master (owner)**: puede editar/borrar solo sus propios registros (su perfil y sus sesiones) y solo se ve a sí mismo al crear/editar sesiones.
+  - Un usuario autenticado nuevo entra como **Player**.
+  - **Master**: usuario con `dagger_masters.status = authorized`; puede crear/editar sus sesiones.
+  - **Admin**: su `id` existe en `admins`; tiene control total y ve todos los masters.
+  - Player solicita autorización desde `/cuenta`; admin aprueba/rechaza desde `/admin/masters` (Usuarios).
 
 ## Stack
 
@@ -66,16 +68,18 @@ Plataforma de gestión de sesiones de juego de rol (D&D y otros sistemas) con pa
 app/
 ├── components/
 │   ├── admin/          # Formularios y UI del panel
+│   ├── profile/        # Componentes reutilizables de perfil/avatar
 │   └── landing/        # Componentes de la página pública
 ├── composables/        # useMasterAvatar, useSessionImage
 ├── layouts/            # admin, default
 ├── pages/
-│   ├── admin/          # masters, sessions (nuevo/editar), index
+│   ├── admin/          # profile, masters, sessions (nuevo/editar), index
 │   ├── blog/           # Blog (índice, detalle, crear)
+│   ├── account.vue     # Perfil básico de jugador/usuario
 │   ├── index.vue       # Landing
 │   ├── login.vue
 │   └── confirm.vue     # Callback post-login
-├── stores/             # Pinia (admin, currentMaster, lookups)
+├── stores/             # Pinia (admin, currentProfile, lookups)
 └── types/              # Tipos de la base de datos y del dominio
 ```
 

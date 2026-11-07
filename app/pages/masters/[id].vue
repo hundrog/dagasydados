@@ -158,7 +158,7 @@ const goBack = () => {
           color="neutral"
           variant="ghost"
           class="cursor-pointer mb-6"
-          :to="`/admin/profile/${master.id}/edit`"
+          :to="'/admin/profile'"
         />
       </div>
 
