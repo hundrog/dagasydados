@@ -158,6 +158,49 @@ const description = computed(() => {
   return truncateText(excerpt || markdownToPlainText(post.value.content), 160)
 })
 
+async function copyPostLink(): Promise<void> {
+  try {
+    if (typeof navigator === 'undefined' || !navigator.clipboard?.writeText) {
+      throw new Error('El portapapeles no está disponible')
+    }
+
+    await navigator.clipboard.writeText(postUrl.value)
+    toast.add({
+      title: 'Enlace copiado',
+      description: 'Pégalo donde quieras compartirlo.',
+      color: 'success'
+    })
+  } catch {
+    toast.add({
+      title: 'No se pudo copiar el enlace',
+      description: postUrl.value,
+      color: 'error'
+    })
+  }
+}
+
+async function sharePost(): Promise<void> {
+  const shareData = {
+    title: post.value.title,
+    text: description.value,
+    url: postUrl.value
+  }
+
+  // Web Share API: en móvil abre el menú nativo del sistema.
+  if (typeof navigator !== 'undefined' && typeof navigator.share === 'function') {
+    try {
+      await navigator.share(shareData)
+      return
+    } catch (error) {
+      // Si el usuario cancela el diálogo nativo, no copiamos el enlace.
+      if (error instanceof DOMException && error.name === 'AbortError') return
+    }
+  }
+
+  // Fallback para escritorio o navegadores sin Web Share.
+  await copyPostLink()
+}
+
 useSeoMeta({
   title: () => `${post.value.title} | Dagas y Dados`,
   description: () => description.value,
@@ -280,6 +323,14 @@ useHead(() => ({
         >
           Inicia sesión para interactuar
         </NuxtLink>
+        <UButton
+          icon="i-lucide-share-2"
+          label="Compartir"
+          color="neutral"
+          variant="outline"
+          class="cursor-pointer sm:ml-auto"
+          @click="sharePost"
+        />
       </div>
       <p
         v-if="likesError"
