@@ -21,10 +21,8 @@ const available = await (async () => {
 
 describe.skipIf(!available)('interacciones del blog (integración)', () => {
   const stamp = Date.now()
-  const service = createClient(SUPABASE_URL as string, SUPABASE_SERVICE_KEY as string, {
-    auth: { autoRefreshToken: false, persistSession: false }
-  })
 
+  let service!: SupabaseClient
   let userA: { id: string, email: string }
   let userB: { id: string, email: string }
   let clientA: SupabaseClient
@@ -62,6 +60,10 @@ describe.skipIf(!available)('interacciones del blog (integración)', () => {
   }
 
   beforeAll(async () => {
+    service = createClient(SUPABASE_URL as string, SUPABASE_SERVICE_KEY as string, {
+      auth: { autoRefreshToken: false, persistSession: false }
+    })
+
     anon = createClient(SUPABASE_URL as string, SUPABASE_PUBLISHABLE_KEY as string, {
       auth: { autoRefreshToken: false, persistSession: false }
     })
@@ -103,6 +105,8 @@ describe.skipIf(!available)('interacciones del blog (integración)', () => {
   })
 
   afterAll(async () => {
+    if (!service || !userA || !userB || !post1 || !post2) return
+
     await service.from('admins').delete().eq('id', userA.id)
     await service.from('blog_posts').delete().in('id', [post1.id, post2.id])
     await service.from('dagger_masters').delete().in('id', [userA.id, userB.id])
