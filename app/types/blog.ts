@@ -46,3 +46,44 @@ export interface BlogPostTag {
   post_id: string
   tag_id: number
 }
+
+export interface BlogLike {
+  id: string
+  post_id: string
+  user_id: string
+  created_at: string
+}
+
+export interface BlogCommentAuthorRef extends BlogAuthorRef {
+  avatar_url: string | null
+}
+
+export interface BlogComment {
+  id: string
+  post_id: string
+  user_id: string
+  parent_id: string | null
+  content: string
+  depth: number
+  created_at: string
+  updated_at: string
+  author: BlogCommentAuthorRef | null
+  replies: BlogComment[]
+  isOptimistic?: boolean
+}
+
+export interface BlogCommentHistoryEntry {
+  id: number
+  comment_id: string
+  old_content: string
+  changed_by: string | null
+  changed_at: string
+}
+
+export interface BlogCommentLikeCount {
+  count: number
+  liked: boolean
+}
+
+export const BLOG_COMMENT_MAX_LENGTH = 5000
+export const BLOG_COMMENT_MAX_DEPTH = 5
