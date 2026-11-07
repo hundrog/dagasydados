@@ -35,6 +35,34 @@ export function generateShortCode(length = 6): string {
 
 export const SLUG_MAX_LENGTH = 80
 
+const REDIRECT_DENYLIST = ['/login', '/confirm']
+
+/**
+ * Valida una ruta interna para usarla como destino después del login.
+ * Rechaza URLs absolutas, protocol-relative (`//evil.com`) y las propias
+ * pantallas de autenticación para evitar bucles.
+ */
+export function safeRedirectPath(value: unknown): string | null {
+  if (typeof value !== 'string') return null
+
+  const path = value.trim()
+  if (!path.startsWith('/') || path.startsWith('//')) return null
+
+  // Decodifica una vez para detectar variantes como /%5Cevil o %2F%2Fevil.
+  let decoded: string
+  try {
+    decoded = decodeURIComponent(path)
+  } catch {
+    return null
+  }
+  if (decoded.startsWith('//') || decoded.includes('\\')) return null
+
+  const pathname = (decoded.split(/[?#]/)[0] ?? '').replace(/\/+$/, '') || '/'
+  if (REDIRECT_DENYLIST.includes(pathname)) return null
+
+  return path
+}
+
 export function ensureUniqueSlug(base: string, taken: string[]): string {
   if (!taken.includes(base)) return base
 
