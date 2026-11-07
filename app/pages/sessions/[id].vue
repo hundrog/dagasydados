@@ -67,6 +67,12 @@ const loadSession = async () => {
   isLoading.value = false
 }
 
+const handlePlayerReserved = () => {
+  if (session.value && session.value.player_count !== null && session.value.player_count !== undefined) {
+    session.value.player_count++
+  }
+}
+
 onMounted(() => {
   loadSession()
 })
@@ -338,6 +344,7 @@ const goBack = () => {
             :master-name="session.master?.user_name || ''"
             :session-type="session.session_type ?? undefined"
             :session-title="session.title"
+            @reserved="handlePlayerReserved"
           />
         </div>
 

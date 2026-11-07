@@ -11,6 +11,10 @@ const props = defineProps<{
   currentPlayers?: number
 }>()
 
+const emit = defineEmits<{
+  (e: 'reserved'): void
+}>()
+
 const toast = useToast()
 const isOpen = ref(false)
 const isLoading = ref(false)
@@ -109,6 +113,8 @@ async function handleReserve() {
   if (import.meta.client) {
     window.open(wame.value, '_blank', 'noopener,noreferrer')
   }
+
+  emit('reserved')
 
   isOpen.value = false
   state.name = ''
