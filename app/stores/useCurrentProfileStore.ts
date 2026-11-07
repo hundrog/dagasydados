@@ -7,6 +7,7 @@ export const useCurrentProfileStore = defineStore('currentProfile', () => {
   const master = ref<{ id: string, full_name: string | null, user_name: string | null, avatar_url: string | null, phone: string | null, status: MasterStatus, role: ProfileRole } | null>(null)
   const isLoading = ref(false)
   let pendingPromise: Promise<void> | null = null
+  let lastRefreshedUserId: string | null = null
 
   const refresh = (): Promise<void> => {
     if (pendingPromise) return pendingPromise
@@ -14,6 +15,11 @@ export const useCurrentProfileStore = defineStore('currentProfile', () => {
     const userId = user.value?.sub
     if (!userId) {
       master.value = null
+      lastRefreshedUserId = null
+      return Promise.resolve()
+    }
+
+    if (userId === lastRefreshedUserId && master.value) {
       return Promise.resolve()
     }
 
@@ -33,6 +39,7 @@ export const useCurrentProfileStore = defineStore('currentProfile', () => {
               ...row,
               role: (row.role ?? (row.status === 'authorized' ? 'master' : 'player')) as ProfileRole
             }
+        if (master.value) lastRefreshedUserId = userId
       } finally {
         isLoading.value = false
         pendingPromise = null

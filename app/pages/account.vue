@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import * as z from 'zod'
+import { formatFullPhoneNumber } from '~/utils/phone'
 import type { PhoneInputExpose } from '~/types/phone'
 
 const supabase = useSupabaseClient()
@@ -75,7 +76,7 @@ async function saveIdentity() {
   const payload = {
     full_name: state.full_name?.trim() || null,
     user_name: state.user_name?.trim() || null,
-    phone: phoneInput.value?.fullNumber || null,
+    phone: phoneInput.value ? formatFullPhoneNumber(undefined, phoneInput.value.fullNumber) : null,
     avatar_url: avatarFile.value ? uploadedUrl : (avatarRemoved.value ? null : (state.avatar_url?.trim() || null))
   }
 
@@ -101,7 +102,13 @@ async function saveIdentity() {
     return
   }
 
-  await cleanupPreviousAvatar()
+  // Solo limpiamos el avatar anterior SI la actualización de la DB fue exitosa
+  try {
+    await cleanupPreviousAvatar()
+  } catch (cleanupError) {
+    console.error('Error cleaning up previous avatar:', cleanupError)
+    // No bloqueamos la respuesta al usuario si solo falló el borrado del archivo viejo
+  }
 
   const { data: refreshed, error: selectError } = await supabase
     .from('dagger_masters')

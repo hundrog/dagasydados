@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import * as z from 'zod'
-import { vMaska } from 'maska/vue'
+import { formatFullPhoneNumber } from '~/utils/phone'
 import type { Master, MasterProfile, MasterStatus } from '~/types/master'
 
 type PhoneCode = {
@@ -193,10 +193,6 @@ const stripCountryCode = (digits: string, dialCode: string) => {
   return d && digits.length > d.length && digits.startsWith(d) ? digits.slice(d.length) : digits
 }
 
-const withMobilePrefix = (country: PhoneCode | undefined, digits: string) => {
-  return country?.code === 'MX' ? `1${digits}` : digits
-}
-
 const applyProfile = (profile: MasterProfile) => {
   state.estilo_juego = { ...profile.estilo_juego }
   state.homebrew = {
@@ -288,7 +284,7 @@ async function submitProfile() {
     }
   }
 
-  const phone = (state.phone?.replace(/\D/g, '') && `${dialCode.value.replace(/\D/g, '')}${withMobilePrefix(country.value, state.phone.replace(/\D/g, ''))}`) || null
+  const phone = formatFullPhoneNumber(country.value, state.phone ?? '')
 
   const payload = {
     full_name: state.full_name.trim() || null,
