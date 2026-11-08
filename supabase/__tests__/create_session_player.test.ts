@@ -32,9 +32,12 @@ describe.skipIf(!available)('create_session_player (integration)', () => {
   // colección) cuando el suite está skipeado por falta de credenciales.
   let publicClient!: ReturnType<typeof createClient>
   let adminClient!: ReturnType<typeof createClient>
+  let userClient!: ReturnType<typeof createClient>
 
   const masterId = crypto.randomUUID()
   const sessionIds: string[] = []
+  let userId = ''
+  let userEmail = ''
 
   const createSession = async (overrides: Record<string, unknown> = {}) => {
     const { data, error } = await adminClient
@@ -62,10 +65,24 @@ describe.skipIf(!available)('create_session_player (integration)', () => {
       p_telefono: telefono
     })
 
+  const callCreatePlayerAsUser = (sessionId: string, nombre: string, telefono: string) =>
+    userClient.rpc<CreatePlayerResult>('create_session_player', {
+      p_game_session_id: sessionId,
+      p_nombre: nombre,
+      p_telefono: telefono
+    })
+
+  const callCreatePlayerManual = (sessionId: string, nombre: string, telefono: string) =>
+    userClient.rpc<CreatePlayerResult>('create_session_player_manual', {
+      p_game_session_id: sessionId,
+      p_nombre: nombre,
+      p_telefono: telefono
+    })
+
   const getStoredRows = async (sessionId: string) => {
     const { data, error } = await adminClient
       .from('session_players')
-      .select('id, nombre, telefono, telefono_hash')
+      .select('id, nombre, telefono, telefono_hash, user_id')
       .eq('game_session_id', sessionId)
     if (error) throw new Error(`No se pudo leer fixtures: ${error.message}`)
     return data ?? []
@@ -81,6 +98,25 @@ describe.skipIf(!available)('create_session_player (integration)', () => {
       user_name: 'test_master'
     })
     if (error) throw new Error(`Fixture master falló: ${error.message}`)
+
+    userEmail = `session-it-${Date.now()}-${crypto.randomUUID().slice(0, 8)}@example.com`
+    const { data: userData, error: userError } = await adminClient.auth.admin.createUser({
+      email: userEmail,
+      password: 'password123',
+      email_confirm: true,
+      user_metadata: { full_name: 'Jugador de prueba', name: 'test_player' }
+    })
+    if (userError) throw new Error(`Fixture jugador falló: ${userError.message}`)
+    userId = userData.user.id
+
+    userClient = createClient(SUPABASE_URL as string, SUPABASE_PUBLISHABLE_KEY as string, {
+      auth: { autoRefreshToken: false, persistSession: false }
+    })
+    const { error: signInError } = await userClient.auth.signInWithPassword({
+      email: userEmail,
+      password: 'password123'
+    })
+    if (signInError) throw new Error(`Login del jugador falló: ${signInError.message}`)
   })
 
   afterAll(async () => {
@@ -88,6 +124,10 @@ describe.skipIf(!available)('create_session_player (integration)', () => {
       await adminClient.from('game_sessions').delete().in('id', sessionIds)
     }
     await adminClient.from('dagger_masters').delete().eq('id', masterId)
+    if (userId) {
+      await adminClient.from('dagger_masters').delete().eq('id', userId)
+      await adminClient.auth.admin.deleteUser(userId)
+    }
   })
 
   describe('validación de entrada', () => {
@@ -221,6 +261,84 @@ describe.skipIf(!available)('create_session_player (integration)', () => {
 
       expect(a.data).toMatchObject({ ok: true })
       expect(b.data).toMatchObject({ ok: true })
+    })
+  })
+
+  describe('vinculación de usuario', () => {
+    it('deja user_id nulo en reservas anónimas', async () => {
+      const sessionId = await createSession()
+      const { data } = await callCreatePlayer(sessionId, 'Ana Anónima', '5552000001')
+
+      expect(data).toMatchObject({ ok: true })
+
+      const rows = await getStoredRows(sessionId)
+      expect(rows[0]?.user_id).toBeNull()
+    })
+
+    it('guarda el user_id del jugador autenticado', async () => {
+      const sessionId = await createSession()
+      const { data, error } = await callCreatePlayerAsUser(sessionId, 'Jugador Logueado', '5553000001')
+
+      expect(error).toBeNull()
+      expect(data).toMatchObject({ ok: true })
+
+      const rows = await getStoredRows(sessionId)
+      expect(rows).toHaveLength(1)
+      expect(rows[0]?.user_id).toBe(userId)
+    })
+
+    it('rechaza al mismo usuario en la misma sesión', async () => {
+      const sessionId = await createSession()
+
+      const first = await callCreatePlayerAsUser(sessionId, 'Jugador Logueado', '5553000002')
+      expect(first.data).toMatchObject({ ok: true })
+
+      const second = await callCreatePlayerAsUser(sessionId, 'Jugador Logueado', '5553000003')
+      expect(second.data).toMatchObject({ ok: false, error: 'already_registered' })
+      expect(await getStoredRows(sessionId)).toHaveLength(1)
+    })
+
+    it('permite al mismo usuario en sesiones distintas', async () => {
+      const sessionA = await createSession()
+      const sessionB = await createSession()
+
+      const a = await callCreatePlayerAsUser(sessionA, 'Jugador Logueado', '5553000004')
+      const b = await callCreatePlayerAsUser(sessionB, 'Jugador Logueado', '5553000005')
+
+      expect(a.data).toMatchObject({ ok: true })
+      expect(b.data).toMatchObject({ ok: true })
+    })
+
+    it('rechaza al master en su propia sesión', async () => {
+      const sessionId = await createSession({ master_id: userId })
+      const { data } = await callCreatePlayerAsUser(sessionId, 'Master', '5553000006')
+
+      expect(data).toMatchObject({ ok: false, error: 'master_own_session' })
+      expect(await getStoredRows(sessionId)).toHaveLength(0)
+    })
+  })
+
+  describe('altas manuales', () => {
+    it('no vincula al master que agrega jugadores', async () => {
+      const sessionId = await createSession({ master_id: userId })
+
+      const first = await callCreatePlayerManual(sessionId, 'Jugador Manual Uno', '5554000001')
+      const second = await callCreatePlayerManual(sessionId, 'Jugador Manual Dos', '5554000002')
+
+      expect(first.data).toMatchObject({ ok: true })
+      expect(second.data).toMatchObject({ ok: true })
+
+      const rows = await getStoredRows(sessionId)
+      expect(rows).toHaveLength(2)
+      expect(rows.every(row => row.user_id === null)).toBe(true)
+    })
+
+    it('rechaza a un usuario que no es master ni admin', async () => {
+      const sessionId = await createSession()
+      const { data } = await callCreatePlayerManual(sessionId, 'Jugador Manual', '5554000003')
+
+      expect(data).toMatchObject({ ok: false, error: 'forbidden' })
+      expect(await getStoredRows(sessionId)).toHaveLength(0)
     })
   })
 })

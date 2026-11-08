@@ -158,7 +158,7 @@ const savePlayer = async () => {
     }
 
     const { data: result, error } = await supabase
-      .rpc('create_session_player', {
+      .rpc('create_session_player_manual', {
         p_game_session_id: props.sessionId,
         p_nombre: playerFormState.nombre.trim(),
         p_telefono: telefono
@@ -174,7 +174,9 @@ const savePlayer = async () => {
     if (outcome && !outcome.ok) {
       playerFormError.value = outcome.error === 'duplicate'
         ? 'Este teléfono ya está registrado para esta sesión.'
-        : (outcome.message ?? 'No se pudo agregar el jugador.')
+        : outcome.error === 'forbidden'
+          ? 'No tienes permiso para agregar jugadores a esta sesión.'
+          : (outcome.message ?? 'No se pudo agregar el jugador.')
       return
     }
   }
