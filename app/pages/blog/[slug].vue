@@ -11,9 +11,13 @@ const route = useRoute()
 const client = useSupabaseClient()
 const toast = useToast()
 const requestUrl = useRequestURL()
-const redirectInfo = useSupabaseCookieRedirect()
 
 const slug = route.params.slug as string
+
+const loginLink = computed(() => ({
+  path: '/login',
+  query: { redirect: route.fullPath }
+}))
 
 async function fetchPost() {
   const { data, error } = await client
@@ -132,11 +136,8 @@ async function handleToggleLike() {
   await toggleLike()
 }
 
-// El redirect automático de @nuxtjs/supabase solo cubre /admin; para volver al
-// post después del login guardamos el destino manualmente.
-function rememberRedirect() {
-  redirectInfo.path.value = route.fullPath
-}
+// El redirect automático de @nuxtjs/supabase solo cubre /admin; el resto de
+// páginas pasan su ruta a /login mediante `loginLink`.
 
 async function submitRootComment(content: string) {
   await addComment(content)
@@ -317,9 +318,8 @@ useHead(() => ({
         </span>
         <NuxtLink
           v-if="!canInteract"
-          to="/login"
+          :to="loginLink"
           class="text-sm text-primary-600 hover:underline"
-          @click="rememberRedirect"
         >
           Inicia sesión para interactuar
         </NuxtLink>
@@ -362,9 +362,8 @@ useHead(() => ({
           class="mb-8 rounded-lg border border-dashed border-gray-300 dark:border-gray-700 p-4 text-sm text-gray-600 dark:text-gray-400"
         >
           <NuxtLink
-            to="/login"
+            :to="loginLink"
             class="text-primary-600 hover:underline"
-            @click="rememberRedirect"
           >Inicia sesión</NuxtLink>
           para dejar un comentario.
         </div>
