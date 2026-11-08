@@ -42,3 +42,45 @@ export function renderMarkdown(content: string): string {
   if (!content) return ''
   return markdown.render(content)
 }
+
+/**
+ * Extrae el texto plano de un Markdown. Se usa para meta descripciones:
+ * el HTML renderizado incluiría etiquetas y entidades, que no queremos
+ * dentro de `content`/`description`.
+ */
+export function markdownToPlainText(content: string): string {
+  if (!content) return ''
+
+  const collectInline = (tokens: ReturnType<typeof markdown.parse>): string => {
+    let text = ''
+
+    for (const token of tokens) {
+      if (token.type === 'text' || token.type === 'code_inline') {
+        text += token.content
+      } else if (token.type === 'softbreak' || token.type === 'hardbreak') {
+        text += ' '
+      } else if (token.type === 'image') {
+        text += token.content
+      } else if (token.children) {
+        text += collectInline(token.children)
+      }
+    }
+
+    return text
+  }
+
+  const blocks: string[] = []
+  for (const token of markdown.parse(content, {})) {
+    if (token.type === 'inline' && token.children) {
+      blocks.push(collectInline(token.children))
+    } else if (token.type === 'fence' || token.type === 'code_block') {
+      blocks.push(token.content)
+    }
+  }
+
+  return blocks
+    .join(' ')
+    .replace(/<[^>]*>/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+}

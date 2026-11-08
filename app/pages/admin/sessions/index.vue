@@ -15,7 +15,7 @@ const toast = useToast()
 const { copy } = useClipboard()
 const adminStore = useAdminStore()
 const { isAdmin } = storeToRefs(adminStore)
-const currentMasterStore = useCurrentMasterStore()
+const currentMasterStore = useCurrentProfileStore()
 const { isAuthorized } = storeToRefs(currentMasterStore)
 const user = useSupabaseUser()
 const { deleteSessionImageByUrl } = useSessionImage()
@@ -381,7 +381,7 @@ const pagination = ref({
               label="Ir a mi perfil"
               icon="i-lucide-user"
               class="cursor-pointer"
-              :to="`/admin/profile/${user?.sub}/edit`"
+              :to="'/admin/profile'"
             />
           </div>
         </template>

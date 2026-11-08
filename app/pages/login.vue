@@ -1,6 +1,17 @@
 <script setup lang="ts">
+import { safeRedirectPath } from '~/utils/url'
+
+const route = useRoute()
 const toast = useToast()
 const supabase = useSupabaseClient()
+const redirectInfo = useSupabaseCookieRedirect()
+
+// El destino puede llegar por querystring (header, blog, páginas de admin).
+// Se guarda en la cookie que confirm.vue consume después del OAuth.
+const redirectTarget = safeRedirectPath(route.query.redirect)
+if (redirectTarget) {
+  redirectInfo.path.value = redirectTarget
+}
 
 const providers = [{
   label: 'Discord',

@@ -4,6 +4,7 @@ import type { PhoneCode } from '~/types/phone'
 
 const props = withDefaults(defineProps<{
   modelValue?: string
+  fullPhone?: string
   name?: string
   label?: string
   hint?: string
@@ -11,6 +12,7 @@ const props = withDefaults(defineProps<{
   placeholder?: string
 }>(), {
   modelValue: '',
+  fullPhone: '',
   name: 'phone',
   label: 'Teléfono',
   hint: undefined,
@@ -64,7 +66,11 @@ const stripCountryCode = (digits: string, dialCodeToStrip: string) => {
   return d && digits.length > d.length && digits.startsWith(d) ? digits.slice(d.length) : digits
 }
 
-function hydrateFromFull(full: string) {
+async function hydrateFromFull(full: string) {
+  if (!phoneCodes.value?.length) {
+    await execute()
+  }
+
   const digits = full.replace(/\D/g, '')
   const match = (phoneCodes.value ?? []).find((c) => {
     const d = c.dialCode.replace(/\D/g, '')
@@ -78,10 +84,27 @@ function hydrateFromFull(full: string) {
     local = local.slice(1)
   }
   emit('update:modelValue', local)
-  nextTick(() => {
-    skipCountryWatch = false
-  })
+  await nextTick()
+  skipCountryWatch = false
 }
+
+const lastHydrated = ref('')
+
+watch(
+  () => props.fullPhone,
+  async (full) => {
+    if (!full || full === lastHydrated.value) return
+    await hydrateFromFull(full)
+    lastHydrated.value = full
+  },
+  { immediate: true }
+)
+
+watch(phoneCodes, async (codes) => {
+  if (!props.fullPhone || !codes?.length || lastHydrated.value === props.fullPhone) return
+  await hydrateFromFull(props.fullPhone)
+  lastHydrated.value = props.fullPhone
+})
 
 defineExpose({ fullNumber, hydrateFromFull })
 </script>

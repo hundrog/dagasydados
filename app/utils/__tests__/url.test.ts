@@ -5,6 +5,7 @@ import {
   generateShortCode,
   ensureUniqueSlug,
   ensureUniqueShortCode,
+  safeRedirectPath,
   SLUG_MAX_LENGTH
 } from '../url'
 
@@ -73,6 +74,38 @@ describe('generateShortCode', () => {
   it('genera códigos distintos entre llamadas', () => {
     const codes = new Set(Array.from({ length: 200 }, () => generateShortCode()))
     expect(codes.size).toBe(200)
+  })
+})
+
+describe('safeRedirectPath', () => {
+  it('acepta rutas internas con query y hash', () => {
+    expect(safeRedirectPath('/blog/post?foo=1#seccion')).toBe('/blog/post?foo=1#seccion')
+  })
+
+  it('rechaza URLs absolutas y protocol-relative', () => {
+    expect(safeRedirectPath('https://evil.test')).toBeNull()
+    expect(safeRedirectPath('//evil.test')).toBeNull()
+  })
+
+  it('rechaza barras invertidas y valores no string', () => {
+    expect(safeRedirectPath('/\\evil.test')).toBeNull()
+    expect(safeRedirectPath('/%5Cevil.test')).toBeNull()
+    expect(safeRedirectPath(['/blog'])).toBeNull()
+    expect(safeRedirectPath(null)).toBeNull()
+    expect(safeRedirectPath(undefined)).toBeNull()
+  })
+
+  it('rechaza las rutas de autenticación para evitar bucles', () => {
+    expect(safeRedirectPath('/login')).toBeNull()
+    expect(safeRedirectPath('/login/')).toBeNull()
+    expect(safeRedirectPath('/login?redirect=/blog')).toBeNull()
+    expect(safeRedirectPath('/confirm')).toBeNull()
+    expect(safeRedirectPath('/confirm?code=123')).toBeNull()
+  })
+
+  it('permite rutas que solo empiezan con los nombres reservados', () => {
+    expect(safeRedirectPath('/login-help')).toBe('/login-help')
+    expect(safeRedirectPath('/confirmation')).toBe('/confirmation')
   })
 })
 

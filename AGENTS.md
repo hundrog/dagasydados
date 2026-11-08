@@ -19,6 +19,7 @@ y debe estar registrado en `.husky/domains.config` (el hook `pre-push` lo valida
 | `SUP`   | soporte / feedback / issues |
 | `PLA`   | plataforma (general / transversal) |
 | `BLG`   | blog                       |
+| `epic`   | epic tasks / grandes cambios |
 
 **Nuevo dominio**: añade una línea en `.husky/domains.config` y actualiza esta tabla.
 
@@ -41,6 +42,15 @@ Los checks locales corren vía `sh .husky/pre-push` (lint + typecheck + tests).
 En ejecución manual los checks validan el working tree; sólo cuando el hook lo dispara un
 `git push` se guardan los cambios sin comitear en un stash temporal para validar únicamente el
 código comiteado (y se restauran al terminar). `SKIP_STASH=1 git push` desactiva ese stash.
+
+## Roles y perfiles (AUTH-1000)
+
+- Todo usuario autenticado queda en `dagger_masters` con `status='created'`, por lo que `role` derivado resulta `player`.
+- `role` está generado desde `status`: `authorized -> master`, resto -> `player`.
+- Admins se detectan por tabla `admins`; son masters autorizados.
+- `/account` edita identidad básica; `/admin/profile` edita el dossier de master.
+- `useCurrentMasterStore` fue renombrado a `useCurrentProfileStore`.
+- La solicitud master usa `request_master_authorization()` (`created -> pending`); solo admins pueden autorizar/rechazar.
 
 ## Dependencias
 
