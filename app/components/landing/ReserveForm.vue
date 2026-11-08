@@ -9,6 +9,8 @@ const props = defineProps<{
   sessionId?: string
   maxPlayers?: number | null
   currentPlayers?: number
+  registered?: boolean
+  checking?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -36,7 +38,7 @@ const isFull = computed(() =>
 )
 
 const canReserve = computed(() =>
-  !!props.phone && !isFull.value
+  !!props.phone && !isFull.value && !props.registered && !props.checking
 )
 
 const schema = z.object({
@@ -63,6 +65,8 @@ const wame = computed(() => {
 })
 
 async function handleReserve() {
+  if (props.registered) return
+
   if (!props.sessionId || !state.name?.trim() || !state.telefono?.trim()) {
     return
   }
@@ -147,11 +151,20 @@ async function handleReserve() {
   >
     <UButton
       block
-      label="Aparta tu lugar"
+      :label="registered ? 'Ya inscrito' : 'Aparta tu lugar'"
+      :icon="registered ? 'i-lucide-circle-check' : undefined"
+      :color="registered ? 'success' : 'primary'"
+      :variant="registered ? 'soft' : 'solid'"
       class="mt-3 cursor-pointer"
       :disabled="!canReserve"
       @click.stop="isOpen = true"
     />
+    <p
+      v-if="registered"
+      class="mt-2 text-center text-sm text-on-surface-dim"
+    >
+      Ya tienes un lugar en esta sesión.
+    </p>
 
     <template #body>
       <UForm

@@ -29,6 +29,13 @@ const hasPayment = computed(() => Boolean(paymentName.value || paymentCuenta.val
 
 const canModify = (session: GameSessionWithMaster) => isAdmin.value || session.master_id === user.value?.sub
 
+const isSessionMaster = computed(() => {
+  const currentUserId = user.value?.sub
+  return Boolean(currentUserId && session.value?.master_id === currentUserId)
+})
+
+const { isRegistered, isChecking, markRegistered } = useSessionRegistration(() => String(route.params.id))
+
 const {
   formatDate,
   scheduleLabel,
@@ -70,6 +77,10 @@ const loadSession = async () => {
 const handlePlayerReserved = () => {
   if (session.value && session.value.player_count !== null && session.value.player_count !== undefined) {
     session.value.player_count++
+  }
+
+  if (user.value) {
+    markRegistered()
   }
 }
 
@@ -333,19 +344,29 @@ const goBack = () => {
           <h2 class="font-display text-headline-sm text-on-surface mb-2">
             Aparta tu lugar
           </h2>
-          <p class="font-body text-body-sm text-on-surface-dim mb-4">
-            Confirma tu nombre y teléfono. Al reservar, se abre WhatsApp con el master para coordinar tu lugar.
+          <p
+            v-if="isSessionMaster"
+            class="font-body text-body-sm text-on-surface-dim"
+          >
+            Eres el master de esta sesión, así que no puedes inscribirte como jugador.
           </p>
-          <LandingReserveForm
-            :session-id="session.id"
-            :max-players="session.max_players"
-            :current-players="currentPlayers"
-            :phone="session.master?.phone || ''"
-            :master-name="session.master?.user_name || ''"
-            :session-type="session.session_type ?? undefined"
-            :session-title="session.title"
-            @reserved="handlePlayerReserved"
-          />
+          <template v-else>
+            <p class="font-body text-body-sm text-on-surface-dim mb-4">
+              Confirma tu nombre y teléfono. Al reservar, se abre WhatsApp con el master para coordinar tu lugar.
+            </p>
+            <LandingReserveForm
+              :session-id="session.id"
+              :max-players="session.max_players"
+              :current-players="currentPlayers"
+              :phone="session.master?.phone || ''"
+              :master-name="session.master?.user_name || ''"
+              :session-type="session.session_type ?? undefined"
+              :session-title="session.title"
+              :registered="isRegistered"
+              :checking="isChecking"
+              @reserved="handlePlayerReserved"
+            />
+          </template>
         </div>
 
         <p class="font-body text-body-sm text-on-surface-dim text-center">
