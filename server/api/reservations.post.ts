@@ -58,6 +58,12 @@ export default defineEventHandler(async (event) => {
   const outcome = result as unknown as CreatePlayerResult
   if (!outcome.ok) {
     switch (outcome.error) {
+      case 'already_registered':
+        throw createError({ statusCode: 409, statusMessage: 'Conflict', message: 'Ya estás inscrito en esta sesión' })
+      case 'master_own_session':
+        throw createError({ statusCode: 403, statusMessage: 'Forbidden', message: 'El master no puede inscribirse en su propia sesión' })
+      case 'not_found':
+        throw createError({ statusCode: 404, statusMessage: 'Not Found', message: 'Sesión no encontrada' })
       case 'duplicate':
         throw createError({ statusCode: 409, statusMessage: 'Conflict', message: 'Este teléfono ya está registrado para esta sesión' })
       case 'full':

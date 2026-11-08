@@ -538,6 +538,14 @@ export type Database = {
         }
         Returns: Json
       }
+      create_session_player_manual: {
+        Args: {
+          p_game_session_id: string
+          p_nombre: string
+          p_telefono: string
+        }
+        Returns: Json
+      }
       finalize_session_players_hash: { Args: never, Returns: undefined }
       hash_telefono: { Args: { p_telefono: string }, Returns: string }
       request_master_authorization: { Args: never, Returns: undefined }
