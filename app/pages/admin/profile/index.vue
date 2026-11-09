@@ -64,6 +64,7 @@ const requestAuthorization = async () => {
 const schema = z.object({
   full_name: z.string().min(1, 'El nombre es obligatorio'),
   user_name: z.string().optional(),
+  email: z.string().optional(),
   phone: z.string().optional(),
   avatar_url: z.url('Debe ser una URL válida').optional().or(z.literal('')),
   plataforma_pago: z.string().optional(),
@@ -101,6 +102,7 @@ type Schema = z.infer<typeof schema>
 const initialState = (): Schema => ({
   full_name: '',
   user_name: '',
+  email: '',
   phone: '',
   avatar_url: '',
   plataforma_pago: '',
@@ -211,6 +213,7 @@ const applyProfile = (profile: MasterProfile) => {
 const hydrateMaster = (master: Master) => {
   state.full_name = master.full_name ?? ''
   state.user_name = master.user_name ?? ''
+  state.email = master.email ?? ''
   state.avatar_url = master.avatar_url ?? ''
   state.plataforma_pago = master.plataforma_pago ?? ''
   state.plataforma_pago_cuenta = master.plataforma_pago_cuenta ?? ''
@@ -237,7 +240,7 @@ onMounted(async () => {
 
   const { data, error } = await supabase
     .from('dagger_masters')
-    .select('id,full_name,user_name,phone,avatar_url,plataforma_pago,plataforma_pago_cuenta,descripcion,profile,status')
+    .select('id,full_name,user_name,email,phone,avatar_url,plataforma_pago,plataforma_pago_cuenta,descripcion,profile,status')
     .eq('id', masterId.value)
     .maybeSingle()
 
@@ -465,6 +468,19 @@ watch(countryCode, () => {
               <UInput
                 v-model="state.user_name"
                 class="w-full"
+              />
+            </UFormField>
+            <UFormField
+              label="Email"
+              name="email"
+              class="md:col-span-2"
+              description="Se sincroniza desde la cuenta de acceso; no se edita desde el perfil."
+            >
+              <UInput
+                v-model="state.email"
+                class="w-full"
+                leading-icon="i-lucide-mail"
+                readonly
               />
             </UFormField>
             <UFormField

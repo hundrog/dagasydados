@@ -4,7 +4,7 @@ export const useCurrentProfileStore = defineStore('currentProfile', () => {
   const supabase = useSupabaseClient()
   const user = useSupabaseUser()
 
-  const master = ref<{ id: string, full_name: string | null, user_name: string | null, avatar_url: string | null, phone: string | null, status: MasterStatus, role: ProfileRole } | null>(null)
+  const master = ref<{ id: string, full_name: string | null, user_name: string | null, email: string | null, avatar_url: string | null, phone: string | null, status: MasterStatus, role: ProfileRole } | null>(null)
   const isLoading = ref(false)
   let pendingPromise: Promise<void> | null = null
   let lastRefreshedUserId: string | null = null
@@ -28,11 +28,11 @@ export const useCurrentProfileStore = defineStore('currentProfile', () => {
       try {
         const { data, error } = await supabase
           .from('dagger_masters')
-          .select('id,full_name,user_name,avatar_url,phone,status,role')
+          .select('id,full_name,user_name,email,avatar_url,phone,status,role')
           .eq('id', userId)
           .maybeSingle()
 
-        const row = data as { id: string, full_name: string | null, user_name: string | null, avatar_url: string | null, phone: string | null, status: MasterStatus, role: ProfileRole | null } | null
+        const row = data as { id: string, full_name: string | null, user_name: string | null, email: string | null, avatar_url: string | null, phone: string | null, status: MasterStatus, role: ProfileRole | null } | null
         master.value = error || !row
           ? null
           : {
