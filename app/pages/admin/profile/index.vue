@@ -477,10 +477,10 @@ watch(countryCode, () => {
               description="Se sincroniza desde la cuenta de acceso; no se edita desde el perfil."
             >
               <UInput
-                v-model="state.email"
+                :model-value="state.email"
                 class="w-full"
                 leading-icon="i-lucide-mail"
-                readonly
+                disabled
               />
             </UFormField>
             <UFormField

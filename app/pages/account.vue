@@ -219,7 +219,7 @@ async function requestMaster() {
             :model-value="profileStore.master?.email ?? ''"
             class="w-full"
             leading-icon="i-lucide-mail"
-            readonly
+            disabled
           />
         </UFormField>
 
