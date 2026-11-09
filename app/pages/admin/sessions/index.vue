@@ -44,7 +44,7 @@ const { selectedMonth, monthOptions, resolveRange, isDefault, reset: resetMonth 
 
 const selectedWeekday = ref<number | 'all'>('all')
 const selectedMode = ref<string>('all')
-const selectedSessionType = ref<string>('all')
+const selectedMaster = ref<string>('all')
 
 const weekdayOptions: Array<{ label: string, value: number | 'all' }> = [
   { label: 'Todos los días', value: 'all' },
@@ -62,10 +62,25 @@ const modeOptions = computed(() => [
   ...(lookups.value?.modes ?? [])
 ])
 
-const sessionTypeOptions = computed(() => [
-  { label: 'Todos los tipos', value: 'all' },
-  ...(lookups.value?.session_types ?? []).map(type => ({ label: type, value: type }))
-])
+const masterOptions = computed(() => {
+  const masters = new Map<string, string>()
+
+  for (const session of sessions.value) {
+    if (!session.master_id || masters.has(session.master_id)) continue
+
+    masters.set(
+      session.master_id,
+      session.master?.full_name || session.master?.user_name || 'Master sin nombre'
+    )
+  }
+
+  return [
+    { label: 'Todos los masters', value: 'all' },
+    ...[...masters.entries()]
+      .sort(([, a], [, b]) => a.localeCompare(b))
+      .map(([value, label]) => ({ label, value }))
+  ]
+})
 
 const occurrencesInMonth = (session: GameSessionWithMaster): Date[] => {
   const range = resolveRange()
@@ -99,7 +114,7 @@ const matchesFilters = (session: GameSessionWithMaster) => {
     return false
   }
 
-  if (selectedSessionType.value !== 'all' && session.session_type?.trim() !== selectedSessionType.value) {
+  if (selectedMaster.value !== 'all' && session.master_id !== selectedMaster.value) {
     return false
   }
 
@@ -116,7 +131,7 @@ const hasActiveFilters = computed(() =>
   !isDefault()
   || selectedWeekday.value !== 'all'
   || selectedMode.value !== 'all'
-  || selectedSessionType.value !== 'all'
+  || selectedMaster.value !== 'all'
 )
 
 const loadSessions = async () => {
@@ -440,15 +455,18 @@ const pagination = ref({
           />
         </div>
 
-        <div class="flex flex-col gap-1.5">
+        <div
+          v-if="isAdmin"
+          class="flex flex-col gap-1.5"
+        >
           <span class="label-metadata text-on-surface-dim">
-            Tipo de sesión
+            Master
           </span>
           <USelectMenu
-            v-model="selectedSessionType"
-            :items="sessionTypeOptions"
+            v-model="selectedMaster"
+            :items="masterOptions"
             value-key="value"
-            leading-icon="i-lucide-swords"
+            leading-icon="i-lucide-crown"
             class="w-52"
           />
         </div>
@@ -460,7 +478,7 @@ const pagination = ref({
           color="neutral"
           variant="ghost"
           class="cursor-pointer"
-          @click="resetMonth(); selectedWeekday = 'all'; selectedMode = 'all'; selectedSessionType = 'all'"
+          @click="resetMonth(); selectedWeekday = 'all'; selectedMode = 'all'; selectedMaster = 'all'"
         />
       </div>
       <UTable
