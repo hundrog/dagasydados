@@ -25,6 +25,11 @@ const createState = () => ({
   tags: (props.post?.tags ?? []).map(tag => tag.name).join(', ')
 })
 
+const statusItems: { label: string, value: 'draft' | 'published' }[] = [
+  { label: 'Borrador', value: 'draft' },
+  { label: 'Publicado', value: 'published' }
+]
+
 const form = ref(createState())
 const isSubmitting = ref(false)
 const errorMessage = ref('')
@@ -180,7 +185,7 @@ async function savePost() {
         >
           <USelect
             v-model="form.status"
-            :options="['draft', 'published']"
+            :items="statusItems"
             class="w-full"
           />
         </UFormField>
