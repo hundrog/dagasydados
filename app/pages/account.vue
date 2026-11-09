@@ -210,6 +210,19 @@ async function requestMaster() {
           />
         </UFormField>
 
+        <UFormField
+          label="Email"
+          name="email"
+          description="Se sincroniza desde tu cuenta de acceso."
+        >
+          <UInput
+            :model-value="profileStore.master?.email ?? ''"
+            class="w-full"
+            leading-icon="i-lucide-mail"
+            disabled
+          />
+        </UFormField>
+
         <PhoneInput
           ref="phoneInput"
           v-model="state.phone"
