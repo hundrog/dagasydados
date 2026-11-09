@@ -71,6 +71,13 @@ describe('buildCommentTree', () => {
     expect(tree[0]?.author).toBeNull()
   })
 
+  it('deja author en null en comentarios de usuarios eliminados', () => {
+    const tree = buildCommentTree([row({ id: 'root', user_id: null })], new Map())
+
+    expect(tree[0]?.author).toBeNull()
+    expect(tree[0]?.user_id).toBeNull()
+  })
+
   it('trata un padre inexistente como comentario raíz para no perderlo', () => {
     const tree = buildCommentTree([row({ id: 'orphan', parent_id: 'no-existe' })], new Map())
 

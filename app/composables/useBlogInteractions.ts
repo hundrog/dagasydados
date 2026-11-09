@@ -9,7 +9,7 @@ import { BLOG_COMMENT_MAX_LENGTH } from '~/types/blog'
 export interface BlogCommentRow {
   id: string
   post_id: string
-  user_id: string
+  user_id: string | null
   parent_id: string | null
   content: string
   depth: number
@@ -33,7 +33,7 @@ export function buildCommentTree(
   for (const row of rows) {
     nodes.set(row.id, {
       ...row,
-      author: authors.get(row.user_id) ?? null,
+      author: row.user_id ? (authors.get(row.user_id) ?? null) : null,
       replies: []
     })
   }
@@ -223,7 +223,13 @@ export function useBlogInteractions(postId: string) {
       if (error) throw error
 
       const rows = (data ?? []) as BlogCommentRow[]
-      const authorIds = [...new Set(rows.map(row => row.user_id))]
+      const authorIds = [
+        ...new Set(
+          rows
+            .map(row => row.user_id)
+            .filter((id): id is string => id !== null)
+        )
+      ]
       const authors = new Map<string, BlogCommentAuthorRef>()
 
       if (authorIds.length > 0) {
