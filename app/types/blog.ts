@@ -57,7 +57,7 @@ export interface BlogPostTag {
 export interface BlogLike {
   id: string
   post_id: string
-  user_id: string
+  user_id: string | null
   created_at: string
 }
 
@@ -68,7 +68,7 @@ export interface BlogCommentAuthorRef extends BlogAuthorRef {
 export interface BlogComment {
   id: string
   post_id: string
-  user_id: string
+  user_id: string | null
   parent_id: string | null
   content: string
   depth: number
